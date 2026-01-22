@@ -52,18 +52,18 @@ export function SignUpForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Create your account</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Crea tu cuenta</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Welcome! Please fill in the details to get started.
+            ¡Bienvenido! Por favor completa los detalles para comenzar.
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
             <View className="gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Correo electrónico</Label>
               <Input
                 id="email"
-                placeholder="m@example.com"
+                placeholder="correo@ejemplo.com"
                 keyboardType="email-address"
                 autoComplete="email"
                 autoCapitalize="none"
@@ -78,7 +78,7 @@ export function SignUpForm() {
             </View>
             <View className="gap-1.5">
               <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Contraseña</Label>
               </View>
               <Input
                 ref={passwordInputRef}
@@ -93,18 +93,18 @@ export function SignUpForm() {
               ) : null}
             </View>
             <Button className="w-full" onPress={onSubmit}>
-              <Text>Continue</Text>
+              <Text>Continuar</Text>
             </Button>
           </View>
           <Text className="text-center text-sm">
-            Already have an account?{' '}
+            ¿Ya tienes una cuenta?{' '}
             <Link href="/(auth)/sign-in" dismissTo className="text-sm underline underline-offset-4">
-              Sign in
+              Inicia sesión
             </Link>
           </Text>
           <View className="flex-row items-center">
             <Separator className="flex-1" />
-            <Text className="px-4 text-sm text-muted-foreground">or</Text>
+            <Text className="px-4 text-sm text-muted-foreground">o</Text>
             <Separator className="flex-1" />
           </View>
           <SocialConnections />

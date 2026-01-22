@@ -8,6 +8,9 @@ import { MoonStarIcon, XIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View } from 'react-native';
+import { Switch } from "@/components/ui/switch"
+
+
 
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
@@ -64,6 +67,11 @@ export default function Screen() {
               <Text>Explore Clerk Docs</Text>
             </Button>
           </Link>
+        </View>
+        <View>
+          <Switch checked={true} onCheckedChange={(checked) => {
+            console.log('Toggle me!', checked);
+          }} />
         </View>
       </View>
     </>

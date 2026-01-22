@@ -34,6 +34,7 @@ export function SignInForm() {
       if (signInAttempt.status === 'complete') {
         setError({ email: '', password: '' });
         await setActive({ session: signInAttempt.createdSessionId });
+        router.replace('/(onboarding)/owner-info');
         return;
       }
       // TODO: Handle other statuses
@@ -59,18 +60,18 @@ export function SignInForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Sign in to app-chapa-tu-venta</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Inicia sesión en Chapa Tu Venta</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Welcome back! Please sign in to continue
+            ¡Bienvenido de nuevo! Inicia sesión para continuar
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
             <View className="gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Correo electrónico</Label>
               <Input
                 id="email"
-                placeholder="m@example.com"
+                placeholder="correo@ejemplo.com"
                 keyboardType="email-address"
                 autoComplete="email"
                 autoCapitalize="none"
@@ -85,13 +86,13 @@ export function SignInForm() {
             </View>
             <View className="gap-1.5">
               <View className="flex-row items-center">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Contraseña</Label>
                 <Link asChild href={`/(auth)/forgot-password?email=${email}`}>
                   <Button
                     variant="link"
                     size="sm"
                     className="ml-auto h-4 px-1 py-0 web:h-fit sm:h-4">
-                    <Text className="font-normal leading-4">Forgot your password?</Text>
+                    <Text className="font-normal leading-4">¿Olvidaste tu contraseña?</Text>
                   </Button>
                 </Link>
               </View>
@@ -108,18 +109,18 @@ export function SignInForm() {
               ) : null}
             </View>
             <Button className="w-full" onPress={onSubmit}>
-              <Text>Continue</Text>
+              <Text>Continuar</Text>
             </Button>
           </View>
           <Text className="text-center text-sm">
-            Don&apos;t have an account?{' '}
+            ¿No tienes una cuenta?{' '}
             <Link href="/(auth)/sign-up" className="text-sm underline underline-offset-4">
-              Sign up
+              Regístrate
             </Link>
           </Text>
           <View className="flex-row items-center">
             <Separator className="flex-1" />
-            <Text className="px-4 text-sm text-muted-foreground">or</Text>
+            <Text className="px-4 text-sm text-muted-foreground">o</Text>
             <Separator className="flex-1" />
           </View>
           <SocialConnections />
