@@ -4,13 +4,18 @@ import { Text } from '@/components/ui/text';
 import { UserMenu } from '@/components/user-menu';
 import { useUser } from '@clerk/clerk-expo';
 import { Link, Stack } from 'expo-router';
-import { MoonStarIcon, XIcon, SunIcon } from 'lucide-react-native';
+import {
+  MoonStarIcon,
+  XIcon,
+  SunIcon,
+  HomeIcon,
+  ShoppingBagIcon,
+  UserIcon,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Image, type ImageStyle, View } from 'react-native';
-import { Switch } from "@/components/ui/switch"
-
-
+import { Image, type ImageStyle, View, TouchableOpacity } from 'react-native';
+import { Switch } from '@/components/ui/switch';
 
 const LOGO = {
   light: require('@/assets/images/react-native-reusables-light.png'),
@@ -39,40 +44,48 @@ const SCREEN_OPTIONS = {
 export default function Screen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
+  const [activeTab, setActiveTab] = React.useState<'home' | 'productos' | 'persona'>('home');
 
   return (
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
-      <View className="flex-1 items-center justify-center gap-8 p-4">
-        <View className="flex-row items-center justify-center gap-3.5">
-          <Image
-            source={CLERK_LOGO[colorScheme ?? 'light']}
-            resizeMode="contain"
-            style={LOGO_STYLE}
-          />
-          <Icon as={XIcon} className="mr-1 size-5" />
-          <Image source={LOGO[colorScheme ?? 'light']} style={LOGO_STYLE} resizeMode="contain" />
+      <View className="flex-1">
+        <View className="flex-1 items-center justify-center gap-8 p-4">
+          <View className="flex-row items-center justify-center gap-3.5">
+            <Image
+              source={CLERK_LOGO[colorScheme ?? 'light']}
+              resizeMode="contain"
+              style={LOGO_STYLE}
+            />
+            <Icon as={XIcon} className="mr-1 size-5" />
+            <Image source={LOGO[colorScheme ?? 'light']} style={LOGO_STYLE} resizeMode="contain" />
+          </View>
+          <View className="max-w-sm gap-2 px-4">
+            <Text variant="h1" className="text-3xl font-medium">
+              Make it yours{user?.firstName ? `, ${user.firstName}` : ''}.
+            </Text>
+            <Text className="ios:text-foreground text-center font-mono text-sm text-muted-foreground">
+              Update the screens and components to match your design and logic.
+            </Text>
+          </View>
+          <View className="gap-2">
+            <Link href="https://go.clerk.com/8e6CCee" asChild>
+              <Button size="sm">
+                <Text>Explore Clerk Docs</Text>
+              </Button>
+            </Link>
+          </View>
+          <View>
+            <Switch
+              checked={true}
+              onCheckedChange={(checked) => {
+                console.log('Toggle me!', checked);
+              }}
+            />
+          </View>
         </View>
-        <View className="max-w-sm gap-2 px-4">
-          <Text variant="h1" className="text-3xl font-medium">
-            Make it yours{user?.firstName ? `, ${user.firstName}` : ''}.
-          </Text>
-          <Text className="ios:text-foreground text-center font-mono text-sm text-muted-foreground">
-            Update the screens and components to match your design and logic.
-          </Text>
-        </View>
-        <View className="gap-2">
-          <Link href="https://go.clerk.com/8e6CCee" asChild>
-            <Button size="sm">
-              <Text>Explore Clerk Docs</Text>
-            </Button>
-          </Link>
-        </View>
-        <View>
-          <Switch checked={true} onCheckedChange={(checked) => {
-            console.log('Toggle me!', checked);
-          }} />
-        </View>
+
+        <NavigationBar activeTab={activeTab} onTabChange={setActiveTab} />
       </View>
     </>
   );
@@ -90,5 +103,57 @@ function ThemeToggle() {
     <Button onPress={toggleColorScheme} size="icon" variant="ghost" className="rounded-full">
       <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-6" />
     </Button>
+  );
+}
+
+interface NavigationBarProps {
+  activeTab: 'home' | 'productos' | 'persona';
+  onTabChange: (tab: 'home' | 'productos' | 'persona') => void;
+}
+
+function NavigationBar({ activeTab, onTabChange }: NavigationBarProps) {
+  const { colorScheme } = useColorScheme();
+
+  return (
+    <View className="bottom-safe border-t border-border bg-background">
+      <View className="flex-row items-center justify-around py-2">
+        <TouchableOpacity onPress={() => onTabChange('home')} className="flex-1 items-center py-2">
+          <Icon
+            as={HomeIcon}
+            className={`size-6 ${activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'}`}
+          />
+          <Text
+            className={`mt-1 text-xs ${activeTab === 'home' ? 'text-primary' : 'text-muted-foreground'}`}>
+            Home
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => onTabChange('productos')}
+          className="flex-1 items-center py-2">
+          <Icon
+            as={ShoppingBagIcon}
+            className={`size-6 ${activeTab === 'productos' ? 'text-primary' : 'text-muted-foreground'}`}
+          />
+          <Text
+            className={`mt-1 text-xs ${activeTab === 'productos' ? 'text-primary' : 'text-muted-foreground'}`}>
+            Productos
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => onTabChange('persona')}
+          className="flex-1 items-center py-2">
+          <Icon
+            as={UserIcon}
+            className={`size-6 ${activeTab === 'persona' ? 'text-primary' : 'text-muted-foreground'}`}
+          />
+          <Text
+            className={`mt-1 text-xs ${activeTab === 'persona' ? 'text-primary' : 'text-muted-foreground'}`}>
+            Persona
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
