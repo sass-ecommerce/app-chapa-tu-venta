@@ -3,16 +3,13 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useUser } from '@clerk/clerk-expo';
 import { Link } from 'expo-router';
-import { XIcon } from 'lucide-react-native';
+import { Clock, Flame, Flag, Navigation, XIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View } from 'react-native';
 import { Switch } from '@/components/ui/switch';
 
-const LOGO = {
-  light: require('@/assets/images/react-native-reusables-light.png'),
-  dark: require('@/assets/images/react-native-reusables-dark.png'),
-};
+const STORE_LOGO = require('@/assets/images/tienda.png');
 
 const CLERK_LOGO = {
   light: require('@/assets/images/clerk-logo-light.png'),
@@ -20,8 +17,8 @@ const CLERK_LOGO = {
 };
 
 const LOGO_STYLE: ImageStyle = {
-  height: 36,
-  width: 40,
+  height: 80,
+  width: 80,
 };
 
 export default function HomeScreen() {
@@ -29,39 +26,57 @@ export default function HomeScreen() {
   const { user } = useUser();
 
   return (
-    <View className="flex-1 items-center justify-center gap-8 p-4">
-      <View className="flex-row items-center justify-center gap-3.5">
-        <Image
-          source={CLERK_LOGO[colorScheme ?? 'light']}
-          resizeMode="contain"
-          style={LOGO_STYLE}
-        />
-        <Icon as={XIcon} className="mr-1 size-5" />
-        <Image source={LOGO[colorScheme ?? 'light']} style={LOGO_STYLE} resizeMode="contain" />
+    <View className="flex-1 gap-8 p-4">
+      {/* Header con saludo y logo */}
+      <View className="flex-row items-start justify-start pt-12">
+        <View>
+          <Text className="text-base font-normal">Hola</Text>
+          <Text className="text-2xl font-bold">{user?.firstName || 'Cesar'}</Text>
+        </View>
+        <Image source={STORE_LOGO} style={LOGO_STYLE} />
       </View>
-      <View className="max-w-sm gap-2 px-4">
-        <Text variant="h1" className="text-3xl font-medium">
-          Make it yours{user?.firstName ? `, ${user.firstName}` : ''}.
-        </Text>
-        <Text className="ios:text-foreground text-center font-mono text-sm text-muted-foreground">
-          Update the screens and components to match your design and logic.
-        </Text>
+
+      {/* Actividades */}
+      <View className="gap-4">
+        <Text className="text-2xl font-bold">Actividades</Text>
+
+        <View className="flex-row gap-4">
+          {/* Training Times */}
+          <View className="flex-1 rounded-2xl bg-card p-4 shadow-sm">
+            <Icon as={Clock} className="text-muted-foreground" size={20} />
+            <Text className="mt-3 text-3xl font-bold">120</Text>
+            <Text className="text-xs text-muted-foreground">minutes</Text>
+            <Text className="mt-2 text-sm font-medium text-primary">Training Times</Text>
+          </View>
+
+          {/* Maximum Distance */}
+          <View className="flex-1 rounded-2xl bg-card p-4 shadow-sm">
+            <Icon as={Navigation} className="text-muted-foreground" size={20} />
+            <Text className="mt-3 text-3xl font-bold">5600</Text>
+            <Text className="text-xs text-muted-foreground">kilometers</Text>
+            <Text className="mt-2 text-sm font-medium text-primary">Maximum Distance</Text>
+          </View>
+        </View>
+
+        <View className="flex-row gap-4">
+          {/* Estimated Point */}
+          <View className="flex-1 rounded-2xl bg-card p-4 shadow-sm">
+            <Icon as={Flag} className="text-muted-foreground" size={20} />
+            <Text className="mt-3 text-3xl font-bold">8020</Text>
+            <Text className="text-xs text-muted-foreground">points</Text>
+            <Text className="mt-2 text-sm font-medium text-primary">Estimated Point</Text>
+          </View>
+
+          {/* Calories */}
+          <View className="flex-1 rounded-2xl bg-card p-4 shadow-sm">
+            <Icon as={Flame} className="text-muted-foreground" size={20} />
+            <Text className="mt-3 text-3xl font-bold">450</Text>
+            <Text className="text-xs text-muted-foreground">cal</Text>
+            <Text className="mt-2 text-sm font-medium text-primary">Calories</Text>
+          </View>
+        </View>
       </View>
-      <View className="gap-2">
-        <Link href="https://go.clerk.com/8e6CCee" asChild>
-          <Button size="sm">
-            <Text>Explore Clerk Docs</Text>
-          </Button>
-        </Link>
-      </View>
-      <View>
-        <Switch
-          checked={true}
-          onCheckedChange={(checked) => {
-            console.log('Toggle me!', checked);
-          }}
-        />
-      </View>
+      {/* actividades */}
     </View>
   );
 }
