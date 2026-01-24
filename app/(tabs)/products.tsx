@@ -6,6 +6,7 @@ import { Search, Bell, Menu, Plus, FolderPlus } from 'lucide-react-native';
 import * as React from 'react';
 import { Alert, View, ScrollView, Pressable } from 'react-native';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useProductsStore } from '@/lib/store/products-store';
 
 // Categorías de productos
 const CATEGORIES = ['All', 'Ropa', 'Accesorios', 'Zapatos', 'Electrónica'];
@@ -75,9 +76,13 @@ const DUMMY_PRODUCTS: Product[] = [
 ];
 
 export default function ProductosScreen() {
-  const [selectedCategory, setSelectedCategory] = React.useState('All');
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [hasNotifications, setHasNotifications] = React.useState(true); // Estado para notificaciones
+  // Hook personalizado de Zustand - mucho más limpio!
+  const selectedCategory = useProductsStore((state) => state.selectedCategory);
+  const searchQuery = useProductsStore((state) => state.searchQuery);
+  const hasNotifications = useProductsStore((state) => state.hasNotifications);
+  const setSelectedCategory = useProductsStore((state) => state.setSelectedCategory);
+  const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
+  const toggleNotifications = useProductsStore((state) => state.toggleNotifications);
 
   const filteredProducts = DUMMY_PRODUCTS.filter((product) => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
@@ -133,7 +138,7 @@ export default function ProductosScreen() {
 
             {/* Notification Bell */}
             <Pressable
-              onPress={() => setHasNotifications(!hasNotifications)}
+              onPress={toggleNotifications}
               className="relative h-12 w-12 items-center justify-center rounded-full bg-muted">
               <Bell size={22} color="#666" />
               {hasNotifications && (
