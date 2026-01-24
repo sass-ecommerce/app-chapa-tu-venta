@@ -2,10 +2,19 @@ import { Product } from '@/components/product-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { Flame, ShoppingCart, Star } from 'lucide-react-native';
+import {
+  Archive,
+  Edit,
+  MoreVertical,
+  Flame,
+  ShoppingCart,
+  Star,
+  Trash2,
+} from 'lucide-react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Image, ScrollView, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 // Data dummy de productos
 const DUMMY_PRODUCTS: Product[] = [
   {
@@ -76,6 +85,63 @@ export default function ProductoDetalleScreen() {
   // Buscar el producto por ID
   const product = DUMMY_PRODUCTS.find((p) => p.id === id);
 
+  const handleEdit = () => {
+    Alert.alert('Editar', `Editar producto: ${product?.name}`);
+  };
+
+  const handleArchive = () => {
+    Alert.alert('Archivar', `Archivar producto: ${product?.name}`);
+  };
+
+  const handleDelete = () => {
+    Alert.alert('Eliminar Producto', `¿Estás seguro de que deseas eliminar "${product?.name}"?`, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Eliminar',
+        style: 'destructive',
+        onPress: () => {
+          // Aquí iría la lógica de eliminación
+          Alert.alert('Eliminado', 'Producto eliminado exitosamente');
+        },
+      },
+    ]);
+  };
+
+  // Componente del menú de tres puntos
+  const MenuButton = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Pressable className="p-2">
+          <MoreVertical size={24} color="#000" />
+        </Pressable>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-48 p-0">
+        <View>
+          <Pressable
+            onPress={handleEdit}
+            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+            <Edit size={18} color="#666" />
+            <Text className="text-base">Editar</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleArchive}
+            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+            <Archive size={18} color="#666" />
+            <Text className="text-base">Archivar</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleDelete}
+            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+            <Trash2 size={18} color="#ef4444" />
+            <Text className="text-base text-destructive">Eliminar</Text>
+          </Pressable>
+        </View>
+      </PopoverContent>
+    </Popover>
+  );
+
   // Si no se encuentra el producto, mostrar mensaje
   if (!product) {
     return (
@@ -99,6 +165,7 @@ export default function ProductoDetalleScreen() {
         options={{
           title: product.name,
           headerBackTitle: 'Productos',
+          headerRight: () => <MenuButton />,
         }}
       />
       <ScrollView className="flex-1 bg-background">
