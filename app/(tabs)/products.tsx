@@ -2,9 +2,10 @@ import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ProductCard, type Product } from '@/components/product-card';
-import { Search } from 'lucide-react-native';
+import { Search, Bell, Menu, Plus, FolderPlus } from 'lucide-react-native';
 import * as React from 'react';
-import { View, ScrollView, Pressable } from 'react-native';
+import { Alert, View, ScrollView, Pressable } from 'react-native';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // Categorías de productos
 const CATEGORIES = ['All', 'Ropa', 'Accesorios', 'Zapatos', 'Electrónica'];
@@ -76,6 +77,7 @@ const DUMMY_PRODUCTS: Product[] = [
 export default function ProductosScreen() {
   const [selectedCategory, setSelectedCategory] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [hasNotifications, setHasNotifications] = React.useState(true); // Estado para notificaciones
 
   const filteredProducts = DUMMY_PRODUCTS.filter((product) => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
@@ -87,10 +89,36 @@ export default function ProductosScreen() {
   return (
     <View className="flex-1 bg-background">
       <ScrollView className="flex-1">
-        <View className="pt-20">
-          {/* Search bar */}
-          <View className="px-4 pb-4">
-            <View className="relative">
+        <View className="pt-12">
+          {/* Search bar with menu and notification bell */}
+          <View className="flex-row items-center gap-3 px-4 pb-4">
+            {/* Menu Button with Popover */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Menu size={22} color="#666" />
+                </Pressable>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-56 p-0">
+                <View>
+                  <Pressable
+                    onPress={() => Alert.alert('Crear Producto', 'Navegar a crear producto')}
+                    className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+                    <Plus size={18} color="#666" />
+                    <Text className="text-base">Crear producto</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
+                    className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+                    <FolderPlus size={18} color="#666" />
+                    <Text className="text-base">Crear colección</Text>
+                  </Pressable>
+                </View>
+              </PopoverContent>
+            </Popover>
+
+            <View className="relative flex-1">
               <Input
                 placeholder="Search"
                 value={searchQuery}
@@ -102,6 +130,16 @@ export default function ProductosScreen() {
                 <Search size={20} color="#666" />
               </View>
             </View>
+
+            {/* Notification Bell */}
+            <Pressable
+              onPress={() => setHasNotifications(!hasNotifications)}
+              className="relative h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Bell size={22} color="#666" />
+              {hasNotifications && (
+                <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+              )}
+            </Pressable>
           </View>
 
           {/* Categories */}

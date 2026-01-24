@@ -20,19 +20,19 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        header: () => (
-          <View className="top-safe flex-row justify-between border-b border-border bg-background px-4 py-2">
-            <Button
-              onPress={toggleColorScheme}
-              size="icon"
-              variant="ghost"
-              className="rounded-full">
-              <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-6" />
-            </Button>
-            <UserMenu />
-          </View>
-        ),
+        headerShown: false,
+        // header: () => (
+        //   <View className="top-safe flex-row justify-between border-b border-border bg-background px-4 py-2">
+        //     <Button
+        //       onPress={toggleColorScheme}
+        //       size="icon"
+        //       variant="ghost"
+        //       className="rounded-full">
+        //       <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-6" />
+        //     </Button>
+        //     <UserMenu />
+        //   </View>
+        // ),
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
@@ -48,7 +48,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="productos"
+        name="products"
         options={{
           title: 'Productos',
           tabBarIcon: ({ color, size }) => <ShoppingBagIcon size={size} color={color} />,
