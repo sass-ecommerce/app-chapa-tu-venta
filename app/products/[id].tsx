@@ -2,6 +2,7 @@ import { Product } from '@/components/product-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Archive,
   Edit,
@@ -13,77 +14,35 @@ import {
 } from 'lucide-react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Pressable,
+  ScrollView,
+  View,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-// Data dummy de productos
-const DUMMY_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Creatine Monohydrate',
-    price: 45.0,
-    originalPrice: 50.0,
-    image: {
-      uri: 'https://media.falabella.com/falabellaPE/119678928_01/w=1500,h=1500,fit=cover',
-    },
-    rating: 4.8,
-    category: 'Ropa',
-    stock: 25,
-    trending: true,
-  },
-  {
-    id: '2',
-    name: 'Women Sneakers',
-    price: 30.0,
-    image: {
-      uri: 'https://s.alicdn.com/@sc04/kf/H3b09d241e10c45598ff0769cdd8578c7P/Women-s-Comfortable-Sneakers-Air-Cushion-Thick-Soles-Red-Lace-up-Casual-Running-Shoes-Tennis-Shoes.jpg_300x300.jpg',
-    },
-    rating: 4.5,
-    category: 'Zapatos',
-    stock: 15,
-  },
-  {
-    id: '3',
-    name: 'Casual Sneakers',
-    price: 55.0,
-    originalPrice: 65.0,
-    image: {
-      uri: 'https://sc04.alicdn.com/kf/Ha1ab137ebb2b41e09cf6dbf33f5042b25.jpg',
-    },
-    rating: 4.7,
-    category: 'Zapatos',
-    stock: 8,
-    trending: true,
-  },
-  {
-    id: '4',
-    name: 'Sport Shoes',
-    price: 25.0,
-    image: {
-      uri: 'https://m.media-amazon.com/images/I/51muje9h1RL._AC_SY300_.jpg',
-    },
-    rating: 4.6,
-    category: 'Zapatos',
-    stock: 42,
-  },
-  {
-    id: '5',
-    name: 'Running Shoes',
-    price: 15.0,
-    image: {
-      uri: 'https://media.falabella.com/falabellaPE/119678928_01/w=1500,h=1500,fit=cover',
-    },
-    rating: 4.3,
-    category: 'Zapatos',
-    stock: 12,
-    trending: true,
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { getProductById } from '@/lib/api/products';
 
 export default function ProductoDetalleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [imageLoading, setImageLoading] = React.useState(true);
 
-  // Buscar el producto por ID
-  const product = DUMMY_PRODUCTS.find((p) => p.id === id);
+  // Usar React Query para obtener el producto
+  const {
+    data: product,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => getProductById(id!),
+    enabled: !!id,
+  });
 
   const handleEdit = () => {
     Alert.alert('Editar', `Editar producto: ${product?.name}`);
@@ -143,7 +102,24 @@ export default function ProductoDetalleScreen() {
   );
 
   // Si no se encuentra el producto, mostrar mensaje
-  if (!product) {
+  if (isLoading) {
+    return (
+      <>
+        <Stack.Screen
+          options={{
+            title: 'Cargando...',
+            headerBackTitle: 'Productos',
+          }}
+        />
+        <View className="flex-1 items-center justify-center bg-background p-4">
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text className="mt-4 text-muted-foreground">Cargando producto...</Text>
+        </View>
+      </>
+    );
+  }
+
+  if (error || !product) {
     return (
       <>
         <Stack.Screen
@@ -153,7 +129,9 @@ export default function ProductoDetalleScreen() {
           }}
         />
         <View className="flex-1 items-center justify-center bg-background p-4">
-          <Text className="text-lg text-muted-foreground">Producto no encontrado</Text>
+          <Text className="text-lg text-destructive">
+            {error instanceof Error ? error.message : 'Producto no encontrado'}
+          </Text>
         </View>
       </>
     );
@@ -168,10 +146,36 @@ export default function ProductoDetalleScreen() {
           headerRight: () => <MenuButton />,
         }}
       />
-      <ScrollView className="flex-1 bg-background">
-        {/* Imagen del producto */}
+      <ScrollView
+        className="flex-1 bg-background"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }>
         <View className="relative">
-          <Image source={product.image} style={{ width: '100%', height: 400 }} resizeMode="cover" />
+          {imageLoading && product.image_uri ? (
+            <View style={{ width: '100%', height: 400 }}>
+              <Skeleton className="h-full w-full" />
+            </View>
+          ) : null}
+          {product.image_uri ? (
+            <Image
+              source={{ uri: product.image_uri }}
+              style={{ width: '100%', height: 400 }}
+              resizeMode="cover"
+              onLoadStart={() => setImageLoading(true)}
+              onLoadEnd={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+            />
+          ) : (
+            <View style={{ width: '100%', height: 400 }}>
+              <Skeleton className="h-full w-full" />
+            </View>
+          )}
 
           {/* Badge de trending si aplica */}
           {product.trending && (
@@ -184,26 +188,33 @@ export default function ProductoDetalleScreen() {
           )}
 
           {/* Rating badge */}
-          <View className="absolute bottom-4 left-4">
-            <Badge variant="outline" className="flex-row items-center gap-1 bg-white">
-              <Star size={14} color="#FFD700" fill="#FFD700" />
-              <Text className="text-xs font-semibold">{product.rating}</Text>
-            </Badge>
-          </View>
+          {/* {product.rating && product.rating > 0 && (
+            <View className="absolute bottom-4 left-4">
+              <Badge variant="outline" className="flex-row items-center gap-1 bg-white">
+                <Star size={14} color="#FFD700" fill="#FFD700" />
+                <Text className="text-xs font-semibold">{product.rating.toFixed(1)}</Text>
+              </Badge>
+            </View>
+          )} */}
         </View>
 
         {/* Información del producto */}
         <View className="p-6">
           {/* Nombre y categoría */}
           <Text className="text-2xl font-bold">{product.name}</Text>
-          <Text className="mt-2 text-sm text-muted-foreground">{product.category}</Text>
+          {product.category_id && (
+            <Text className="mt-2 text-sm text-muted-foreground">{product.category_id}</Text>
+          )}
+          {product.sku && (
+            <Text className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</Text>
+          )}
 
           {/* Precio */}
           <View className="mt-4 flex-row items-center gap-3">
             <Text className="text-3xl font-bold text-primary">S/ {product.price.toFixed(2)}</Text>
-            {product.originalPrice && (
+            {product.price_list && product.price_list > product.price && (
               <Text className="text-lg text-muted-foreground line-through">
-                S/ {product.originalPrice.toFixed(2)}
+                S/ {product.price_list.toFixed(2)}
               </Text>
             )}
           </View>
@@ -213,19 +224,17 @@ export default function ProductoDetalleScreen() {
             <Text className="text-sm">
               Stock:{' '}
               <Text
-                className={`font-semibold ${product.stock < 10 ? 'text-destructive' : 'text-green-600'}`}>
-                {product.stock} unidades
+                className={`font-semibold ${product.stock_quantity < 10 ? 'text-destructive' : 'text-green-600'}`}>
+                {product.stock_quantity} unidades
               </Text>
             </Text>
           </View>
 
-          {/* Descripción (placeholder) */}
+          {/* Descripción */}
           <View className="mt-6">
             <Text className="text-lg font-semibold">Descripción</Text>
             <Text className="mt-2 leading-6 text-muted-foreground">
-              Este es un producto de alta calidad que cumple con todos los estándares de
-              fabricación. Perfecto para uso diario y diseñado para brindar comodidad y durabilidad.
-              Disponible en nuestra tienda con envío rápido.
+              {product.description || 'Sin descripción disponible'}
             </Text>
           </View>
         </View>

@@ -60,22 +60,24 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </AspectRatio>
 
-          {/* Rating y Trending */}
-          {product.rating !== undefined && product.rating > 0 && (
-            <View
-              className="absolute left-3 top-4 flex-row items-center justify-between"
-              style={{ width: '88%' }}>
+          {/* Rating */}
+          {/* {product.rating !== undefined && product.rating > 0 && (
+            <View className="absolute left-3 top-4">
               <Badge variant="outline" className="rounded-full bg-background/90 px-3 py-1.5">
                 <Icon as={Star} size={14} className="text-foreground" />
                 <Text className="ml-1 text-sm font-semibold">{product.rating.toFixed(1)}</Text>
               </Badge>
-              {product.trending && (
-                <Badge
-                  variant="outline"
-                  className="h-9 w-9 items-center justify-center rounded-full bg-background/90">
-                  <Icon as={Flame} size={18} className="text-orange-500" fill="#f97316" />
-                </Badge>
-              )}
+            </View>
+          )} */}
+
+          {/* Trending */}
+          {product.trending && (
+            <View className="absolute right-3 top-4">
+              <Badge
+                variant="outline"
+                className="h-9 w-9 items-center justify-center rounded-full bg-background/90">
+                <Icon as={Flame} size={18} className="text-orange-500" fill="#f97316" />
+              </Badge>
             </View>
           )}
         </View>
