@@ -4,76 +4,21 @@ import { Button } from '@/components/ui/button';
 import { ProductCard, type Product } from '@/components/product-card';
 import { Search, Bell, Menu, Plus, FolderPlus } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, View, ScrollView, Pressable } from 'react-native';
+import {
+  Alert,
+  View,
+  ScrollView,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProductsStore } from '@/lib/store/products-store';
+import { useQuery } from '@tanstack/react-query';
+import { getProducts } from '@/lib/api/products';
 
 // Categorías de productos
 const CATEGORIES = ['All', 'Ropa', 'Accesorios', 'Zapatos', 'Electrónica'];
-
-// Data dummy de productos
-const DUMMY_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Creatine Monohydrate',
-    price: 45.0,
-    originalPrice: 50.0,
-    image: {
-      uri: 'https://media.falabella.com/falabellaPE/119678928_01/w=1500,h=1500,fit=cover',
-    },
-    rating: 4.8,
-    category: 'Ropa',
-    stock: 25,
-    trending: true,
-  },
-  {
-    id: '2',
-    name: 'Women Sneakers',
-    price: 30.0,
-    image: {
-      uri: 'https://s.alicdn.com/@sc04/kf/H3b09d241e10c45598ff0769cdd8578c7P/Women-s-Comfortable-Sneakers-Air-Cushion-Thick-Soles-Red-Lace-up-Casual-Running-Shoes-Tennis-Shoes.jpg_300x300.jpg',
-    },
-    rating: 4.5,
-    category: 'Zapatos',
-    stock: 15,
-  },
-  {
-    id: '3',
-    name: 'Casual Sneakers',
-    price: 55.0,
-    originalPrice: 65.0,
-    image: {
-      uri: 'https://sc04.alicdn.com/kf/Ha1ab137ebb2b41e09cf6dbf33f5042b25.jpg',
-    },
-    rating: 4.7,
-    category: 'Zapatos',
-    stock: 8,
-    trending: true,
-  },
-  {
-    id: '4',
-    name: 'Sport Shoes',
-    price: 25.0,
-    image: {
-      uri: 'https://m.media-amazon.com/images/I/51muje9h1RL._AC_SY300_.jpg',
-    },
-    rating: 4.6,
-    category: 'Zapatos',
-    stock: 42,
-  },
-  {
-    id: '5',
-    name: 'Running Shoes',
-    price: 15.0,
-    image: {
-      uri: 'https://media.falabella.com/falabellaPE/119678928_01/w=1500,h=1500,fit=cover',
-    },
-    rating: 4.3,
-    category: 'Zapatos',
-    stock: 12,
-    trending: true,
-  },
-];
 
 export default function ProductosScreen() {
   // Hook personalizado de Zustand - mucho más limpio!
@@ -84,8 +29,28 @@ export default function ProductosScreen() {
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
   const toggleNotifications = useProductsStore((state) => state.toggleNotifications);
 
-  const filteredProducts = DUMMY_PRODUCTS.filter((product) => {
-    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+  // React Query para obtener productos desde la API
+  const {
+    data: products,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+    // Configuración específica para esta query (sobrescribe la global)
+    staleTime: 5 * 60 * 1000, // 5 minutos - los datos se consideran frescos
+    gcTime: 10 * 60 * 1000, // 10 minutos - tiempo en caché
+    retry: 2, // Reintentar 2 veces si falla
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: true, // Refetch al volver a la app
+    refetchOnReconnect: true, // Refetch al reconectar internet
+    // enabled: true, // Puedes desactivar la query con false
+  });
+
+  const filteredProducts = (products ?? []).filter((product) => {
+    const matchesCategory = selectedCategory === 'All' || product.category_id === selectedCategory;
     const matchesSearch =
       searchQuery === '' || product.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
@@ -93,7 +58,16 @@ export default function ProductosScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScrollView className="flex-1">
+      <ScrollView
+        className="flex-1"
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={() => refetch()}
+            colors={['#3b82f6']} // Android
+            tintColor="#3b82f6" // iOS
+          />
+        }>
         <View className="pt-12">
           {/* Search bar with menu and notification bell */}
           <View className="flex-row items-center gap-3 px-4 pb-4">
@@ -172,14 +146,46 @@ export default function ProductosScreen() {
             ))}
           </ScrollView>
 
+          {/* Loading State */}
+          {isLoading && (
+            <View className="flex-1 items-center justify-center py-20">
+              <ActivityIndicator size="large" color="#3b82f6" />
+              <Text className="mt-4 text-muted-foreground">Cargando productos...</Text>
+            </View>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <View className="mx-4 rounded-lg bg-red-50 p-4">
+              <Text className="mb-2 text-base font-semibold text-red-900">
+                Error al cargar productos
+              </Text>
+              <Text className="mb-4 text-sm text-red-700">
+                {error instanceof Error ? error.message : 'Error desconocido'}
+              </Text>
+              <Button onPress={() => refetch()} variant="outline" className="border-red-300">
+                <Text className="text-red-700">Reintentar</Text>
+              </Button>
+            </View>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !error && filteredProducts.length === 0 && (
+            <View className="flex-1 items-center justify-center py-20">
+              <Text className="text-lg text-muted-foreground">No se encontraron productos</Text>
+            </View>
+          )}
+
           {/* Products Grid */}
-          <View className="flex-row flex-wrap px-2">
-            {filteredProducts.map((product) => (
-              <View key={product.id} className="w-1/2 p-2">
-                <ProductCard product={product} />
-              </View>
-            ))}
-          </View>
+          {!isLoading && !error && filteredProducts.length > 0 && (
+            <View className="flex-row flex-wrap px-2">
+              {filteredProducts.map((product) => (
+                <View key={product.id} className="w-1/2 p-2">
+                  <ProductCard product={product} />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
