@@ -50,8 +50,37 @@ export async function getProducts(): Promise<Product[]> {
 // Get product by ID
 export async function getProductById(id: string): Promise<Product> {
   const apiProducts = await apiFetch<ApiProduct[]>(`/products?id=eq.${id}`);
+  console.log('API Products:', apiProducts);
   if (apiProducts.length === 0) {
     throw new Error('Product not found');
   }
+  return transformProduct(apiProducts[0]);
+}
+
+// Create product data type
+export interface CreateProductData {
+  name: string;
+  description?: string;
+  price: number;
+  price_list?: number;
+  price_base?: number;
+  stock_quantity: number;
+  image_uri?: string;
+  category_id?: string;
+  sku?: string;
+  rating?: number;
+  trending?: boolean;
+  is_active?: boolean;
+}
+
+// Create a new product
+export async function createProduct(data: CreateProductData): Promise<Product> {
+  const apiProducts = await apiFetch<ApiProduct[]>('/products', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      Prefer: 'return=representation',
+    },
+  });
   return transformProduct(apiProducts[0]);
 }

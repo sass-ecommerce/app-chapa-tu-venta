@@ -12,15 +12,23 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useProductsStore } from '@/lib/store/products-store';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/lib/api/products';
+import { useRouter } from 'expo-router';
 
 // Categorías de productos
 const CATEGORIES = ['All', 'Ropa', 'Accesorios', 'Zapatos', 'Electrónica'];
 
 export default function ProductosScreen() {
+  const router = useRouter();
+
   // Hook personalizado de Zustand - mucho más limpio!
   const selectedCategory = useProductsStore((state) => state.selectedCategory);
   const searchQuery = useProductsStore((state) => state.searchQuery);
@@ -71,31 +79,29 @@ export default function ProductosScreen() {
         <View className="pt-12">
           {/* Search bar with menu and notification bell */}
           <View className="flex-row items-center gap-3 px-4 pb-4">
-            {/* Menu Button with Popover */}
-            <Popover>
-              <PopoverTrigger asChild>
+            {/* Menu Button with DropdownMenu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Menu size={22} color="#666" />
                 </Pressable>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-56 p-0">
-                <View>
-                  <Pressable
-                    onPress={() => Alert.alert('Crear Producto', 'Navegar a crear producto')}
-                    className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-                    <Plus size={18} color="#666" />
-                    <Text className="text-base">Crear producto</Text>
-                  </Pressable>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem
+                  onPress={() => router.push('/products/create')}
+                  className="flex-row items-center gap-3">
+                  <Plus size={18} color="#666" />
+                  <Text className="text-base">Crear producto</Text>
+                </DropdownMenuItem>
 
-                  <Pressable
-                    onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
-                    className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-                    <FolderPlus size={18} color="#666" />
-                    <Text className="text-base">Crear colección</Text>
-                  </Pressable>
-                </View>
-              </PopoverContent>
-            </Popover>
+                <DropdownMenuItem
+                  onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
+                  className="flex-row items-center gap-3">
+                  <FolderPlus size={18} color="#666" />
+                  <Text className="text-base">Crear colección</Text>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <View className="relative flex-1">
               <Input
