@@ -25,26 +25,26 @@ const LOGO_STYLE: ImageStyle = {
 export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
-  
+
   // Datos de ventas
   const salesData = {
     current: 100, // Número de ventas del día
     goal: 1000, // Objetivo de ventas
   };
-  
+
   // Calcular el porcentaje (0-100)
   const salesPercentage = (salesData.current / salesData.goal) * 100;
-  
+
   // Estado para animación del contador
   const [animatedSales, setAnimatedSales] = React.useState(0);
-  
+
   // Animar el contador de ventas
   React.useEffect(() => {
     const duration = 1500; // duración de la animación en ms
     const steps = 60; // número de pasos
     const increment = salesData.current / steps;
     const stepDuration = duration / steps;
-    
+
     let currentStep = 0;
     const timer = setInterval(() => {
       currentStep++;
@@ -55,7 +55,7 @@ export default function HomeScreen() {
         clearInterval(timer);
       }
     }, stepDuration);
-    
+
     return () => clearInterval(timer);
   }, [salesData.current]);
 
