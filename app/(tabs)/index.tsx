@@ -8,6 +8,7 @@ import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View } from 'react-native';
 import { Switch } from '@/components/ui/switch';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const STORE_LOGO = require('@/assets/images/tienda.png');
 
@@ -25,6 +26,15 @@ export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
 
+  // Datos de ventas
+  const salesData = {
+    current: 100, // Número de ventas del día
+    goal: 1000, // Objetivo de ventas
+  };
+
+  // Calcular el porcentaje (0-100)
+  const salesPercentage = (salesData.current / salesData.goal) * 100;
+
   return (
     <View className="flex-1 gap-8 p-4">
       {/* Header con saludo y logo */}
@@ -34,6 +44,30 @@ export default function HomeScreen() {
           <Text className="text-2xl font-bold">{user?.firstName || 'Cesar'}</Text>
         </View>
         <Image source={STORE_LOGO} style={LOGO_STYLE} />
+      </View>
+
+      {/* Progreso Circular de Ventas */}
+      <View className="items-center justify-center">
+        <AnimatedCircularProgress
+          size={200}
+          width={15}
+          fill={salesPercentage}
+          tintColor="#10b981"
+          backgroundColor="#e5e7eb"
+          rotation={0}
+          lineCap="round"
+          duration={1500}>
+          {() => (
+            <View className="items-center">
+              <Text className="text-4xl font-bold text-foreground">{salesData.current}</Text>
+              <Text className="text-sm text-muted-foreground">de {salesData.goal}</Text>
+              <Text className="mt-2 text-xs font-medium text-primary">ventas del día</Text>
+              <Text className="mt-1 text-xs text-muted-foreground">
+                {salesPercentage.toFixed(1)}% completado
+              </Text>
+            </View>
+          )}
+        </AnimatedCircularProgress>
       </View>
 
       {/* Actividades */}
