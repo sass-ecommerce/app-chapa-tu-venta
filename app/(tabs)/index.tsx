@@ -25,15 +25,39 @@ const LOGO_STYLE: ImageStyle = {
 export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
-
+  
   // Datos de ventas
   const salesData = {
     current: 100, // Número de ventas del día
     goal: 1000, // Objetivo de ventas
   };
-
+  
   // Calcular el porcentaje (0-100)
   const salesPercentage = (salesData.current / salesData.goal) * 100;
+  
+  // Estado para animación del contador
+  const [animatedSales, setAnimatedSales] = React.useState(0);
+  
+  // Animar el contador de ventas
+  React.useEffect(() => {
+    const duration = 1500; // duración de la animación en ms
+    const steps = 60; // número de pasos
+    const increment = salesData.current / steps;
+    const stepDuration = duration / steps;
+    
+    let currentStep = 0;
+    const timer = setInterval(() => {
+      currentStep++;
+      if (currentStep <= steps) {
+        setAnimatedSales(Math.round(increment * currentStep));
+      } else {
+        setAnimatedSales(salesData.current);
+        clearInterval(timer);
+      }
+    }, stepDuration);
+    
+    return () => clearInterval(timer);
+  }, [salesData.current]);
 
   return (
     <View className="flex-1 gap-8 p-4">
@@ -59,7 +83,7 @@ export default function HomeScreen() {
           duration={1500}>
           {() => (
             <View className="items-center">
-              <Text className="text-4xl font-bold text-foreground">{salesData.current}</Text>
+              <Text className="text-4xl font-bold text-foreground">{animatedSales}</Text>
               <Text className="text-sm text-muted-foreground">de {salesData.goal}</Text>
               <Text className="mt-2 text-xs font-medium text-primary">ventas del día</Text>
               <Text className="mt-1 text-xs text-muted-foreground">
