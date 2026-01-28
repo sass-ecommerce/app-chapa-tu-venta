@@ -3,10 +3,10 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useUser } from '@clerk/clerk-expo';
 import { Link } from 'expo-router';
-import { Clock, Flame, Flag, Navigation, XIcon } from 'lucide-react-native';
+import { Clock, Flame, Flag, Navigation, XIcon, Rocket } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { Image, type ImageStyle, View } from 'react-native';
+import { Image, type ImageStyle, View, Animated } from 'react-native';
 import { Switch } from '@/components/ui/switch';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
@@ -28,7 +28,7 @@ export default function HomeScreen() {
 
   // Datos de ventas
   const salesData = {
-    current: 100, // Número de ventas del día
+    current: 500, // Número de ventas del día
     goal: 1000, // Objetivo de ventas
   };
 
@@ -37,6 +37,9 @@ export default function HomeScreen() {
 
   // Estado para animación del contador
   const [animatedSales, setAnimatedSales] = React.useState(0);
+
+  // Animación del cohete
+  const rocketScale = React.useRef(new Animated.Value(1)).current;
 
   // Animar el contador de ventas
   React.useEffect(() => {
@@ -58,6 +61,22 @@ export default function HomeScreen() {
 
     return () => clearInterval(timer);
   }, [salesData.current]);
+
+  // Animar el cohete (crecer y decrecer)
+  React.useEffect(() => {
+    Animated.sequence([
+      Animated.timing(rocketScale, {
+        toValue: 1.2,
+        duration: 750,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rocketScale, {
+        toValue: 1,
+        duration: 750,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
     <View className="flex-1 gap-8 p-4">
@@ -83,7 +102,10 @@ export default function HomeScreen() {
           duration={1500}>
           {() => (
             <View className="items-center">
-              <Text className="text-4xl font-bold text-foreground">{animatedSales}</Text>
+              <Animated.View style={{ transform: [{ scale: rocketScale }] }}>
+                <Icon as={Rocket} className="text-primary" size={32} />
+              </Animated.View>
+              <Text className="mt-2 text-4xl font-bold text-foreground">{animatedSales}</Text>
               <Text className="text-sm text-muted-foreground">de {salesData.goal}</Text>
               <Text className="mt-2 text-xs font-medium text-primary">ventas del día</Text>
               <Text className="mt-1 text-xs text-muted-foreground">
