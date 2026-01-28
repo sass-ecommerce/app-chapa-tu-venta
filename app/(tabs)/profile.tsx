@@ -18,14 +18,95 @@ import {
   HelpCircleIcon,
   FileTextIcon,
   PencilIcon,
+  CameraIcon,
+  ImageIcon,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function PerfilScreen() {
   const { user } = useUser();
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
+  const [imageUri, setImageUri] = React.useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [showImageDialog, setShowImageDialog] = React.useState(false);
+
+  const pickImageFromGallery = async () => {
+    setShowImageDialog(false);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    setShowImageDialog(false);
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara para tomar fotos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    if (!user) return;
+
+    try {
+      setIsUploadingImage(true);
+      setImageUri(uri);
+
+      // Convertir la imagen a base64
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+
+        // Actualizar imagen en Clerk
+        await user.setProfileImage({ file: base64data });
+
+        console.log('✅ [Profile] Image uploaded successfully');
+        Alert.alert('Éxito', 'Foto de perfil actualizada');
+      };
+
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('❌ [Profile] Error uploading image:', error);
+      Alert.alert('Error', 'No se pudo actualizar la foto de perfil');
+      setImageUri(null);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const userInitials = React.useMemo(() => {
     const name = user?.fullName || user?.emailAddresses[0]?.emailAddress || 'U';
@@ -77,12 +158,23 @@ export default function PerfilScreen() {
         {/* Header con Avatar y Info del Usuario */}
         <Card>
           <CardHeader className="items-center gap-4 pb-6">
-            <Avatar alt={`${user?.fullName || 'Usuario'}'s avatar`} className="size-24">
-              <AvatarImage source={user?.imageUrl ? { uri: user.imageUrl } : undefined} />
-              <AvatarFallback>
-                <Text className="text-2xl">{userInitials}</Text>
-              </AvatarFallback>
-            </Avatar>
+            <TouchableOpacity onPress={() => setShowImageDialog(true)} disabled={isUploadingImage}>
+              <View className="relative">
+                <Avatar alt={`${user?.fullName || 'Usuario'}'s avatar`} className="size-24">
+                  <AvatarImage source={{ uri: imageUri || user?.imageUrl }} />
+                  <AvatarFallback>
+                    <Text className="text-2xl">{userInitials}</Text>
+                  </AvatarFallback>
+                </Avatar>
+                <View className="absolute bottom-0 right-0 rounded-full bg-primary p-2">
+                  {isUploadingImage ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <Icon as={CameraIcon} className="size-4 text-primary-foreground" />
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
             <View className="items-center gap-1">
               <Text className="text-center text-2xl font-semibold">
                 {user?.fullName || 'Usuario'}
@@ -231,6 +323,30 @@ export default function PerfilScreen() {
           <Text className="text-xs text-muted-foreground">Versión 1.0.0</Text>
         </View>
       </View>
+
+      <AlertDialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cambiar foto de perfil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Elige una opción para actualizar tu foto de perfil
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancelar</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction onPress={pickImageFromGallery}>
+              <Icon as={ImageIcon} className="mr-2 size-4" />
+              <Text>Galería</Text>
+            </AlertDialogAction>
+            <AlertDialogAction onPress={takePhoto}>
+              <Icon as={CameraIcon} className="mr-2 size-4" />
+              <Text>Cámara</Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ScrollView>
   );
 }
