@@ -10,10 +10,7 @@ import { Image, Platform, View, type ImageSourcePropType } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
-type SocialConnectionStrategy = Extract<
-  StartSSOFlowParams['strategy'],
-  'oauth_google' | 'oauth_github' | 'oauth_apple'
->;
+type SocialConnectionStrategy = Extract<StartSSOFlowParams['strategy'], 'oauth_google'>;
 
 const SOCIAL_CONNECTION_STRATEGIES: {
   type: SocialConnectionStrategy;
@@ -21,19 +18,9 @@ const SOCIAL_CONNECTION_STRATEGIES: {
   useTint?: boolean;
 }[] = [
   {
-    type: 'oauth_apple',
-    source: { uri: 'https://img.clerk.com/static/apple.png?width=160' },
-    useTint: true,
-  },
-  {
     type: 'oauth_google',
     source: { uri: 'https://img.clerk.com/static/google.png?width=160' },
     useTint: false,
-  },
-  {
-    type: 'oauth_github',
-    source: { uri: 'https://img.clerk.com/static/github.png?width=160' },
-    useTint: true,
   },
 ];
 
@@ -56,7 +43,8 @@ export function SocialConnections() {
 
         // If sign in was successful, set the active session
         if (createdSessionId && setActive) {
-          setActive({ session: createdSessionId });
+          await setActive({ session: createdSessionId });
+          router.replace('/(onboarding)/register-store');
           return;
         }
 
