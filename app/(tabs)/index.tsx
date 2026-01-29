@@ -16,7 +16,8 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
 
   React.useEffect(() => {
-    if (user?.unsafeMetadata?.step === ONBOARDING_STEPS.REGISTER_STORE) {
+    console.log('User metadata in index:', user?.unsafeMetadata);
+    if (user?.unsafeMetadata?.lastStep === ONBOARDING_STEPS.REGISTER_STORE) {
       router.replace('/(onboarding)/register-store');
     }
   }, [user]);

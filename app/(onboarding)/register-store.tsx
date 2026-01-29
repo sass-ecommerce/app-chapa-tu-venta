@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Stack, router } from 'expo-router';
+import { router } from 'expo-router';
 import * as React from 'react';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
@@ -12,6 +12,9 @@ import { Picker } from '@react-native-picker/picker';
 import { useColorScheme } from 'nativewind';
 import { useUser } from '@clerk/clerk-expo';
 import { ONBOARDING_STEPS } from '@/lib/constants';
+import { createStore, getStoreById } from '@/lib/api/stores';
+import { updateUserById } from '@/lib/api/users';
+import { Alert } from 'react-native';
 
 const CATEGORIAS = [
   { value: '', label: 'Selecciona una categoría' },
@@ -30,25 +33,7 @@ const CATEGORIAS = [
 export default function RegisterStoreScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
-
-  React.useEffect(() => {
-    const updateUserMetadata = async () => {
-      if (user) {
-        try {
-          await user.update({
-            unsafeMetadata: {
-              ...user.unsafeMetadata,
-              lastStep: ONBOARDING_STEPS.REGISTER_STORE,
-            },
-          });
-        } catch (error) {
-          console.error('Error actualizando metadata:', error);
-        }
-      }
-    };
-
-    updateUserMetadata();
-  }, [user]);
+  const [isLoadingStore, setIsLoadingStore] = React.useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -58,11 +43,106 @@ export default function RegisterStoreScreen() {
       categoria: '',
     },
     onSubmit: async ({ value }) => {
-      console.log('Tienda registrada:', value);
-      // Aquí puedes guardar la información y navegar a la siguiente pantalla
-      router.push('/'); // O a donde necesites
+      try {
+        // Crear la tienda en Supabase
+        const storeData = {
+          name: value.nombreTienda,
+          owner_email: user?.emailAddresses[0]?.emailAddress || null,
+          ruc: value.ruc ? parseInt(value.ruc) : null,
+          plan: null,
+          settings: null,
+        };
+
+        const [newStore] = await createStore(storeData);
+
+        if (!user) throw new Error('Usuario no autenticado.');
+
+        await user.update({
+          unsafeMetadata: {
+            ...user.unsafeMetadata,
+            store: {
+              id: newStore.id,
+              slug: newStore.slug,
+            },
+          },
+        });
+
+        console.log('Tienda creada exitosamente:', newStore);
+
+        // Actualizar el usuario con el store_id
+        const { user: userCustom } =
+          (user?.publicMetadata as { user: { slug: string; id: number } }) || {};
+
+        console.log('Datos del usuario:', userCustom);
+
+        const { slug, id } = userCustom;
+
+        if (!slug) {
+          throw new Error('El slug del usuario no está disponible.');
+        }
+
+        const result = await updateUserById(id, {
+          store_id: newStore.id,
+        });
+
+        console.log('Usuario actualizado con store_id:', result);
+        await user.update({
+          unsafeMetadata: {
+            ...user.unsafeMetadata,
+            lastStep: '',
+          },
+        });
+
+        router.replace('/(tabs)');
+      } catch (error) {
+        console.error('Error al crear la tienda:', error);
+        Alert.alert('Error', 'No se pudo crear la tienda. Por favor, intenta de nuevo.', [
+          { text: 'OK' },
+        ]);
+      }
     },
   });
+
+  // Cargar datos de la tienda si existe en unsafeMetadata
+  React.useEffect(() => {
+    const loadStoreData = async () => {
+      if (!user) return;
+
+      // Actualizar metadata con el último paso
+      try {
+        await user.update({
+          unsafeMetadata: {
+            ...user.unsafeMetadata,
+            lastStep: ONBOARDING_STEPS.REGISTER_STORE,
+          },
+        });
+      } catch (error) {
+        console.error('Error actualizando metadata:', error);
+      }
+
+      // Verificar si ya existe una tienda en unsafeMetadata
+      const storeInMetadata = (user.unsafeMetadata as { store?: { id: number } })?.store;
+
+      if (storeInMetadata?.id) {
+        setIsLoadingStore(true);
+        try {
+          const existingStore = await getStoreById(storeInMetadata.id);
+
+          // Autocompletar el formulario con los datos de la tienda
+          form.setFieldValue('nombreTienda', existingStore.name);
+          form.setFieldValue('ruc', existingStore.ruc ? String(existingStore.ruc) : '');
+
+          console.log('Datos de tienda cargados:', existingStore);
+        } catch (error) {
+          console.error('Error cargando datos de la tienda:', error);
+        } finally {
+          setIsLoadingStore(false);
+        }
+      }
+    };
+
+    loadStoreData();
+  }, [user]);
 
   return (
     <>
@@ -83,6 +163,11 @@ export default function RegisterStoreScreen() {
               </CardDescription>
             </CardHeader>
             <CardContent className="gap-6">
+              {isLoadingStore && (
+                <Text className="text-center text-sm text-muted-foreground">
+                  Cargando datos de la tienda...
+                </Text>
+              )}
               <form.Field
                 name="nombreTienda"
                 validators={{
@@ -132,7 +217,7 @@ export default function RegisterStoreScreen() {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <Text className="text-sm font-medium text-destructive">
-                        {String(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0]?.message)}
                       </Text>
                     )}
                   </View>
@@ -164,7 +249,7 @@ export default function RegisterStoreScreen() {
                     />
                     {field.state.meta.errors.length > 0 && (
                       <Text className="text-sm font-medium text-destructive">
-                        {String(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0]?.message)}
                       </Text>
                     )}
                   </View>
@@ -191,7 +276,7 @@ export default function RegisterStoreScreen() {
                     </View>
                     {field.state.meta.errors.length > 0 && (
                       <Text className="text-sm font-medium text-destructive">
-                        {String(field.state.meta.errors[0])}
+                        {String(field.state.meta.errors[0]?.message)}
                       </Text>
                     )}
                   </View>
