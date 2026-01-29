@@ -7,11 +7,19 @@ import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { ONBOARDING_STEPS } from '@/lib/constants';
 
 export default function HomeScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
   const [refreshing, setRefreshing] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user?.unsafeMetadata?.step === ONBOARDING_STEPS.REGISTER_STORE) {
+      router.replace('/(onboarding)/register-store');
+    }
+  }, [user]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);

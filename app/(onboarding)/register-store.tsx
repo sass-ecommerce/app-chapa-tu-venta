@@ -10,6 +10,8 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Picker } from '@react-native-picker/picker';
 import { useColorScheme } from 'nativewind';
+import { useUser } from '@clerk/clerk-expo';
+import { ONBOARDING_STEPS } from '@/lib/constants';
 
 const CATEGORIAS = [
   { value: '', label: 'Selecciona una categoría' },
@@ -27,6 +29,26 @@ const CATEGORIAS = [
 
 export default function RegisterStoreScreen() {
   const { colorScheme } = useColorScheme();
+  const { user } = useUser();
+
+  React.useEffect(() => {
+    const updateUserMetadata = async () => {
+      if (user) {
+        try {
+          await user.update({
+            unsafeMetadata: {
+              ...user.unsafeMetadata,
+              lastStep: ONBOARDING_STEPS.REGISTER_STORE,
+            },
+          });
+        } catch (error) {
+          console.error('Error actualizando metadata:', error);
+        }
+      }
+    };
+
+    updateUserMetadata();
+  }, [user]);
 
   const form = useForm({
     defaultValues: {
@@ -44,12 +66,6 @@ export default function RegisterStoreScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          title: 'Registra tu tienda',
-          headerShown: true,
-        }}
-      />
       <ScrollView className="flex-1">
         <View className="p-4">
           <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
