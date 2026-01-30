@@ -2,7 +2,20 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useUser } from '@clerk/clerk-expo';
-import { Search, Bell, Plus, MoreVertical, Apple, ShoppingBag } from 'lucide-react-native';
+import {
+  Search,
+  Bell,
+  Plus,
+  MoreVertical,
+  Apple,
+  ShoppingBag,
+  Package,
+  CreditCard,
+  Truck,
+  Shirt,
+  Footprints,
+  Watch,
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
@@ -30,47 +43,55 @@ export default function HomeScreen() {
     }, 1500);
   }, []);
 
-  const upcomingPayments = [
+  const recentProducts = [
     {
       id: 1,
-      name: 'Adobe Premium',
-      amount: 30,
-      daysLeft: 2,
-      icon: 'A',
+      name: 'Zapatillas Nike Air',
+      price: 250.0,
+      stock: 15,
+      icon: <Icon as={Footprints} className="text-foreground" size={32} />,
       color: '#7c3aed',
     },
     {
       id: 2,
-      name: 'Apple Premium',
-      amount: 30,
-      daysLeft: 2,
-      icon: <Icon as={Apple} className="text-foreground" size={32} />,
+      name: 'Polo Adidas',
+      price: 89.5,
+      stock: 32,
+      icon: <Icon as={Shirt} className="text-foreground" size={32} />,
       color: '#ffffff',
       isDark: colorScheme === 'dark' ? false : true,
+    },
+    {
+      id: 3,
+      name: 'Reloj Casio',
+      price: 180.0,
+      stock: 8,
+      icon: <Icon as={Watch} className="text-foreground" size={32} />,
+      color: '#7c3aed',
     },
   ];
 
   const transactions = [
     {
       id: 1,
-      name: 'Apple Inc.',
+      name: 'Venta - Zapatillas Nike',
       date: '21 Sep, 03:02 PM',
-      amount: -230.5,
-      icon: <Icon as={Apple} className="text-foreground" size={24} />,
+      amount: 250.0,
+      icon: <Icon as={ShoppingBag} className="text-foreground" size={24} />,
     },
     {
       id: 2,
-      name: 'Adobe',
+      name: 'Venta - Polo Adidas',
       date: '21 Sep, 03:22 PM',
-      amount: -130.5,
-      icon: 'A',
+      amount: 89.5,
+      icon: <Icon as={Package} className="text-foreground" size={24} />,
     },
     {
       id: 3,
-      name: 'Amazon',
-      date: '21 Sep, 02:02',
-      amount: -20.5,
-      icon: 'a',
+      name: 'Venta - Pantalón Deportivo',
+      date: '21 Sep, 02:02 PM',
+      amount: 120.0,
+      icon: <Icon as={ShoppingBag} className="text-foreground" size={24} />,
     },
   ];
 
@@ -89,7 +110,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View className="mb-6 flex-row items-center justify-between pt-12">
           <View>
-            <Text className="text-base font-normal text-muted-foreground">Hello,</Text>
+            <Text className="text-base font-normal text-muted-foreground">Hola,</Text>
             <Text className="text-2xl font-bold text-foreground">
               {user?.firstName || 'Siyam'} {user?.lastName || 'Ahmed'}!
             </Text>
@@ -112,8 +133,8 @@ export default function HomeScreen() {
           className="mb-6 overflow-hidden rounded-3xl p-6">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="mb-1 text-sm text-white/80">Current Balance</Text>
-              <Text className="text-4xl font-bold text-white">$4,570.80</Text>
+              <Text className="mb-1 text-sm text-white/80">Saldo Actual</Text>
+              <Text className="text-4xl font-bold text-white">S/ 4,570.80</Text>
             </View>
             <TouchableOpacity className="h-12 w-12 items-center justify-center rounded-full bg-white/30">
               <Icon as={Plus} className="text-white" size={24} />
@@ -121,70 +142,66 @@ export default function HomeScreen() {
           </View>
         </LinearGradient>
 
-        {/* Upcoming Payment Section */}
+        {/* Recent Products Section */}
         <View className="mb-6">
           <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-foreground">Upcoming payment</Text>
+            <Text className="text-lg font-bold text-foreground">Últimos Productos Agregados</Text>
             <TouchableOpacity>
-              <Text className="text-sm text-muted-foreground">See all</Text>
+              <Text className="text-sm text-muted-foreground">Ver todo</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-3">
-            {upcomingPayments.map((payment, index) => (
+            {recentProducts.map((product, index) => (
               <View
-                key={payment.id}
+                key={product.id}
                 style={{
-                  backgroundColor: payment.color,
-                  marginRight: index < upcomingPayments.length - 1 ? 12 : 0,
+                  backgroundColor: product.color,
+                  marginRight: index < recentProducts.length - 1 ? 12 : 0,
+                  borderWidth: product.isDark ? 1 : 0,
+                  borderColor: product.isDark ? '#e5e7eb' : 'transparent',
                 }}
                 className="w-40 rounded-2xl p-4">
                 <View className="mb-4 flex-row items-start justify-between">
-                  {typeof payment.icon === 'string' ? (
-                    <View className="h-12 w-12 items-center justify-center rounded-full bg-white/30">
-                      <Text className="text-2xl font-bold text-white">{payment.icon}</Text>
-                    </View>
-                  ) : (
-                    <View
-                      className={`h-12 w-12 items-center justify-center rounded-full ${
-                        payment.isDark ? 'bg-muted' : 'bg-white/30'
-                      }`}>
-                      {payment.icon}
-                    </View>
-                  )}
+                  <View
+                    className={`h-12 w-12 items-center justify-center rounded-full ${
+                      product.isDark ? 'bg-muted' : 'bg-white/30'
+                    }`}>
+                    {product.icon}
+                  </View>
                   <TouchableOpacity>
                     <Icon
                       as={MoreVertical}
-                      className={payment.isDark ? 'text-foreground' : 'text-white'}
+                      className={product.isDark ? 'text-foreground' : 'text-white'}
                       size={20}
                     />
                   </TouchableOpacity>
                 </View>
                 <Text
                   className={`mb-1 text-base font-semibold ${
-                    payment.isDark ? 'text-foreground' : 'text-white'
+                    product.isDark ? 'text-foreground' : 'text-white'
                   }`}>
-                  {payment.name}
+                  {product.name}
                 </Text>
                 <Text
-                  className={`text-sm ${payment.isDark ? 'text-muted-foreground' : 'text-white/80'}`}>
-                  ${payment.amount}/month
+                  className={`text-sm ${product.isDark ? 'text-muted-foreground' : 'text-white/80'}`}>
+                  S/ {product.price.toFixed(2)}
                 </Text>
                 <Text
-                  className={`text-xs ${payment.isDark ? 'text-muted-foreground' : 'text-white/60'}`}>
-                  {payment.daysLeft} days left
+                  className={`text-xs ${product.isDark ? 'text-muted-foreground' : 'text-white/60'}`}>
+                  Stock: {product.stock} unidades
                 </Text>
               </View>
             ))}
           </ScrollView>
         </View>
 
-        {/* Recent Transactions Section */}
+        {/* Recent Sales Section */}
         <View>
           <View className="mb-4 flex-row items-center justify-between">
-            <Text className="text-lg font-bold text-foreground">Recent Transactions</Text>
+            <Text className="text-lg font-bold text-foreground">Últimas Ventas</Text>
             <TouchableOpacity>
-              <Text className="text-sm text-muted-foreground">See all</Text>
+              <Text className="text-sm text-muted-foreground">Ver todo</Text>
             </TouchableOpacity>
           </View>
 
@@ -210,8 +227,8 @@ export default function HomeScreen() {
                     <Text className="text-sm text-muted-foreground">{transaction.date}</Text>
                   </View>
                 </View>
-                <Text className="text-base font-semibold text-red-500">
-                  ${transaction.amount.toFixed(2)}
+                <Text className="text-base font-semibold text-green-500">
+                  S/ {transaction.amount.toFixed(2)}
                 </Text>
               </View>
             ))}
