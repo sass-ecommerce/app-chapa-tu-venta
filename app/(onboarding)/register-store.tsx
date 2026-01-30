@@ -10,7 +10,7 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Picker } from '@react-native-picker/picker';
 import { useColorScheme } from 'nativewind';
-import { useUser } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { ONBOARDING_STEPS } from '@/lib/constants';
 import { createStore, getStoreById } from '@/lib/api/stores';
 import { updateUserById } from '@/lib/api/users';
@@ -33,6 +33,7 @@ const CATEGORIAS = [
 export default function RegisterStoreScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
+  const { signOut } = useAuth();
   const [isLoadingStore, setIsLoadingStore] = React.useState(false);
 
   const form = useForm({
@@ -285,9 +286,24 @@ export default function RegisterStoreScreen() {
 
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
-                  <Button className="w-full" onPress={form.handleSubmit} disabled={!canSubmit}>
-                    <Text>{isSubmitting ? 'Registrando...' : 'Registrar tienda'}</Text>
-                  </Button>
+                  <>
+                    <Button className="w-full" onPress={form.handleSubmit} disabled={!canSubmit}>
+                      <Text>{isSubmitting ? 'Registrando...' : 'Registrar tienda'}</Text>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onPress={async () => {
+                        try {
+                          await signOut();
+                          router.replace('/(auth)/sign-in');
+                        } catch (error) {
+                          console.error('Error al cerrar sesión:', error);
+                        }
+                      }}>
+                      <Text>Cerrar sesión</Text>
+                    </Button>
+                  </>
                 )}
               </form.Subscribe>
             </CardContent>

@@ -74,7 +74,6 @@ function Routes() {
         <Stack.Screen name="(onboarding)/owner-info" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)/register-store" options={{ headerShown: false }} />
         <Stack.Screen name="products" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
       </Stack.Protected>
 
       {/* Screens outside the guards are accessible to everyone (e.g. not found) */}
