@@ -20,10 +20,13 @@ import {
   PencilIcon,
   CameraIcon,
   ImageIcon,
+  MoonIcon,
+  SunIcon,
 } from 'lucide-react-native';
 import * as React from 'react';
 import { View, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useColorScheme } from 'nativewind';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +41,7 @@ import {
 export default function PerfilScreen() {
   const { user } = useUser();
   const { signOut } = useAuth();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const [imageUri, setImageUri] = React.useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
@@ -152,6 +156,12 @@ export default function PerfilScreen() {
     ]);
   };
 
+  const handleToggleTheme = () => {
+    const newScheme = colorScheme === 'dark' ? 'light' : 'dark';
+    setColorScheme(newScheme);
+    console.log(`🎨 [Profile] Theme changed to: ${newScheme}`);
+  };
+
   return (
     <ScrollView className="flex-1 bg-background">
       <View className="gap-6 p-4 pt-12">
@@ -250,6 +260,22 @@ export default function PerfilScreen() {
             <Text className="text-lg font-semibold">Configuración</Text>
           </CardHeader>
           <CardContent className="gap-1">
+            <Button
+              variant="ghost"
+              className="h-14 justify-start gap-3 px-3"
+              onPress={handleToggleTheme}>
+              <Icon
+                as={colorScheme === 'dark' ? SunIcon : MoonIcon}
+                className="size-5 text-muted-foreground"
+              />
+              <Text className="flex-1 text-left">
+                {colorScheme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
+              </Text>
+              <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" />
+            </Button>
+
+            <Separator />
+
             <Button
               variant="ghost"
               className="h-14 justify-start gap-3 px-3"
