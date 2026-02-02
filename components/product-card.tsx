@@ -22,12 +22,19 @@ export function ProductCard({ product }: ProductCardProps) {
     router.push(`/products/${product.slug}`);
   };
 
+  // Helper function to get stock badge color based on stock level
+  const getStockColor = (stock: number) => {
+    if (stock > 10) return 'bg-green-500';
+    if (stock >= 3) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
-    <Pressable onPress={handlePress}>
-      <Card className="w-full overflow-hidden rounded-2xl bg-card">
+    <Pressable onPress={handlePress} className="active:opacity-90">
+      <Card className="w-full overflow-hidden rounded-xl bg-card">
         <View className="relative">
           {/* Imagen del producto */}
-          <AspectRatio ratio={1} className="overflow-hidden">
+          <AspectRatio ratio={4 / 3} className="overflow-hidden">
             {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
             {product.imageUri ? (
               <Image
@@ -55,35 +62,40 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Trending */}
           {product.trending && (
-            <View className="absolute right-3 top-4">
+            <View className="absolute right-2 top-2">
               <Badge
                 variant="outline"
-                className="h-9 w-9 items-center justify-center rounded-full bg-background/90">
-                <Icon as={Flame} size={18} className="text-orange-500" fill="#f97316" />
+                className="h-7 w-7 items-center justify-center rounded-full bg-background/90">
+                <Icon as={Flame} size={14} className="text-orange-500" fill="#f97316" />
               </Badge>
             </View>
           )}
         </View>
 
         {/* Info del producto */}
-        <View className="px-4 pb-4">
-          <Text className="text-lg font-semibold text-foreground" numberOfLines={1}>
+        <View className="gap-1 px-3 pb-3 pt-2">
+          <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
             {product.name}
           </Text>
-          <Text className="mt-1 text-xs text-muted-foreground">
-            Stock: {product.stockQuantity} unidades
-          </Text>
-          <View className="mt-2 flex-row items-center justify-between">
-            <View>
-              <Text className="text-xl font-bold text-foreground">
-                S/ {product.price.toFixed(2)}
+
+          {/* Stock badge with color indicator */}
+          <View className="flex-row items-center gap-1.5">
+            <View className={`h-1.5 w-1.5 rounded-full ${getStockColor(product.stockQuantity)}`} />
+            <Text className="text-xs text-muted-foreground">
+              {product.stockQuantity} disponibles
+            </Text>
+          </View>
+
+          {/* Prices inline */}
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-base font-bold text-foreground">
+              S/ {product.price.toFixed(2)}
+            </Text>
+            {product.priceList && product.priceList > product.price && (
+              <Text className="text-xs text-muted-foreground line-through">
+                S/ {product.priceList.toFixed(2)}
               </Text>
-              {product.priceList && product.priceList > product.price && (
-                <Text className="text-sm text-muted-foreground line-through">
-                  S/ {product.priceList.toFixed(2)}
-                </Text>
-              )}
-            </View>
+            )}
           </View>
         </View>
       </Card>

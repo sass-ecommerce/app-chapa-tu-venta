@@ -168,9 +168,9 @@ export default function ProductosScreen() {
 
           {/* Products Grid */}
           {!isLoading && !error && filteredProducts.length > 0 && (
-            <View className="flex-row flex-wrap px-2">
+            <View className="flex-row flex-wrap px-1.5">
               {filteredProducts.map((product) => (
-                <View key={product.slug} className="w-1/2 p-2">
+                <View key={product.slug} className="w-1/2 p-1.5">
                   <ProductCard product={product} />
                 </View>
               ))}

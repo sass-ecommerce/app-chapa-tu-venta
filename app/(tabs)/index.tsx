@@ -158,14 +158,14 @@ export default function HomeScreen() {
               {user?.firstName || 'Siyam'} {user?.lastName || 'Ahmed'}!
             </Text>
           </View>
-          <View className="flex-row gap-3">
+          {/* <View className="flex-row gap-3">
             <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-muted">
               <Icon as={Search} className="text-foreground" size={20} />
             </TouchableOpacity>
             <TouchableOpacity className="h-10 w-10 items-center justify-center rounded-full bg-muted">
               <Icon as={Bell} className="text-foreground" size={20} />
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
 
         {/* Sales Summary Card with Donut Chart */}
