@@ -1,19 +1,29 @@
 // API Configuration
 export const API_CONFIG = {
-  baseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
-  apiKey: process.env.EXPO_PUBLIC_SUPABASE_API_KEY!,
+  baseUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
   authToken: process.env.EXPO_PUBLIC_SUPABASE_AUTH_TOKEN!,
+  // Kept for backwards compatibility with other endpoints
+  supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  supabaseKey: process.env.EXPO_PUBLIC_SUPABASE_API_KEY!,
 };
 
-// Base fetch function with headers
-export async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_CONFIG.baseUrl}${endpoint}`;
+// Base fetch function with headers and query params support
+export async function apiFetch<T>(
+  endpoint: string,
+  options?: RequestInit,
+  queryParams?: Record<string, string>
+): Promise<T> {
+  // Construct URL with query params
+  let url = `${API_CONFIG.baseUrl}${endpoint}`;
+
+  if (queryParams) {
+    const params = new URLSearchParams(queryParams);
+    url += `?${params.toString()}`;
+  }
 
   const response = await fetch(url, {
     ...options,
     headers: {
-      apikey: API_CONFIG.apiKey,
-      Authorization: `Bearer ${API_CONFIG.authToken}`,
       'Content-Type': 'application/json',
       ...options?.headers,
     },

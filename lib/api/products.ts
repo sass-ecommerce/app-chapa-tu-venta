@@ -1,86 +1,100 @@
 import { apiFetch } from './config';
-import type { Product } from '@/components/product-card';
 
-// API Response types (coincide con el schema de Supabase)
-export interface ApiProduct {
-  id: number;
-  store_id?: number;
-  category_id?: string;
-  sku?: string;
-  name: string;
-  description?: string;
-  price: number;
-  price_list?: number;
-  price_base?: number;
-  stock_quantity: number;
-  image_uri?: string;
-  rating?: number;
-  trending?: boolean;
-  is_active?: boolean;
-  created_at?: string;
+// Product type - matches API response structure (camelCase)
+export interface Product {
+  slug: string; // UUID del producto (identificador único)
+  sku: string; // Código SKU
+  name: string; // Nombre del producto
+  description: string; // Descripción
+  price: number; // Precio actual
+  stockQuantity: number; // Stock (convertido de string a number)
+  isActive: boolean; // Estado activo/inactivo
+  priceList: number; // Precio de lista (convertido de string a number)
+  imageUri: string; // URL de la imagen
+  trending: boolean; // Es trending
 }
 
-// Transform API product to app Product type
-function transformProduct(apiProduct: ApiProduct): Product {
+// API Response type (before conversion)
+interface ApiProductResponse {
+  slug: string;
+  sku: string;
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: string; // Viene como string desde la API
+  isActive: boolean;
+  priceList: string; // Viene como string desde la API
+  imageUri: string;
+  trending: boolean;
+}
+
+// Get all products (requires storeSlug)
+export async function getProducts(storeSlug: string, token: string): Promise<Product[]> {
+  const data = await apiFetch<ApiProductResponse[]>(
+    '/products',
+    { headers: { Authorization: `Bearer ${token}` } },
+    { storeSlug }
+  );
+
+  console.log('✅ [API] Products fetched:', data);
+
+  // Convertir solo los campos necesarios (string a number)
+  return data.map((item) => ({
+    ...item,
+    stockQuantity: parseInt(item.stockQuantity, 10),
+    priceList: parseFloat(item.priceList),
+  }));
+}
+
+// Get product by slug (requires storeSlug and token)
+export async function getProductById(
+  slug: string,
+  storeSlug: string,
+  token: string
+): Promise<Product> {
+  const data = await apiFetch<ApiProductResponse[]>(
+    `/products?slug=eq.${slug}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+    { storeSlug }
+  );
+
+  if (!data || data.length === 0) {
+    throw new Error('Producto no encontrado');
+  }
+
+  console.log('✅ [API] Product fetched by slug:', data[0]);
+
+  const item = data[0];
   return {
-    id: String(apiProduct.id),
-    store_id: apiProduct.store_id,
-    category_id: apiProduct.category_id,
-    sku: apiProduct.sku,
-    name: apiProduct.name,
-    description: apiProduct.description,
-    price: apiProduct.price,
-    price_list: apiProduct.price_list,
-    price_base: apiProduct.price_base,
-    stock_quantity: apiProduct.stock_quantity,
-    image_uri: apiProduct.image_uri,
-    rating: apiProduct.rating,
-    trending: apiProduct.trending,
-    is_active: apiProduct.is_active,
-    created_at: apiProduct.created_at,
+    ...item,
+    stockQuantity: parseInt(item.stockQuantity, 10),
+    priceList: parseFloat(item.priceList),
   };
 }
 
-// Get all products
-export async function getProducts(): Promise<Product[]> {
-  const apiProducts = await apiFetch<ApiProduct[]>('/products');
-  return apiProducts.map(transformProduct);
-}
+// Get recent products with pagination (for home screen)
+export async function getRecentProducts(
+  storeSlug: string,
+  token: string,
+  limit: number = 5,
+  offset: number = 0
+): Promise<Product[]> {
+  const data = await apiFetch<ApiProductResponse[]>(
+    '/products',
+    { headers: { Authorization: `Bearer ${token}` } },
+    {
+      storeSlug,
+      limit: limit.toString(),
+      offset: offset.toString(),
+    }
+  );
 
-// Get product by ID
-export async function getProductById(id: string): Promise<Product> {
-  const apiProducts = await apiFetch<ApiProduct[]>(`/products?id=eq.${id}`);
-  console.log('API Products:', apiProducts);
-  if (apiProducts.length === 0) {
-    throw new Error('Product not found');
-  }
-  return transformProduct(apiProducts[0]);
-}
+  console.log('✅ [API] Recent products fetched:', data);
 
-// Create product data type
-export interface CreateProductData {
-  name: string;
-  description?: string;
-  price: number;
-  price_list?: number;
-  price_base?: number;
-  stock_quantity: number;
-  image_uri?: string;
-  category_id?: string;
-  sku?: string;
-  rating?: number;
-  trending?: boolean;
-  is_active?: boolean;
-}
-
-// Create a new product
-export async function createProduct(data: CreateProductData): Promise<Product> {
-  const apiProducts = await apiFetch<ApiProduct[]>('/products', {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers: {
-      Prefer: 'return=representation',
-    },
-  });
-  return transformProduct(apiProducts[0]);
+  // Convertir solo los campos necesarios (string a number)
+  return data.map((item) => ({
+    ...item,
+    stockQuantity: parseInt(item.stockQuantity, 10),
+    priceList: parseFloat(item.priceList),
+  }));
 }

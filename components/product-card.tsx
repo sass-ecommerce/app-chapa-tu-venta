@@ -8,24 +8,7 @@ import { useRouter } from 'expo-router';
 import { Flame, Star } from 'lucide-react-native';
 import * as React from 'react';
 import { Image, Pressable, View } from 'react-native';
-
-export type Product = {
-  id: string;
-  store_id?: number;
-  category_id?: string;
-  sku?: string;
-  name: string;
-  description?: string;
-  price: number;
-  price_list?: number; // precio de lista
-  price_base?: number; // precio base
-  stock_quantity: number;
-  image_uri?: string;
-  rating?: number;
-  trending?: boolean;
-  is_active?: boolean;
-  created_at?: string;
-};
+import type { Product } from '@/lib/api/products';
 
 type ProductCardProps = {
   product: Product;
@@ -36,7 +19,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [imageLoading, setImageLoading] = React.useState(true);
 
   const handlePress = () => {
-    router.push(`/products/${product.id}`);
+    router.push(`/products/${product.slug}`);
   };
 
   return (
@@ -45,10 +28,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <View className="relative">
           {/* Imagen del producto */}
           <AspectRatio ratio={1} className="overflow-hidden">
-            {imageLoading && product.image_uri && <Skeleton className="h-full w-full" />}
-            {product.image_uri ? (
+            {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
+            {product.imageUri ? (
               <Image
-                source={{ uri: product.image_uri }}
+                source={{ uri: product.imageUri }}
                 style={{ width: '100%', height: '100%' }}
                 resizeMode="cover"
                 onLoadStart={() => setImageLoading(true)}
@@ -88,16 +71,16 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </Text>
           <Text className="mt-1 text-xs text-muted-foreground">
-            Stock: {product.stock_quantity} unidades
+            Stock: {product.stockQuantity} unidades
           </Text>
           <View className="mt-2 flex-row items-center justify-between">
             <View>
               <Text className="text-xl font-bold text-foreground">
                 S/ {product.price.toFixed(2)}
               </Text>
-              {product.price_list && product.price_list > product.price && (
+              {product.priceList && product.priceList > product.price && (
                 <Text className="text-sm text-muted-foreground line-through">
-                  S/ {product.price_list.toFixed(2)}
+                  S/ {product.priceList.toFixed(2)}
                 </Text>
               )}
             </View>

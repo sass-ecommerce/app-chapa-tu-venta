@@ -1,4 +1,4 @@
-import { Product } from '@/components/product-card';
+import type { Product } from '@/lib/api/products';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -26,10 +26,16 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuery } from '@tanstack/react-query';
 import { getProductById } from '@/lib/api/products';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 
 export default function ProductoDetalleScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { slug: productSlug } = useLocalSearchParams<{ slug: string }>();
+  const { user } = useUser();
+  const { getToken } = useAuth();
   const [imageLoading, setImageLoading] = React.useState(true);
+
+  // Get storeSlug from user metadata
+  const storeSlug = (user?.unsafeMetadata as { store?: { slug: string } })?.store?.slug;
 
   // Usar React Query para obtener el producto
   const {
@@ -39,9 +45,18 @@ export default function ProductoDetalleScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => getProductById(id!),
-    enabled: !!id,
+    queryKey: ['product', productSlug, storeSlug],
+    queryFn: async () => {
+      if (!productSlug || !storeSlug) {
+        throw new Error('Faltan parámetros requeridos');
+      }
+      const token = await getToken();
+      if (!token) {
+        throw new Error('No se pudo obtener el token de autenticación');
+      }
+      return getProductById(productSlug, storeSlug, token);
+    },
+    enabled: !!productSlug && !!storeSlug,
   });
 
   const handleEdit = () => {
@@ -157,14 +172,14 @@ export default function ProductoDetalleScreen() {
           />
         }>
         <View className="relative">
-          {imageLoading && product.image_uri ? (
+          {imageLoading && product.imageUri ? (
             <View style={{ width: '100%', height: 400 }}>
               <Skeleton className="h-full w-full" />
             </View>
           ) : null}
-          {product.image_uri ? (
+          {product.imageUri ? (
             <Image
-              source={{ uri: product.image_uri }}
+              source={{ uri: product.imageUri }}
               style={{ width: '100%', height: 400 }}
               resizeMode="cover"
               onLoadStart={() => setImageLoading(true)}
@@ -200,11 +215,8 @@ export default function ProductoDetalleScreen() {
 
         {/* Información del producto */}
         <View className="p-6">
-          {/* Nombre y categoría */}
+          {/* Nombre y SKU */}
           <Text className="text-2xl font-bold">{product.name}</Text>
-          {product.category_id && (
-            <Text className="mt-2 text-sm text-muted-foreground">{product.category_id}</Text>
-          )}
           {product.sku && (
             <Text className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</Text>
           )}
@@ -212,9 +224,9 @@ export default function ProductoDetalleScreen() {
           {/* Precio */}
           <View className="mt-4 flex-row items-center gap-3">
             <Text className="text-3xl font-bold text-primary">S/ {product.price.toFixed(2)}</Text>
-            {product.price_list && product.price_list > product.price && (
+            {product.priceList && product.priceList > product.price && (
               <Text className="text-lg text-muted-foreground line-through">
-                S/ {product.price_list.toFixed(2)}
+                S/ {product.priceList.toFixed(2)}
               </Text>
             )}
           </View>
@@ -224,8 +236,8 @@ export default function ProductoDetalleScreen() {
             <Text className="text-sm">
               Stock:{' '}
               <Text
-                className={`font-semibold ${product.stock_quantity < 10 ? 'text-destructive' : 'text-green-600'}`}>
-                {product.stock_quantity} unidades
+                className={`font-semibold ${product.stockQuantity < 10 ? 'text-destructive' : 'text-green-600'}`}>
+                {product.stockQuantity} unidades
               </Text>
             </Text>
           </View>

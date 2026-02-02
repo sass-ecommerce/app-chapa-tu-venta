@@ -1,7 +1,8 @@
 import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ProductCard, type Product } from '@/components/product-card';
+import { ProductCard } from '@/components/product-card';
+import type { Product } from '@/lib/api/products';
 import { Search, Bell, Menu, Plus, FolderPlus } from 'lucide-react-native';
 import * as React from 'react';
 import {
@@ -22,18 +23,19 @@ import { useProductsStore } from '@/lib/store/products-store';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '@/lib/api/products';
 import { useRouter } from 'expo-router';
-
-// Categorías de productos
-const CATEGORIES = ['All', 'Ropa', 'Accesorios', 'Zapatos', 'Electrónica'];
+import { useAuth, useUser } from '@clerk/clerk-expo';
 
 export default function ProductosScreen() {
   const router = useRouter();
+  const { user } = useUser();
+  const { getToken } = useAuth();
+
+  // Get storeSlug from user metadata
+  const storeSlug = (user?.unsafeMetadata as { store?: { slug: string } })?.store?.slug;
 
   // Hook personalizado de Zustand - mucho más limpio!
-  const selectedCategory = useProductsStore((state) => state.selectedCategory);
   const searchQuery = useProductsStore((state) => state.searchQuery);
   const hasNotifications = useProductsStore((state) => state.hasNotifications);
-  const setSelectedCategory = useProductsStore((state) => state.setSelectedCategory);
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
   const toggleNotifications = useProductsStore((state) => state.toggleNotifications);
 
@@ -45,8 +47,17 @@ export default function ProductosScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
+    queryKey: ['products', storeSlug],
+    queryFn: async () => {
+      console.log('Fetching products for storeSlug:', storeSlug);
+      if (!storeSlug) throw new Error('No se encontró el identificador de la tienda');
+
+      const token = await getToken();
+      if (!token) throw new Error('No se pudo obtener el token de autenticación');
+
+      return getProducts(storeSlug, token);
+    },
+    enabled: !!storeSlug, // Only run if storeSlug exists
     // Configuración específica para esta query (sobrescribe la global)
     staleTime: 5 * 60 * 1000, // 5 minutos - los datos se consideran frescos
     gcTime: 10 * 60 * 1000, // 10 minutos - tiempo en caché
@@ -54,14 +65,12 @@ export default function ProductosScreen() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: true, // Refetch al volver a la app
     refetchOnReconnect: true, // Refetch al reconectar internet
-    // enabled: true, // Puedes desactivar la query con false
   });
 
   const filteredProducts = (products ?? []).filter((product) => {
-    const matchesCategory = selectedCategory === 'All' || product.category_id === selectedCategory;
     const matchesSearch =
       searchQuery === '' || product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
   return (
@@ -127,31 +136,6 @@ export default function ProductosScreen() {
             </Pressable>
           </View>
 
-          {/* Categories */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              gap: 8,
-              paddingHorizontal: 16,
-              paddingBottom: 16,
-            }}>
-            {CATEGORIES.map((category) => (
-              <Button
-                key={category}
-                onPress={() => setSelectedCategory(category)}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                className={`rounded-full ${selectedCategory === category ? 'bg-blue-500' : ''}`}>
-                <Text
-                  className={`font-medium ${
-                    selectedCategory === category ? 'text-white' : 'text-foreground'
-                  }`}>
-                  {category}
-                </Text>
-              </Button>
-            ))}
-          </ScrollView>
-
           {/* Loading State */}
           {isLoading && (
             <View className="flex-1 items-center justify-center py-20">
@@ -186,7 +170,7 @@ export default function ProductosScreen() {
           {!isLoading && !error && filteredProducts.length > 0 && (
             <View className="flex-row flex-wrap px-2">
               {filteredProducts.map((product) => (
-                <View key={product.id} className="w-1/2 p-2">
+                <View key={product.slug} className="w-1/2 p-2">
                   <ProductCard product={product} />
                 </View>
               ))}
