@@ -25,7 +25,7 @@ export function ProductCardHorizontal({ product, onPress }: ProductCardHorizonta
   const [imageLoading, setImageLoading] = React.useState(true);
 
   return (
-    <Pressable onPress={onPress} className="active:scale-95" style={{ opacity: 1 }}>
+    <Pressable onPress={onPress} className="mb-2 active:scale-95" style={{ opacity: 1 }}>
       <Card
         className="w-44 overflow-hidden shadow-md shadow-primary/10"
         style={{
@@ -87,17 +87,18 @@ export function ProductCardHorizontal({ product, onPress }: ProductCardHorizonta
           <View className="mb-2 flex-row items-start gap-1">
             <Icon as={Package} size={14} className="mt-0.5 text-muted-foreground" />
             <Text className="flex-1 text-sm font-bold text-foreground" numberOfLines={2}>
-              {product.name}
+              {product.name.slice(0, 15)}
+              {product.name.length > 15 ? '...' : ''}
             </Text>
           </View>
 
           {/* Price Section */}
           <View className="mb-2 flex-row items-center gap-2">
-            <Text className="text-lg font-bold text-primary">S/ {product.price.toFixed(2)}</Text>
+            <Text className="text-lg font-bold text-primary">S/ {product.price.toFixed(1)}</Text>
             {product.priceList > product.price && (
               <View className="flex-1">
                 <Text className="text-xs text-muted-foreground line-through">
-                  S/ {product.priceList.toFixed(2)}
+                  S/ {product.priceList.toFixed(1)}
                 </Text>
                 <Text className="text-xs font-semibold text-green-600 dark:text-green-400">
                   {Math.round(((product.priceList - product.price) / product.priceList) * 100)}% off

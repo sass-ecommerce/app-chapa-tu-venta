@@ -1,9 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
+import * as React from 'react';
+import {
+  View,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
+
+import * as ImagePicker from 'expo-image-picker';
+import { useColorScheme } from 'nativewind';
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import {
@@ -23,10 +29,14 @@ import {
   MoonIcon,
   SunIcon,
 } from 'lucide-react-native';
-import * as React from 'react';
-import { View, ScrollView, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { useColorScheme } from 'nativewind';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { AnimatedCard } from '@/components/ui/animated-card';
+import { CardContent, CardHeader } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
+import { Separator } from '@/components/ui/separator';
+import { Text } from '@/components/ui/text';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +47,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ANIMATION, REFRESH_COLORS } from '@/lib/constants';
 
 export default function PerfilScreen() {
   const { user } = useUser();
@@ -46,6 +57,7 @@ export default function PerfilScreen() {
   const [imageUri, setImageUri] = React.useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   const [showImageDialog, setShowImageDialog] = React.useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const pickImageFromGallery = async () => {
     setShowImageDialog(false);
@@ -162,11 +174,27 @@ export default function PerfilScreen() {
     console.log(`🎨 [Profile] Theme changed to: ${newScheme}`);
   };
 
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    // Reload user data
+    await user?.reload();
+    setRefreshing(false);
+  }, [user]);
+
   return (
-    <ScrollView className="flex-1 bg-background">
-      <View className="gap-6 p-4 pt-12">
+    <ScrollView
+      className="flex-1 bg-background"
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[REFRESH_COLORS.LIGHT]}
+          tintColor={REFRESH_COLORS.LIGHT}
+        />
+      }>
+      <View className="gap-6 px-5 pt-12">
         {/* Header con Avatar y Info del Usuario */}
-        <Card>
+        <AnimatedCard delay={0}>
           <CardHeader className="items-center gap-4 pb-6">
             <TouchableOpacity onPress={() => setShowImageDialog(true)} disabled={isUploadingImage}>
               <View className="relative">
@@ -202,10 +230,10 @@ export default function PerfilScreen() {
               <Text>Editar Perfil</Text>
             </Button>
           </CardHeader>
-        </Card>
+        </AnimatedCard>
 
         {/* Información de la Cuenta */}
-        <Card>
+        <AnimatedCard delay={ANIMATION.STAGGER}>
           <CardHeader>
             <Text className="text-lg font-semibold">Información de la Cuenta</Text>
           </CardHeader>
@@ -252,10 +280,10 @@ export default function PerfilScreen() {
               </>
             )}
           </CardContent>
-        </Card>
+        </AnimatedCard>
 
         {/* Configuración y Opciones */}
-        <Card>
+        <AnimatedCard delay={ANIMATION.STAGGER * 2}>
           <CardHeader>
             <Text className="text-lg font-semibold">Configuración</Text>
           </CardHeader>
@@ -330,7 +358,7 @@ export default function PerfilScreen() {
               <Icon as={ChevronRightIcon} className="size-5 text-muted-foreground" />
             </Button>
           </CardContent>
-        </Card>
+        </AnimatedCard>
 
         {/* Botón de Cerrar Sesión */}
         <Button

@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, Settings } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 
 interface HomeHeaderProps {
@@ -21,14 +19,7 @@ interface HomeHeaderProps {
 /**
  * Modern home header with gradient text, avatar, and action buttons
  */
-export function HomeHeader({
-  firstName,
-  lastName,
-  avatarUrl,
-  onNotificationsPress,
-  onSettingsPress,
-  notificationCount = 0,
-}: HomeHeaderProps) {
+export function HomeHeader({ firstName, lastName, avatarUrl }: HomeHeaderProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -43,53 +34,11 @@ export function HomeHeader({
     return () => clearInterval(timer);
   }, []);
 
-  const formattedDate = currentTime.toLocaleDateString('es-PE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-
-  const formattedTime = currentTime.toLocaleTimeString('es-PE', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
   // Get user initials for avatar fallback
   const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
 
   return (
-    <View className="mb-6 pt-12">
-      {/* Top Row: Date/Time and Actions */}
-      <View className="mb-4 flex-row items-center justify-between">
-        <View>
-          <Text className="text-xs capitalize text-muted-foreground">{formattedDate}</Text>
-          <Text className="text-sm font-semibold text-muted-foreground">{formattedTime}</Text>
-        </View>
-
-        <View className="flex-row items-center gap-3">
-          {/* Notifications Button */}
-          <Pressable
-            onPress={onNotificationsPress}
-            className="relative h-10 w-10 items-center justify-center rounded-full bg-muted active:opacity-70">
-            <Icon as={Bell} size={20} className="text-foreground" />
-            {notificationCount > 0 && (
-              <View className="absolute right-0 top-0 h-5 w-5 items-center justify-center rounded-full bg-destructive">
-                <Text className="text-xs font-bold text-destructive-foreground">
-                  {notificationCount > 9 ? '9+' : notificationCount}
-                </Text>
-              </View>
-            )}
-          </Pressable>
-
-          {/* Settings Button */}
-          <Pressable
-            onPress={onSettingsPress}
-            className="h-10 w-10 items-center justify-center rounded-full bg-muted active:opacity-70">
-            <Icon as={Settings} size={20} className="text-foreground" />
-          </Pressable>
-        </View>
-      </View>
-
+    <View className="mb-6">
       {/* Main Row: Avatar and Greeting */}
       <View className="flex-row items-center gap-4">
         {/* Avatar */}

@@ -15,6 +15,7 @@ import { RecentSalesSection } from '@/components/home/recent-sales-section';
 import type { SalesSummary, Transaction } from '@/components/home/types';
 import type { UserPublicMetadata } from '@/lib/types/clerk';
 import { getProducts } from '@/lib/api/products';
+import { REFRESH_COLORS } from '@/lib/constants';
 
 // Chart colors using project palette
 const CHART_COLORS = {
@@ -109,11 +110,11 @@ export default function HomeScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={['#7c3aed']} // Android
-          tintColor="#7c3aed" // iOS
+          colors={[REFRESH_COLORS.LIGHT]}
+          tintColor={REFRESH_COLORS.LIGHT}
         />
       }>
-      <View className="px-5">
+      <View className="px-5 pt-12">
         {/* Modern Header with Avatar and Actions */}
         <HomeHeader
           firstName={user?.firstName || undefined}

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs } from '@/components/ui/tabs';
 import { Chip } from '@/components/ui/chip';
 import { FAB } from '@/components/ui/fab';
+import { Icon } from '@/components/ui/icon';
 
 import { ProductCard } from '@/components/product-card';
 import { ProductCardList } from '@/components/product-card-list';
@@ -29,6 +30,7 @@ import { useProductsStore } from '@/lib/store/products-store';
 import { getProducts } from '@/lib/api/products';
 import type { Product } from '@/lib/api/products';
 import type { UserPublicMetadata } from '@/lib/types/clerk';
+import { REFRESH_COLORS } from '@/lib/constants';
 
 export default function ProductosScreen() {
   const router = useRouter();
@@ -154,8 +156,8 @@ export default function ProductosScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => refetch()}
-            colors={['#3b82f6']}
-            tintColor="#3b82f6"
+            colors={[REFRESH_COLORS.LIGHT]}
+            tintColor={REFRESH_COLORS.LIGHT}
           />
         }>
         <View className="pt-12">
@@ -165,21 +167,21 @@ export default function ProductosScreen() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
-                  <Menu size={22} color="#666" />
+                  <Icon as={Menu} className="text-muted-foreground" size={22} />
                 </Pressable>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 <DropdownMenuItem
                   onPress={() => router.push('/products/create')}
                   className="flex-row items-center gap-3">
-                  <Plus size={18} color="#666" />
+                  <Icon as={Plus} className="text-muted-foreground" size={18} />
                   <Text className="text-base">Crear producto</Text>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
                   onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
                   className="flex-row items-center gap-3">
-                  <FolderPlus size={18} color="#666" />
+                  <Icon as={FolderPlus} className="text-muted-foreground" size={18} />
                   <Text className="text-base">Crear colección</Text>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -194,7 +196,7 @@ export default function ProductosScreen() {
                 placeholderTextColor="#666"
               />
               <View className="absolute left-4 top-3">
-                <Search size={20} color="#666" />
+                <Icon as={Search} className="text-muted-foreground" size={20} />
               </View>
             </View>
 
@@ -202,9 +204,9 @@ export default function ProductosScreen() {
             <Pressable
               onPress={toggleNotifications}
               className="relative h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
-              <Bell size={22} color="#666" />
+              <Icon as={Bell} className="text-muted-foreground" size={22} />
               {hasNotifications && (
-                <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+                <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-destructive" />
               )}
             </Pressable>
           </View>
@@ -226,9 +228,9 @@ export default function ProductosScreen() {
                   onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
                   className="flex-row items-center gap-2 rounded-full bg-muted px-3 py-1.5 active:opacity-80">
                   {viewMode === 'grid' ? (
-                    <List size={16} color="#666" />
+                    <Icon as={List} className="text-muted-foreground" size={16} />
                   ) : (
-                    <Grid3x3 size={16} color="#666" />
+                    <Icon as={Grid3x3} className="text-muted-foreground" size={16} />
                   )}
                   <Text className="text-xs font-medium text-muted-foreground">
                     {viewMode === 'grid' ? 'Lista' : 'Grid'}
