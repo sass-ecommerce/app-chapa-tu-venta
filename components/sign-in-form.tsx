@@ -5,13 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useSignIn, useUser } from '@clerk/clerk-expo';
 import { Link, router } from 'expo-router';
 import * as React from 'react';
 import { type TextInput, View } from 'react-native';
 
+import { redirectAfterAuth } from '@/lib/auth/navigation-helpers';
+
 export function SignInForm() {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { user } = useUser();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const passwordInputRef = React.useRef<TextInput>(null);
@@ -34,7 +37,12 @@ export function SignInForm() {
       if (signInAttempt.status === 'complete') {
         setError({ email: '', password: '' });
         await setActive({ session: signInAttempt.createdSessionId });
-        router.replace('/(onboarding)/owner-info');
+
+        // Wait for user to be loaded and redirect based on onboarding status
+        if (user) {
+          await user.reload();
+          redirectAfterAuth(user, router);
+        }
         return;
       }
       // TODO: Handle other statuses
@@ -60,7 +68,9 @@ export function SignInForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Inicia sesión en Chapa Tu Venta</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">
+            Inicia sesión en Chapa Tu Venta
+          </CardTitle>
           <CardDescription className="text-center sm:text-left">
             ¡Bienvenido de nuevo! Inicia sesión para continuar
           </CardDescription>

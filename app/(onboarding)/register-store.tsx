@@ -11,10 +11,10 @@ import { z } from 'zod';
 import { Picker } from '@react-native-picker/picker';
 import { useColorScheme } from 'nativewind';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { ONBOARDING_STEPS } from '@/lib/constants';
-import { createStore, getStoreById } from '@/lib/api/stores';
-import { updateUserById } from '@/lib/api/users';
+import { createStore } from '@/lib/api/stores';
 import { Alert } from 'react-native';
+
+import type { UserPublicMetadata } from '@/lib/types/clerk';
 
 const CATEGORIAS = [
   { value: '', label: 'Selecciona una categoría' },
@@ -33,7 +33,7 @@ const CATEGORIAS = [
 export default function RegisterStoreScreen() {
   const { colorScheme } = useColorScheme();
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const [isLoadingStore, setIsLoadingStore] = React.useState(false);
 
   const form = useForm({
@@ -45,58 +45,50 @@ export default function RegisterStoreScreen() {
     },
     onSubmit: async ({ value }) => {
       try {
+        if (!user) {
+          throw new Error('Usuario no autenticado');
+        }
+
+        const token = await getToken();
+        console.log('✅ [Store] Token obtenido');
+        if (!token) throw new Error('No se pudo obtener el token de autenticación.');
+
         // Crear la tienda en Supabase
         const storeData = {
           name: value.nombreTienda,
-          owner_email: user?.emailAddresses[0]?.emailAddress || null,
+          ownerEmail: user?.emailAddresses[0]?.emailAddress || null,
           ruc: value.ruc ? parseInt(value.ruc) : null,
           plan: null,
           settings: null,
         };
 
-        const [newStore] = await createStore(storeData);
+        const newStore = await createStore(storeData, token);
+        console.log('✅ [Store] Tienda creada exitosamente:', newStore);
 
-        if (!user) throw new Error('Usuario no autenticado.');
+        // NOTA: publicMetadata solo puede actualizarse desde el backend
+        // Por ahora usamos unsafeMetadata (actualizable desde el cliente)
+        // TODO: Mover esto a un webhook/API endpoint para actualizar publicMetadata
+        const currentMetadata = (user.unsafeMetadata || {}) as UserPublicMetadata;
 
         await user.update({
           unsafeMetadata: {
-            ...user.unsafeMetadata,
+            ...currentMetadata,
+            user: {
+              slug: user.id,
+            },
             store: {
-              id: newStore.id,
               slug: newStore.slug,
             },
+            registerStoreCompleted: true,
           },
         });
 
-        console.log('Tienda creada exitosamente:', newStore);
+        console.log('✅ [Store] Metadata actualizada correctamente');
 
-        // Actualizar el usuario con el store_id
-        const { user: userCustom } =
-          (user?.publicMetadata as { user: { slug: string; id: number } }) || {};
-
-        console.log('Datos del usuario:', userCustom);
-
-        const { slug, id } = userCustom;
-
-        if (!slug) {
-          throw new Error('El slug del usuario no está disponible.');
-        }
-
-        const result = await updateUserById(id, {
-          store_id: newStore.id,
-        });
-
-        console.log('Usuario actualizado con store_id:', result);
-        await user.update({
-          unsafeMetadata: {
-            ...user.unsafeMetadata,
-            lastStep: '',
-          },
-        });
-
+        // Redirigir a la pantalla principal
         router.replace('/(tabs)');
       } catch (error) {
-        console.error('Error al crear la tienda:', error);
+        console.error('❌ [Store] Error al crear la tienda:', error);
         Alert.alert('Error', 'No se pudo crear la tienda. Por favor, intenta de nuevo.', [
           { text: 'OK' },
         ]);
@@ -104,45 +96,9 @@ export default function RegisterStoreScreen() {
     },
   });
 
-  // Cargar datos de la tienda si existe en unsafeMetadata
+  // No need to preload store data for first-time registration
   React.useEffect(() => {
-    const loadStoreData = async () => {
-      if (!user) return;
-
-      // Actualizar metadata con el último paso
-      try {
-        await user.update({
-          unsafeMetadata: {
-            ...user.unsafeMetadata,
-            lastStep: ONBOARDING_STEPS.REGISTER_STORE,
-          },
-        });
-      } catch (error) {
-        console.error('Error actualizando metadata:', error);
-      }
-
-      // Verificar si ya existe una tienda en unsafeMetadata
-      const storeInMetadata = (user.unsafeMetadata as { store?: { id: number } })?.store;
-
-      if (storeInMetadata?.id) {
-        setIsLoadingStore(true);
-        try {
-          const existingStore = await getStoreById(storeInMetadata.id);
-
-          // Autocompletar el formulario con los datos de la tienda
-          form.setFieldValue('nombreTienda', existingStore.name);
-          form.setFieldValue('ruc', existingStore.ruc ? String(existingStore.ruc) : '');
-
-          console.log('Datos de tienda cargados:', existingStore);
-        } catch (error) {
-          console.error('Error cargando datos de la tienda:', error);
-        } finally {
-          setIsLoadingStore(false);
-        }
-      }
-    };
-
-    loadStoreData();
+    console.log('📝 [Store] User loaded in register-store screen');
   }, [user]);
 
   return (

@@ -9,6 +9,8 @@ import { Alert, View } from 'react-native';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 
+import type { UserPublicMetadata } from '@/lib/types/clerk';
+
 interface EditProfileFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -17,11 +19,13 @@ interface EditProfileFormProps {
 export function EditProfileForm({ onSuccess, onCancel }: EditProfileFormProps) {
   const { user } = useUser();
 
+  const metadata = (user?.unsafeMetadata || {}) as UserPublicMetadata & { phone?: string };
+
   const form = useForm({
     defaultValues: {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
-      phone: (user?.unsafeMetadata?.phone as string) || '',
+      phone: metadata?.phone || '',
     },
     onSubmit: async ({ value }) => {
       if (!user) return;

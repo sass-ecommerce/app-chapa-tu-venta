@@ -30,6 +30,7 @@ export async function apiFetch<T>(
   });
 
   if (!response.ok) {
+    console.error('API fetch error:', await response.text());
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
   }
 

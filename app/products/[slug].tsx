@@ -25,17 +25,13 @@ import {
 } from 'react-native';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useQuery } from '@tanstack/react-query';
-import { getProductById } from '@/lib/api/products';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { getProductBySlug } from '@/lib/api/products';
+import { useAuth } from '@clerk/clerk-expo';
 
 export default function ProductoDetalleScreen() {
   const { slug: productSlug } = useLocalSearchParams<{ slug: string }>();
-  const { user } = useUser();
   const { getToken } = useAuth();
   const [imageLoading, setImageLoading] = React.useState(true);
-
-  // Get storeSlug from user metadata
-  const storeSlug = (user?.unsafeMetadata as { store?: { slug: string } })?.store?.slug;
 
   // Usar React Query para obtener el producto
   const {
@@ -45,18 +41,19 @@ export default function ProductoDetalleScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['product', productSlug, storeSlug],
+    queryKey: ['product', productSlug],
     queryFn: async () => {
-      if (!productSlug || !storeSlug) {
-        throw new Error('Faltan parámetros requeridos');
-      }
+      console.log('📍 [ProductDetail] Fetching product with slug:', productSlug);
+      if (!productSlug) throw new Error('Faltan parámetros requeridos');
+
       const token = await getToken();
-      if (!token) {
-        throw new Error('No se pudo obtener el token de autenticación');
-      }
-      return getProductById(productSlug, storeSlug, token);
+      console.log('📍 [ProductDetail] Fetched token:', token);
+      if (!token) throw new Error('No se pudo obtener el token de autenticación');
+
+      const productData = await getProductBySlug(productSlug, token);
+      return productData;
     },
-    enabled: !!productSlug && !!storeSlug,
+    enabled: !!productSlug,
   });
 
   const handleEdit = () => {

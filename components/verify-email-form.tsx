@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useSignUp, useUser } from '@clerk/clerk-expo';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { type TextStyle, View } from 'react-native';
+
+import { redirectAfterAuth } from '@/lib/auth/navigation-helpers';
 
 const RESEND_CODE_INTERVAL_SECONDS = 30;
 
@@ -14,6 +16,7 @@ const TABULAR_NUMBERS_STYLE: TextStyle = { fontVariant: ['tabular-nums'] };
 
 export function VerifyEmailForm() {
   const { signUp, setActive, isLoaded } = useSignUp();
+  const { user } = useUser();
   const { email = '' } = useLocalSearchParams<{ email?: string }>();
   const [code, setCode] = React.useState('');
   const [error, setError] = React.useState('');
@@ -32,7 +35,12 @@ export function VerifyEmailForm() {
       // and redirect the user
       if (signUpAttempt.status === 'complete') {
         await setActive({ session: signUpAttempt.createdSessionId });
-        router.replace('/(onboarding)/owner-info');
+
+        // Wait for user to be loaded and redirect based on onboarding status
+        if (user) {
+          await user.reload();
+          redirectAfterAuth(user, router);
+        }
         return;
       }
       // TODO: Handle other statuses
@@ -69,15 +77,15 @@ export function VerifyEmailForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Verify your email</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Verifica tu correo</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Enter the verification code sent to {email || 'your email'}
+            Ingresa el código de verificación enviado a {email || 'tu correo'}
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
             <View className="gap-1.5">
-              <Label htmlFor="code">Verification code</Label>
+              <Label htmlFor="code">Código de verificación</Label>
               <Input
                 id="code"
                 autoCapitalize="none"
@@ -93,7 +101,7 @@ export function VerifyEmailForm() {
               )}
               <Button variant="link" size="sm" disabled={countdown > 0} onPress={onResendCode}>
                 <Text className="text-center text-xs">
-                  Didn&apos;t receive the code? Resend{' '}
+                  ¿No recibiste el código? Reenviar{' '}
                   {countdown > 0 ? (
                     <Text className="text-xs" style={TABULAR_NUMBERS_STYLE}>
                       ({countdown})
@@ -104,10 +112,10 @@ export function VerifyEmailForm() {
             </View>
             <View className="gap-3">
               <Button className="w-full" onPress={onSubmit}>
-                <Text>Continue</Text>
+                <Text>Continuar</Text>
               </Button>
               <Button variant="link" className="mx-auto" onPress={router.back}>
-                <Text>Cancel</Text>
+                <Text>Cancelar</Text>
               </Button>
             </View>
           </View>

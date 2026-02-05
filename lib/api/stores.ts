@@ -2,40 +2,31 @@ import { apiFetch } from './config';
 
 export interface CreateStorePayload {
   name: string;
-  owner_email?: string | null;
+  ownerEmail?: string | null;
   ruc?: number | null;
   plan?: string | null;
-  settings?: any | null;
+  settings?: Record<string, any> | null;
 }
 
-export interface Store {
-  id: number;
+export interface StoreResponse {
   name: string;
   slug: string;
-  owner_email: string | null;
-  plan: string | null;
-  settings: any | null;
   created_at: string;
-  status: boolean;
-  updated_at: string | null;
-  ruc: number | null;
 }
 
-export async function createStore(data: CreateStorePayload): Promise<Store[]> {
+export async function createStore(data: CreateStorePayload, token: string): Promise<StoreResponse> {
   console.log('Creating store with data:', data);
-  return apiFetch<Store[]>('/stores', {
+  return apiFetch<StoreResponse>('/stores', {
     method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(data),
-    headers: {
-      Prefer: 'return=representation',
-    },
   });
 }
 
-export async function getStoreById(storeId: number): Promise<Store> {
-  const response = await apiFetch<Store[]>(`/stores?id=eq.${storeId}`);
-  if (!response || response.length === 0) {
-    throw new Error('Tienda no encontrada');
-  }
-  return response[0];
+export async function getStoreBySlug(slug: string, token: string): Promise<StoreResponse[]> {
+  console.log('Fetching store with slug:', slug);
+  return apiFetch<StoreResponse[]>(`/stores/${slug}`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }

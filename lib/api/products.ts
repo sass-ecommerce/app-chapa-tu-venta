@@ -47,54 +47,21 @@ export async function getProducts(storeSlug: string, token: string): Promise<Pro
 }
 
 // Get product by slug (requires storeSlug and token)
-export async function getProductById(
-  slug: string,
-  storeSlug: string,
-  token: string
-): Promise<Product> {
-  const data = await apiFetch<ApiProductResponse[]>(
-    `/products?slug=eq.${slug}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-    { storeSlug }
-  );
+export async function getProductBySlug(slug: string, token: string): Promise<Product> {
+  const data = await apiFetch<ApiProductResponse>(`/products/${slug}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-  if (!data || data.length === 0) {
+  console.log(`✅ [API] Product fetched by slug (${slug}):`, data);
+
+  if (!data) {
     throw new Error('Producto no encontrado');
   }
 
-  console.log('✅ [API] Product fetched by slug:', data[0]);
-
-  const item = data[0];
+  const item = data;
   return {
     ...item,
     stockQuantity: parseInt(item.stockQuantity, 10),
     priceList: parseFloat(item.priceList),
   };
-}
-
-// Get recent products with pagination (for home screen)
-export async function getRecentProducts(
-  storeSlug: string,
-  token: string,
-  limit: number = 5,
-  offset: number = 0
-): Promise<Product[]> {
-  const data = await apiFetch<ApiProductResponse[]>(
-    '/products',
-    { headers: { Authorization: `Bearer ${token}` } },
-    {
-      storeSlug,
-      limit: limit.toString(),
-      offset: offset.toString(),
-    }
-  );
-
-  console.log('✅ [API] Recent products fetched:', data);
-
-  // Convertir solo los campos necesarios (string a number)
-  return data.map((item) => ({
-    ...item,
-    stockQuantity: parseInt(item.stockQuantity, 10),
-    priceList: parseFloat(item.priceList),
-  }));
 }

@@ -1,12 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useSSO, type StartSSOFlowParams } from '@clerk/clerk-expo';
+import { useSSO, useUser, type StartSSOFlowParams } from '@clerk/clerk-expo';
 import * as AuthSession from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, Platform, View, type ImageSourcePropType } from 'react-native';
+
+import { redirectAfterAuth } from '@/lib/auth/navigation-helpers';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -28,6 +30,7 @@ export function SocialConnections() {
   useWarmUpBrowser();
   const { colorScheme } = useColorScheme();
   const { startSSOFlow } = useSSO();
+  const { user } = useUser();
 
   function onSocialLoginPress(strategy: SocialConnectionStrategy) {
     return async () => {
@@ -44,7 +47,12 @@ export function SocialConnections() {
         // If sign in was successful, set the active session
         if (createdSessionId && setActive) {
           await setActive({ session: createdSessionId });
-          router.replace('/(onboarding)/register-store');
+
+          // Wait for user to be loaded and redirect based on onboarding status
+          if (user) {
+            await user.reload();
+            redirectAfterAuth(user, router);
+          }
           return;
         }
 

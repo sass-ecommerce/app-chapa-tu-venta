@@ -71,7 +71,6 @@ function Routes() {
       {/* Screens only shown when the user IS signed in */}
       <Stack.Protected guard={isSignedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(onboarding)/owner-info" options={{ headerShown: false }} />
         <Stack.Screen name="(onboarding)/register-store" options={{ headerShown: false }} />
         <Stack.Screen name="products/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="products/create" options={{ headerShown: false }} />

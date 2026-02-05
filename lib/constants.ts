@@ -1,5 +1,5 @@
-// Onboarding steps constants
+// Onboarding steps constants (deprecated - keeping for backwards compatibility)
+// New approach: check user.unsafeMetadata.registerStoreCompleted
 export const ONBOARDING_STEPS = {
   REGISTER_STORE: 'register-store',
-  OWNER_INFO: 'owner-info',
 } as const;

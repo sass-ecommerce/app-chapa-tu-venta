@@ -16,7 +16,6 @@ import { View, ScrollView, Alert, Image } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useForm } from '@tanstack/react-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createProduct, type CreateProductData } from '@/lib/api/products';
 import { z } from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Image as ImageIcon, Link } from 'lucide-react-native';

@@ -3,13 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
-import { useSignIn } from '@clerk/clerk-expo';
+import { useSignIn, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { TextInput, View } from 'react-native';
 
+import { redirectAfterAuth } from '@/lib/auth/navigation-helpers';
+
 export function ResetPasswordForm() {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { user } = useUser();
   const [password, setPassword] = React.useState('');
   const [code, setCode] = React.useState('');
   const codeInputRef = React.useRef<TextInput>(null);
@@ -29,7 +32,13 @@ export function ResetPasswordForm() {
       if (result.status === 'complete') {
         // Set the active session to
         // the newly created session (user is now signed in)
-        setActive({ session: result.createdSessionId });
+        await setActive({ session: result.createdSessionId });
+
+        // Wait for user to be loaded and redirect based on onboarding status
+        if (user) {
+          await user.reload();
+          redirectAfterAuth(user, router);
+        }
         return;
       }
       // TODO: Handle other statuses
@@ -52,16 +61,16 @@ export function ResetPasswordForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Reset password</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">Restablecer contraseña</CardTitle>
           <CardDescription className="text-center sm:text-left">
-            Enter the code sent to your email and set a new password
+            Ingresa el código enviado a tu correo y establece una nueva contraseña
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
             <View className="gap-1.5">
               <View className="flex-row items-center">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">Nueva contraseña</Label>
               </View>
               <Input
                 id="password"
@@ -76,7 +85,7 @@ export function ResetPasswordForm() {
               ) : null}
             </View>
             <View className="gap-1.5">
-              <Label htmlFor="code">Verification code</Label>
+              <Label htmlFor="code">Código de verificación</Label>
               <Input
                 id="code"
                 autoCapitalize="none"
@@ -92,7 +101,7 @@ export function ResetPasswordForm() {
               ) : null}
             </View>
             <Button className="w-full" onPress={onSubmit}>
-              <Text>Reset Password</Text>
+              <Text>Restablecer contraseña</Text>
             </Button>
           </View>
         </CardContent>
