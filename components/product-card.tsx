@@ -5,53 +5,57 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { Flame, Star } from 'lucide-react-native';
 import * as React from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import type { Product } from '@/lib/api/products';
 
 type ProductCardProps = {
   product: Product;
 };
 
-export function ProductCard({ product }: ProductCardProps) {
-  const router = useRouter();
-  const [imageLoading, setImageLoading] = React.useState(true);
+export const ProductCard = React.memo(
+  ({ product }: ProductCardProps) => {
+    const router = useRouter();
+    const [imageLoading, setImageLoading] = React.useState(true);
 
-  const handlePress = () => {
-    router.push(`/products/${product.slug}`);
-  };
+    const handlePress = () => {
+      router.push(`/products/${product.slug}`);
+    };
 
-  // Helper function to get stock badge color based on stock level
-  const getStockColor = (stock: number) => {
-    if (stock > 10) return 'bg-green-500';
-    if (stock >= 3) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
+    // Helper function to get stock badge color based on stock level
+    const getStockColor = (stock: number) => {
+      if (stock > 10) return 'bg-green-500';
+      if (stock >= 3) return 'bg-yellow-500';
+      return 'bg-red-500';
+    };
 
-  return (
-    <Pressable onPress={handlePress} className="active:opacity-90">
-      <Card className="w-full overflow-hidden rounded-xl bg-card">
-        <View className="relative">
-          {/* Imagen del producto */}
-          <AspectRatio ratio={4 / 3} className="overflow-hidden">
-            {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
-            {product.imageUri ? (
-              <Image
-                source={{ uri: product.imageUri }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-                onLoadStart={() => setImageLoading(true)}
-                onLoadEnd={() => setImageLoading(false)}
-                onError={() => setImageLoading(false)}
-              />
-            ) : (
-              <Skeleton className="h-full w-full" />
-            )}
-          </AspectRatio>
+    return (
+      <Pressable onPress={handlePress} className="active:opacity-90">
+        <Card className="w-full overflow-hidden rounded-xl bg-card">
+          <View className="relative">
+            {/* Imagen del producto */}
+            <AspectRatio ratio={4 / 3} className="overflow-hidden">
+              {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
+              {product.imageUri ? (
+                <Image
+                  source={{ uri: product.imageUri }}
+                  contentFit="cover"
+                  transition={200}
+                  cachePolicy="memory-disk"
+                  className="h-full w-full"
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => setImageLoading(false)}
+                />
+              ) : (
+                <Skeleton className="h-full w-full" />
+              )}
+            </AspectRatio>
 
-          {/* Rating */}
-          {/* {product.rating !== undefined && product.rating > 0 && (
+            {/* Rating */}
+            {/* {product.rating !== undefined && product.rating > 0 && (
             <View className="absolute left-3 top-4">
               <Badge variant="outline" className="rounded-full bg-background/90 px-3 py-1.5">
                 <Icon as={Star} size={14} className="text-foreground" />
@@ -60,45 +64,52 @@ export function ProductCard({ product }: ProductCardProps) {
             </View>
           )} */}
 
-          {/* Trending */}
-          {product.trending && (
-            <View className="absolute right-2 top-2">
-              <Badge
-                variant="outline"
-                className="h-7 w-7 items-center justify-center rounded-full bg-background/90">
-                <Icon as={Flame} size={14} className="text-orange-500" fill="#f97316" />
-              </Badge>
-            </View>
-          )}
-        </View>
-
-        {/* Info del producto */}
-        <View className="gap-1 px-3 pb-3 pt-2">
-          <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
-            {product.name}
-          </Text>
-
-          {/* Stock badge with color indicator */}
-          <View className="flex-row items-center gap-1.5">
-            <View className={`h-1.5 w-1.5 rounded-full ${getStockColor(product.stockQuantity)}`} />
-            <Text className="text-xs text-muted-foreground">
-              {product.stockQuantity} disponibles
-            </Text>
-          </View>
-
-          {/* Prices inline */}
-          <View className="flex-row items-center gap-1.5">
-            <Text className="text-base font-bold text-foreground">
-              S/ {product.price.toFixed(2)}
-            </Text>
-            {product.priceList && product.priceList > product.price && (
-              <Text className="text-xs text-muted-foreground line-through">
-                S/ {product.priceList.toFixed(2)}
-              </Text>
+            {/* Trending */}
+            {product.trending && (
+              <View className="absolute right-2 top-2">
+                <Badge
+                  variant="outline"
+                  className="h-7 w-7 items-center justify-center rounded-full bg-background/90">
+                  <Icon as={Flame} size={14} className="text-orange-500" fill="#f97316" />
+                </Badge>
+              </View>
             )}
           </View>
-        </View>
-      </Card>
-    </Pressable>
-  );
-}
+
+          {/* Info del producto */}
+          <View className="gap-1 px-3 pb-3 pt-2">
+            <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
+              {product.name}
+            </Text>
+
+            {/* Stock badge with color indicator */}
+            <View className="flex-row items-center gap-1.5">
+              <View
+                className={`h-1.5 w-1.5 rounded-full ${getStockColor(product.stockQuantity)}`}
+              />
+              <Text className="text-xs text-muted-foreground">
+                {product.stockQuantity} disponibles
+              </Text>
+            </View>
+
+            {/* Prices inline */}
+            <View className="flex-row items-center gap-1.5">
+              <Text className="text-base font-bold text-foreground">
+                S/ {product.price.toFixed(2)}
+              </Text>
+              {product.priceList && product.priceList > product.price && (
+                <Text className="text-xs text-muted-foreground line-through">
+                  S/ {product.priceList.toFixed(2)}
+                </Text>
+              )}
+            </View>
+          </View>
+        </Card>
+      </Pressable>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if the product slug changes (indicating a different product)
+    return prevProps.product.slug === nextProps.product.slug;
+  }
+);

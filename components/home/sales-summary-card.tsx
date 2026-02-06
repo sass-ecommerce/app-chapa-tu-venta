@@ -17,6 +17,10 @@ interface SalesSummaryCardProps {
   chartColors: ChartColors;
 }
 
+// Inline style constants outside component to avoid re-creating on each render
+const CHART_CONTAINER_STYLE = { width: 150, height: 150 } as const;
+const CHART_SHADOW_STYLE = { width: 140, height: 140 } as const;
+
 export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -48,6 +52,16 @@ export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardPro
     ? (['#1e1b4b', '#312e81', '#3730a3'] as [string, string, ...string[]])
     : (['#f5f3ff', '#ede9fe', '#e9d5ff'] as [string, string, ...string[]]);
 
+  // Memoize background colors for metric icons
+  const metricBackgroundColors = React.useMemo(
+    () => ({
+      completed: chartColors.completed + '20',
+      pending: chartColors.pending + '20',
+      cancelled: chartColors.cancelled + '20',
+    }),
+    [chartColors]
+  );
+
   return (
     <View className="mb-6 overflow-hidden rounded-3xl shadow-lg shadow-primary/20">
       <LinearGradient colors={gradientColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
@@ -61,12 +75,9 @@ export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardPro
           {/* Horizontal Layout: Chart + Metrics */}
           <View className="flex-row items-center justify-between">
             {/* Left Side: Enhanced Donut Chart with Shadow */}
-            <View className="items-center justify-center" style={{ width: 150, height: 150 }}>
+            <View className="items-center justify-center" style={CHART_CONTAINER_STYLE}>
               {/* Chart Shadow Effect */}
-              <View
-                className="absolute rounded-full bg-primary/10"
-                style={{ width: 140, height: 140 }}
-              />
+              <View className="absolute rounded-full bg-primary/10" style={CHART_SHADOW_STYLE} />
 
               <PieChart
                 data={chartData}
@@ -99,7 +110,7 @@ export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardPro
               <View className="flex-row items-center gap-3">
                 <View
                   className="h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: chartColors.completed + '20' }}>
+                  style={{ backgroundColor: metricBackgroundColors.completed }}>
                   <Icon as={CheckCircle2} size={20} className="text-green-400" />
                 </View>
                 <View className="flex-1">
@@ -116,7 +127,7 @@ export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardPro
               <View className="flex-row items-center gap-3">
                 <View
                   className="h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: chartColors.pending + '20' }}>
+                  style={{ backgroundColor: metricBackgroundColors.pending }}>
                   <Icon as={Clock} size={20} className="text-yellow-400" />
                 </View>
                 <View className="flex-1">
@@ -133,7 +144,7 @@ export function SalesSummaryCard({ salesData, chartColors }: SalesSummaryCardPro
               <View className="flex-row items-center gap-3">
                 <View
                   className="h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ backgroundColor: chartColors.cancelled + '20' }}>
+                  style={{ backgroundColor: metricBackgroundColors.cancelled }}>
                   <Icon as={XCircle} size={20} className="text-red-400" />
                 </View>
                 <View className="flex-1">

@@ -14,9 +14,9 @@ import {
 } from 'lucide-react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
+import { Image } from 'expo-image';
 import {
   Alert,
-  Image,
   Pressable,
   ScrollView,
   View,
@@ -177,10 +177,12 @@ export default function ProductoDetalleScreen() {
           {product.imageUri ? (
             <Image
               source={{ uri: product.imageUri }}
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
               style={{ width: '100%', height: 400 }}
-              resizeMode="cover"
               onLoadStart={() => setImageLoading(true)}
-              onLoadEnd={() => setImageLoading(false)}
+              onLoad={() => setImageLoading(false)}
               onError={() => setImageLoading(false)}
             />
           ) : (

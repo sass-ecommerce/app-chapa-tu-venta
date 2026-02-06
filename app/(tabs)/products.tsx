@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Alert, View, ScrollView, Pressable, RefreshControl } from 'react-native';
 
+import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useAuth, useUser } from '@clerk/clerk-expo';
@@ -27,10 +28,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { useProductsStore } from '@/lib/store/products-store';
+import type { TabValue } from '@/lib/store/products-store';
 import { getProducts } from '@/lib/api/products';
 import type { Product } from '@/lib/api/products';
 import type { UserPublicMetadata } from '@/lib/types/clerk';
 import { REFRESH_COLORS } from '@/lib/constants';
+
+// Type guard to validate tab value
+function isValidTabValue(value: string): value is TabValue {
+  return value === 'all' || value === 'low-stock' || value === 'out-of-stock';
+}
 
 export default function ProductosScreen() {
   const router = useRouter();
@@ -216,7 +223,15 @@ export default function ProductosScreen() {
 
           {/* Tabs Navigation */}
           {!isLoading && !error && products && (
-            <Tabs tabs={tabs} value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} />
+            <Tabs
+              tabs={tabs}
+              value={selectedTab}
+              onValueChange={(v) => {
+                if (isValidTabValue(v)) {
+                  setSelectedTab(v);
+                }
+              }}
+            />
           )}
 
           {/* Category Chips + View Toggle */}
@@ -296,18 +311,27 @@ export default function ProductosScreen() {
           {!isLoading && !error && filteredProducts.length > 0 && (
             <>
               {viewMode === 'grid' ? (
-                <View className="flex-row flex-wrap px-2.5 pb-24">
-                  {filteredProducts.map((product) => (
-                    <View key={product.slug} className="w-1/2 p-1.5">
-                      <ProductCard product={product} />
-                    </View>
-                  ))}
+                <View className="px-2.5 pb-24" style={{ minHeight: 400 }}>
+                  <FlashList
+                    data={filteredProducts}
+                    renderItem={({ item }) => (
+                      <View className="w-1/2 p-1.5">
+                        <ProductCard product={item} />
+                      </View>
+                    )}
+                    keyExtractor={(item) => item.slug}
+                    numColumns={2}
+                    showsVerticalScrollIndicator={false}
+                  />
                 </View>
               ) : (
-                <View className="px-5 pb-24">
-                  {filteredProducts.map((product) => (
-                    <ProductCardList key={product.slug} product={product} />
-                  ))}
+                <View className="px-5 pb-24" style={{ minHeight: 400 }}>
+                  <FlashList
+                    data={filteredProducts}
+                    renderItem={({ item }) => <ProductCardList product={item} />}
+                    keyExtractor={(item) => item.slug}
+                    showsVerticalScrollIndicator={false}
+                  />
                 </View>
               )}
             </>

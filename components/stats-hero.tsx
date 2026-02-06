@@ -40,23 +40,35 @@ function StatCard({ icon, value, label, delay, color }: StatCardProps) {
 }
 
 export function StatsHero({ products, isLoading = false }: StatsHeroProps) {
-  const totalProducts = products.length;
-  const lowStockCount = products.filter((p) => p.stockQuantity > 0 && p.stockQuantity < 10).length;
-  const totalValue = products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0);
+  // Memoize all calculations to avoid recalculating on every render
+  const stats = React.useMemo(() => {
+    const totalProducts = products.length;
+    const lowStockCount = products.filter(
+      (p) => p.stockQuantity > 0 && p.stockQuantity < 10
+    ).length;
+    const totalValue = products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0);
+
+    return {
+      totalProducts,
+      lowStockCount,
+      totalValue,
+      formattedValue: `S/ ${(totalValue / 1000).toFixed(1)}K`,
+    };
+  }, [products]);
 
   // Animated counter for total value
   const animatedValue = useSharedValue(0);
 
   React.useEffect(() => {
-    if (!isLoading && totalValue > 0) {
+    if (!isLoading && stats.totalValue > 0) {
       animatedValue.value = withDelay(
         400,
-        withTiming(totalValue, {
+        withTiming(stats.totalValue, {
           duration: 1200,
         })
       );
     }
-  }, [totalValue, isLoading]);
+  }, [stats.totalValue, isLoading]);
 
   if (isLoading) {
     return (
@@ -77,21 +89,21 @@ export function StatsHero({ products, isLoading = false }: StatsHeroProps) {
       <View className="flex-row gap-2">
         <StatCard
           icon={<Package size={16} className="text-primary" />}
-          value={totalProducts}
+          value={stats.totalProducts}
           label="Total Productos"
           delay={0}
           color="primary"
         />
         <StatCard
           icon={<TrendingDown size={16} className="text-orange-500" />}
-          value={lowStockCount}
+          value={stats.lowStockCount}
           label="Bajo Stock"
           delay={100}
           color="orange-500"
         />
         <StatCard
           icon={<DollarSign size={16} className="text-green-500" />}
-          value={`S/ ${(totalValue / 1000).toFixed(1)}K`}
+          value={stats.formattedValue}
           label="Valor Total"
           delay={200}
           color="green-500"

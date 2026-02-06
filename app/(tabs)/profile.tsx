@@ -4,7 +4,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
-  TouchableOpacity,
+  Pressable,
   RefreshControl,
 } from 'react-native';
 
@@ -196,7 +196,7 @@ export default function PerfilScreen() {
         {/* Header con Avatar y Info del Usuario */}
         <AnimatedCard delay={0}>
           <CardHeader className="items-center gap-4 pb-6">
-            <TouchableOpacity onPress={() => setShowImageDialog(true)} disabled={isUploadingImage}>
+            <Pressable onPress={() => setShowImageDialog(true)} disabled={isUploadingImage}>
               <View className="relative">
                 <Avatar alt={`${user?.fullName || 'Usuario'}'s avatar`} className="size-24">
                   <AvatarImage source={{ uri: imageUri || user?.imageUrl }} />
@@ -212,7 +212,7 @@ export default function PerfilScreen() {
                   )}
                 </View>
               </View>
-            </TouchableOpacity>
+            </Pressable>
             <View className="items-center gap-1">
               <Text className="text-center text-2xl font-semibold">
                 {user?.fullName || 'Usuario'}
