@@ -36,7 +36,7 @@ export async function getProducts(storeSlug: string, token: string): Promise<Pro
     { storeSlug }
   );
 
-  console.log('✅ [API] Products fetched:', data);
+  console.log('✅ [API] Products fetched:', data.length, 'products');
 
   // Convertir solo los campos necesarios (string a number)
   return data.map((item) => ({

@@ -5,10 +5,9 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import { Flame, Star } from 'lucide-react-native';
 import * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, Image } from 'react-native';
 import type { Product } from '@/lib/api/products';
 
 type ProductCardProps = {
@@ -19,6 +18,12 @@ export const ProductCard = React.memo(
   ({ product }: ProductCardProps) => {
     const router = useRouter();
     const [imageLoading, setImageLoading] = React.useState(true);
+    const [imageError, setImageError] = React.useState(false);
+
+    React.useEffect(() => {
+      setImageLoading(true);
+      setImageError(false);
+    }, [product.imageUri]);
 
     const handlePress = () => {
       router.push(`/products/${product.slug}`);
@@ -31,27 +36,39 @@ export const ProductCard = React.memo(
       return 'bg-red-500';
     };
 
+    // Check if imageUri is valid
+    const hasValidImage = product.imageUri && product.imageUri.trim() !== '';
+
     return (
       <Pressable onPress={handlePress} className="active:opacity-90">
         <Card className="w-full overflow-hidden rounded-xl bg-card">
           <View className="relative">
             {/* Imagen del producto */}
-            <AspectRatio ratio={4 / 3} className="overflow-hidden">
-              {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
-              {product.imageUri ? (
-                <Image
-                  source={{ uri: product.imageUri }}
-                  contentFit="cover"
-                  transition={200}
-                  cachePolicy="memory-disk"
-                  className="h-full w-full"
-                  onLoadStart={() => setImageLoading(true)}
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => setImageLoading(false)}
-                />
-              ) : (
-                <Skeleton className="h-full w-full" />
-              )}
+            <AspectRatio ratio={4 / 3} className="overflow-hidden bg-muted">
+              <View className="relative h-full w-full">
+                {imageLoading && hasValidImage && !imageError && (
+                  <View className="absolute inset-0 z-10">
+                    <Skeleton className="h-full w-full" />
+                  </View>
+                )}
+                {hasValidImage && !imageError ? (
+                  <Image
+                    source={{ uri: product.imageUri }}
+                    resizeMode="cover"
+                    style={{ width: '100%', height: '100%' }}
+                    onLoadStart={() => setImageLoading(true)}
+                    onLoad={() => setImageLoading(false)}
+                    onError={() => {
+                      setImageLoading(false);
+                      setImageError(true);
+                    }}
+                  />
+                ) : (
+                  <View className="absolute inset-0 items-center justify-center bg-muted">
+                    <Text className="text-4xl">📦</Text>
+                  </View>
+                )}
+              </View>
             </AspectRatio>
 
             {/* Rating */}

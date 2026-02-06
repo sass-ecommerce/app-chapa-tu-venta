@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Alert, View, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { Alert, View, Pressable, RefreshControl, ScrollView } from 'react-native';
 
 import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
@@ -150,6 +150,199 @@ export default function ProductosScreen() {
     ];
   }, [products]);
 
+  // Render header component with search, stats, tabs, and filters
+  const renderHeader = React.useCallback(() => {
+    return (
+      <View className="pt-12">
+        {/* Search bar with menu and notification bell */}
+        <View className="flex-row items-center gap-3 px-5 pb-4">
+          {/* Menu Button with DropdownMenu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
+                <Icon as={Menu} className="text-muted-foreground" size={22} />
+              </Pressable>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuItem
+                onPress={() => router.push('/products/create')}
+                className="flex-row items-center gap-3">
+                <Icon as={Plus} className="text-muted-foreground" size={18} />
+                <Text className="text-base">Crear producto</Text>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
+                className="flex-row items-center gap-3">
+                <Icon as={FolderPlus} className="text-muted-foreground" size={18} />
+                <Text className="text-base">Crear colección</Text>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <View className="relative flex-1">
+            <Input
+              placeholder="Buscar productos..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              className="h-12 rounded-full border-0 bg-muted pl-12"
+              placeholderTextColor="#666"
+            />
+            <View className="absolute left-4 top-3">
+              <Icon as={Search} className="text-muted-foreground" size={20} />
+            </View>
+          </View>
+
+          {/* Notification Bell */}
+          <Pressable
+            onPress={toggleNotifications}
+            className="relative h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
+            <Icon as={Bell} className="text-muted-foreground" size={22} />
+            {hasNotifications && (
+              <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-destructive" />
+            )}
+          </Pressable>
+        </View>
+
+        {/* Stats Hero Section */}
+        {!isLoading && !error && products && <StatsHero products={products} />}
+
+        {/* Tabs Navigation */}
+        {!isLoading && !error && products && (
+          <Tabs
+            tabs={tabs}
+            value={selectedTab}
+            onValueChange={(v) => {
+              if (isValidTabValue(v)) {
+                setSelectedTab(v);
+              }
+            }}
+          />
+        )}
+
+        {/* Category Chips + View Toggle */}
+        {!isLoading && !error && categories.length > 0 && (
+          <View className="gap-3 px-5 py-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm font-semibold text-muted-foreground">Filtrar por:</Text>
+              <Pressable
+                onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className="flex-row items-center gap-2 rounded-full bg-muted px-3 py-1.5 active:opacity-80">
+                {viewMode === 'grid' ? (
+                  <Icon as={List} className="text-muted-foreground" size={16} />
+                ) : (
+                  <Icon as={Grid3x3} className="text-muted-foreground" size={16} />
+                )}
+                <Text className="text-xs font-medium text-muted-foreground">
+                  {viewMode === 'grid' ? 'Lista' : 'Grid'}
+                </Text>
+              </Pressable>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View className="flex-row gap-2">
+                {categories.map((category) => (
+                  <Chip
+                    key={category}
+                    label={category}
+                    selected={selectedCategories.includes(category)}
+                    onPress={() => toggleCategory(category)}
+                    count={
+                      category === 'Destacados'
+                        ? products?.filter((p) => p.trending).length
+                        : category === 'Por Agotarse'
+                          ? products?.filter((p) => p.stockQuantity < 10).length
+                          : products?.filter((p) => p.priceList > p.price).length
+                    }
+                  />
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+      </View>
+    );
+  }, [
+    searchQuery,
+    setSearchQuery,
+    hasNotifications,
+    toggleNotifications,
+    isLoading,
+    error,
+    products,
+    tabs,
+    selectedTab,
+    setSelectedTab,
+    categories,
+    viewMode,
+    setViewMode,
+    selectedCategories,
+    toggleCategory,
+    router,
+  ]);
+
+  // Render empty component for loading, error, and empty states
+  const renderEmpty = React.useCallback(() => {
+    if (isLoading) {
+      return (
+        <View className="px-2.5 py-4">
+          <ProductSkeletonGrid count={6} />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View className="mx-5 rounded-2xl bg-red-50 p-5 dark:bg-red-950/20">
+          <Text className="mb-2 text-base font-semibold text-red-900 dark:text-red-400">
+            Error al cargar productos
+          </Text>
+          <Text className="mb-4 text-sm text-red-700 dark:text-red-500">
+            {error instanceof Error ? error.message : 'Error desconocido'}
+          </Text>
+          <Button onPress={() => refetch()} variant="outline" className="border-red-300">
+            <Text className="text-red-700 dark:text-red-400">Reintentar</Text>
+          </Button>
+        </View>
+      );
+    }
+
+    // Empty state - no products match filters
+    return (
+      <View className="flex-1 items-center justify-center py-20">
+        <Text className="text-lg font-medium text-muted-foreground">
+          No se encontraron productos
+        </Text>
+        <Text className="mt-2 text-sm text-muted-foreground">Intenta con otros filtros</Text>
+      </View>
+    );
+  }, [isLoading, error, refetch]);
+
+  // Render footer with spacer for FAB
+  const renderFooter = React.useCallback(() => {
+    return <View className="h-24" />;
+  }, []);
+
+  // Render item based on view mode
+  const renderItem = React.useCallback(
+    ({ item }: { item: Product }) => {
+      if (viewMode === 'grid') {
+        return (
+          <View className="p-1.5">
+            <ProductCard product={item} />
+          </View>
+        );
+      } else {
+        return (
+          <View className="px-5">
+            <ProductCardList product={item} />
+          </View>
+        );
+      }
+    },
+    [viewMode]
+  );
+
   return (
     <View className="flex-1 bg-background">
       {/* Floating Action Button */}
@@ -157,8 +350,16 @@ export default function ProductosScreen() {
         <FAB onPress={() => router.push('/products/create')} size="large" />
       </View>
 
-      <ScrollView
-        className="flex-1"
+      <FlashList
+        data={filteredProducts}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.slug}
+        numColumns={viewMode === 'grid' ? 2 : 1}
+        key={viewMode} // Force re-render when switching between grid and list
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -166,178 +367,8 @@ export default function ProductosScreen() {
             colors={[REFRESH_COLORS.LIGHT]}
             tintColor={REFRESH_COLORS.LIGHT}
           />
-        }>
-        <View className="pt-12">
-          {/* Search bar with menu and notification bell */}
-          <View className="flex-row items-center gap-3 px-5 pb-4">
-            {/* Menu Button with DropdownMenu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Pressable className="h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
-                  <Icon as={Menu} className="text-muted-foreground" size={22} />
-                </Pressable>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuItem
-                  onPress={() => router.push('/products/create')}
-                  className="flex-row items-center gap-3">
-                  <Icon as={Plus} className="text-muted-foreground" size={18} />
-                  <Text className="text-base">Crear producto</Text>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
-                  className="flex-row items-center gap-3">
-                  <Icon as={FolderPlus} className="text-muted-foreground" size={18} />
-                  <Text className="text-base">Crear colección</Text>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <View className="relative flex-1">
-              <Input
-                placeholder="Buscar productos..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                className="h-12 rounded-full border-0 bg-muted pl-12"
-                placeholderTextColor="#666"
-              />
-              <View className="absolute left-4 top-3">
-                <Icon as={Search} className="text-muted-foreground" size={20} />
-              </View>
-            </View>
-
-            {/* Notification Bell */}
-            <Pressable
-              onPress={toggleNotifications}
-              className="relative h-12 w-12 items-center justify-center rounded-full bg-muted active:opacity-80">
-              <Icon as={Bell} className="text-muted-foreground" size={22} />
-              {hasNotifications && (
-                <View className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-destructive" />
-              )}
-            </Pressable>
-          </View>
-
-          {/* Stats Hero Section */}
-          {!isLoading && !error && products && <StatsHero products={products} />}
-
-          {/* Tabs Navigation */}
-          {!isLoading && !error && products && (
-            <Tabs
-              tabs={tabs}
-              value={selectedTab}
-              onValueChange={(v) => {
-                if (isValidTabValue(v)) {
-                  setSelectedTab(v);
-                }
-              }}
-            />
-          )}
-
-          {/* Category Chips + View Toggle */}
-          {!isLoading && !error && categories.length > 0 && (
-            <View className="gap-3 px-5 py-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-sm font-semibold text-muted-foreground">Filtrar por:</Text>
-                <Pressable
-                  onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                  className="flex-row items-center gap-2 rounded-full bg-muted px-3 py-1.5 active:opacity-80">
-                  {viewMode === 'grid' ? (
-                    <Icon as={List} className="text-muted-foreground" size={16} />
-                  ) : (
-                    <Icon as={Grid3x3} className="text-muted-foreground" size={16} />
-                  )}
-                  <Text className="text-xs font-medium text-muted-foreground">
-                    {viewMode === 'grid' ? 'Lista' : 'Grid'}
-                  </Text>
-                </Pressable>
-              </View>
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-2">
-                  {categories.map((category) => (
-                    <Chip
-                      key={category}
-                      label={category}
-                      selected={selectedCategories.includes(category)}
-                      onPress={() => toggleCategory(category)}
-                      count={
-                        category === 'Destacados'
-                          ? products?.filter((p) => p.trending).length
-                          : category === 'Por Agotarse'
-                            ? products?.filter((p) => p.stockQuantity < 10).length
-                            : products?.filter((p) => p.priceList > p.price).length
-                      }
-                    />
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Loading State with Skeletons */}
-          {isLoading && (
-            <View className="px-2.5 py-4">
-              <ProductSkeletonGrid count={6} />
-            </View>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <View className="mx-5 rounded-2xl bg-red-50 p-5 dark:bg-red-950/20">
-              <Text className="mb-2 text-base font-semibold text-red-900 dark:text-red-400">
-                Error al cargar productos
-              </Text>
-              <Text className="mb-4 text-sm text-red-700 dark:text-red-500">
-                {error instanceof Error ? error.message : 'Error desconocido'}
-              </Text>
-              <Button onPress={() => refetch()} variant="outline" className="border-red-300">
-                <Text className="text-red-700 dark:text-red-400">Reintentar</Text>
-              </Button>
-            </View>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && !error && filteredProducts.length === 0 && (
-            <View className="flex-1 items-center justify-center py-20">
-              <Text className="text-lg font-medium text-muted-foreground">
-                No se encontraron productos
-              </Text>
-              <Text className="mt-2 text-sm text-muted-foreground">Intenta con otros filtros</Text>
-            </View>
-          )}
-
-          {/* Products Grid or List */}
-          {!isLoading && !error && filteredProducts.length > 0 && (
-            <>
-              {viewMode === 'grid' ? (
-                <View className="px-2.5 pb-24" style={{ minHeight: 400 }}>
-                  <FlashList
-                    data={filteredProducts}
-                    renderItem={({ item }) => (
-                      <View className="w-1/2 p-1.5">
-                        <ProductCard product={item} />
-                      </View>
-                    )}
-                    keyExtractor={(item) => item.slug}
-                    numColumns={2}
-                    showsVerticalScrollIndicator={false}
-                  />
-                </View>
-              ) : (
-                <View className="px-5 pb-24" style={{ minHeight: 400 }}>
-                  <FlashList
-                    data={filteredProducts}
-                    renderItem={({ item }) => <ProductCardList product={item} />}
-                    keyExtractor={(item) => item.slug}
-                    showsVerticalScrollIndicator={false}
-                  />
-                </View>
-              )}
-            </>
-          )}
-        </View>
-      </ScrollView>
+        }
+      />
     </View>
   );
 }

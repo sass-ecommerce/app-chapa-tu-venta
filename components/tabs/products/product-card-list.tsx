@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { View, Pressable } from 'react-native';
+import { View, Pressable, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import { Text } from '@/components/ui/text';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +15,12 @@ export const ProductCardList = React.memo(
   ({ product }: ProductCardListProps) => {
     const router = useRouter();
     const [imageLoading, setImageLoading] = React.useState(true);
+    const [imageError, setImageError] = React.useState(false);
+
+    React.useEffect(() => {
+      setImageLoading(true);
+      setImageError(false);
+    }, [product.imageUri]);
 
     const handlePress = () => {
       console.log('Navigating to product detail for slug:', product.slug);
@@ -28,25 +33,36 @@ export const ProductCardList = React.memo(
       return 'bg-red-500';
     };
 
+    const hasValidImage = product.imageUri && product.imageUri.trim() !== '';
+
     return (
       <Pressable onPress={handlePress} className="active:opacity-90">
         <Card className="mb-2 flex-row items-center gap-3 overflow-hidden rounded-xl bg-card p-3">
           {/* Image thumbnail */}
           <View className="h-16 w-16 overflow-hidden rounded-lg bg-muted">
-            {imageLoading && product.imageUri && <Skeleton className="h-full w-full" />}
-            {product.imageUri ? (
-              <Image
-                source={{ uri: product.imageUri }}
-                contentFit="cover"
-                transition={200}
-                cachePolicy="memory-disk"
-                className="h-full w-full"
-                onLoadStart={() => setImageLoading(true)}
-                onLoad={() => setImageLoading(false)}
-                onError={() => setImageLoading(false)}
-              />
+            {hasValidImage && !imageError ? (
+              <>
+                {imageLoading && (
+                  <View className="absolute inset-0 z-10">
+                    <Skeleton className="h-full w-full" />
+                  </View>
+                )}
+                <Image
+                  source={{ uri: product.imageUri }}
+                  resizeMode="cover"
+                  style={{ width: '100%', height: '100%' }}
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
+                />
+              </>
             ) : (
-              <Skeleton className="h-full w-full" />
+              <View className="h-full w-full items-center justify-center bg-muted">
+                <Text className="text-2xl">📦</Text>
+              </View>
             )}
           </View>
 
