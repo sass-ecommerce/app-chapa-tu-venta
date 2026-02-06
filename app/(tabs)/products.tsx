@@ -14,10 +14,10 @@ import { Chip } from '@/components/ui/chip';
 import { FAB } from '@/components/ui/fab';
 import { Icon } from '@/components/ui/icon';
 
-import { ProductCard } from '@/components/product-card';
-import { ProductCardList } from '@/components/product-card-list';
-import { ProductSkeletonGrid } from '@/components/product-skeleton';
-import { StatsHero } from '@/components/stats-hero';
+import { ProductCard } from '@/components/tabs/products/product-card';
+import { ProductCardList } from '@/components/tabs/products/product-card-list';
+import { ProductSkeletonGrid } from '@/components/tabs/products/product-skeleton';
+import { StatsHero } from '@/components/tabs/products/stats-hero';
 
 import { Search, Bell, Menu, Plus, FolderPlus, Grid3x3, List } from 'lucide-react-native';
 import {

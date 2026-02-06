@@ -8,11 +8,11 @@ import { router } from 'expo-router';
 import { ShoppingBag, Package } from 'lucide-react-native';
 import { Icon } from '@/components/ui/icon';
 
-import { HomeHeader } from '@/components/home/home-header';
-import { SalesSummaryCard } from '@/components/home/sales-summary-card';
-import { RecentProductsSection } from '@/components/home/recent-products-section';
-import { RecentSalesSection } from '@/components/home/recent-sales-section';
-import type { SalesSummary, Transaction } from '@/components/home/types';
+import { HomeHeader } from '@/components/tabs/home/home-header';
+import { SalesSummaryCard } from '@/components/tabs/home/sales-summary-card';
+import { RecentProductsSection } from '@/components/tabs/home/recent-products-section';
+import { RecentSalesSection } from '@/components/tabs/home/recent-sales-section';
+import type { SalesSummary, Transaction } from '@/components/tabs/home/types';
 import type { UserPublicMetadata } from '@/lib/types/clerk';
 import { getProducts } from '@/lib/api/products';
 import { REFRESH_COLORS } from '@/lib/constants';
