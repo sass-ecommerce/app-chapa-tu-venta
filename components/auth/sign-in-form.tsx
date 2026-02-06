@@ -1,36 +1,52 @@
-import { SocialConnections } from '@/components/social-connections';
+import { SocialConnections } from '@/components/auth/social-connections';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { useSignUp } from '@clerk/clerk-expo';
+import { useSignIn, useUser } from '@clerk/clerk-expo';
 import { Link, router } from 'expo-router';
 import * as React from 'react';
-import { TextInput, View } from 'react-native';
+import { type TextInput, View } from 'react-native';
 
-export function SignUpForm() {
-  const { signUp, isLoaded } = useSignUp();
+import { redirectAfterAuth } from '@/lib/auth/navigation-helpers';
+
+export function SignInForm() {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const { user } = useUser();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const passwordInputRef = React.useRef<TextInput>(null);
   const [error, setError] = React.useState<{ email?: string; password?: string }>({});
 
   async function onSubmit() {
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      return;
+    }
 
-    // Start sign-up process using email and password provided
+    // Start the sign-in process using the email and password provided
     try {
-      await signUp.create({
-        emailAddress: email,
+      const signInAttempt = await signIn.create({
+        identifier: email,
         password,
       });
 
-      // Send user an email with verification code
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      // If sign-in process is complete, set the created session as active
+      // and redirect the user
+      if (signInAttempt.status === 'complete') {
+        setError({ email: '', password: '' });
+        await setActive({ session: signInAttempt.createdSessionId });
 
-      router.push(`/(auth)/sign-up/verify-email?email=${email}`);
+        // Wait for user to be loaded and redirect based on onboarding status
+        if (user) {
+          await user.reload();
+          redirectAfterAuth(user, router);
+        }
+        return;
+      }
+      // TODO: Handle other statuses
+      console.error(JSON.stringify(signInAttempt, null, 2));
     } catch (err) {
       // See https://go.clerk.com/mRUDrIe for more info on error handling
       if (err instanceof Error) {
@@ -52,9 +68,11 @@ export function SignUpForm() {
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
-          <CardTitle className="text-center text-xl sm:text-left">Crea tu cuenta</CardTitle>
+          <CardTitle className="text-center text-xl sm:text-left">
+            Inicia sesión en Chapa Tu Venta
+          </CardTitle>
           <CardDescription className="text-center sm:text-left">
-            ¡Bienvenido! Por favor completa los detalles para comenzar.
+            ¡Bienvenido de nuevo! Inicia sesión para continuar
           </CardDescription>
         </CardHeader>
         <CardContent className="gap-6">
@@ -79,6 +97,14 @@ export function SignUpForm() {
             <View className="gap-1.5">
               <View className="flex-row items-center">
                 <Label htmlFor="password">Contraseña</Label>
+                <Link asChild href={`/(auth)/forgot-password?email=${email}`}>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="ml-auto h-4 px-1 py-0 web:h-fit sm:h-4">
+                    <Text className="font-normal leading-4">¿Olvidaste tu contraseña?</Text>
+                  </Button>
+                </Link>
               </View>
               <Input
                 ref={passwordInputRef}
@@ -97,9 +123,9 @@ export function SignUpForm() {
             </Button>
           </View>
           <Text className="text-center text-sm">
-            ¿Ya tienes una cuenta?{' '}
-            <Link href="/(auth)/sign-in" dismissTo className="text-sm underline underline-offset-4">
-              Inicia sesión
+            ¿No tienes una cuenta?{' '}
+            <Link href="/(auth)/sign-up" className="text-sm underline underline-offset-4">
+              Regístrate
             </Link>
           </Text>
           <View className="flex-row items-center">
