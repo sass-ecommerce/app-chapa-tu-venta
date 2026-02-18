@@ -1,8 +1,8 @@
-import type { Product } from '@/lib/api/products';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
-import { Skeleton } from '@/components/ui/skeleton';
+import type { Product } from '@/features/products/api/products';
+import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
+import { Text } from '@/shared/components/ui/text';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import {
   Archive,
   Edit,
@@ -23,10 +23,11 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { useQuery } from '@tanstack/react-query';
-import { getProductBySlug } from '@/lib/api/products';
-import { useAuth } from '@clerk/clerk-expo';
+
+import { getProductBySlug } from '@/features/products/api/products';
+import { useAuth } from '@/shared/hooks/hooks';
 
 export default function ProductoDetalleScreen() {
   const { slug: productSlug } = useLocalSearchParams<{ slug: string }>();

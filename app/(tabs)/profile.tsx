@@ -10,8 +10,9 @@ import {
 
 import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from 'nativewind';
-import { useAuth, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
+
+import { useAuth, useUser } from '@/shared/hooks/hooks';
 import {
   LogOutIcon,
   MailIcon,
@@ -30,13 +31,13 @@ import {
   SunIcon,
 } from 'lucide-react-native';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { AnimatedCard } from '@/components/ui/animated-card';
-import { CardContent, CardHeader } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import { Button } from '@/shared/components/ui/button';
+import { AnimatedCard } from '@/shared/components/ui/animated-card';
+import { CardContent, CardHeader } from '@/shared/components/ui/card';
+import { Icon } from '@/shared/components/ui/icon';
+import { Separator } from '@/shared/components/ui/separator';
+import { Text } from '@/shared/components/ui/text';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,11 +47,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { ANIMATION, REFRESH_COLORS } from '@/lib/constants';
+} from '@/shared/components/ui/alert-dialog';
+import { ANIMATION, REFRESH_COLORS } from '@/shared/config/constants';
 
 export default function PerfilScreen() {
-  const { user } = useUser();
+  const { user, refreshUser } = useUser();
   const { signOut } = useAuth();
   const { colorScheme, setColorScheme } = useColorScheme();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
@@ -99,22 +100,14 @@ export default function PerfilScreen() {
       setIsUploadingImage(true);
       setImageUri(uri);
 
-      // Convertir la imagen a base64
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const reader = new FileReader();
+      // TODO: Implementar upload de imagen con API custom
+      // Por ahora solo mostramos la imagen localmente
+      console.log('⚠️ [Profile] Image upload not yet implemented in custom API');
 
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-
-        // Actualizar imagen en Clerk
-        await user.setProfileImage({ file: base64data });
-
-        console.log('✅ [Profile] Image uploaded successfully');
-        Alert.alert('Éxito', 'Foto de perfil actualizada');
-      };
-
-      reader.readAsDataURL(blob);
+      Alert.alert(
+        'En desarrollo',
+        'La función de actualizar foto de perfil estará disponible pronto'
+      );
     } catch (error) {
       console.error('❌ [Profile] Error uploading image:', error);
       Alert.alert('Error', 'No se pudo actualizar la foto de perfil');
@@ -125,14 +118,15 @@ export default function PerfilScreen() {
   };
 
   const userInitials = React.useMemo(() => {
-    const name = user?.fullName || user?.emailAddresses[0]?.emailAddress || 'U';
+    if (!user) return 'U';
+    const name = `${user.firstName} ${user.lastName}`.trim() || user.email || 'U';
     return name
       .split(' ')
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
-  }, [user?.fullName, user?.emailAddresses]);
+  }, [user?.firstName, user?.lastName, user?.email]);
 
   const createdAt = React.useMemo(() => {
     if (!user?.createdAt) return null;
@@ -176,10 +170,10 @@ export default function PerfilScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // Reload user data
-    await user?.reload();
+    // Reload user data from API
+    await refreshUser();
     setRefreshing(false);
-  }, [user]);
+  }, [refreshUser]);
 
   return (
     <ScrollView
@@ -198,8 +192,10 @@ export default function PerfilScreen() {
           <CardHeader className="items-center gap-4 pb-6">
             <Pressable onPress={() => setShowImageDialog(true)} disabled={isUploadingImage}>
               <View className="relative">
-                <Avatar alt={`${user?.fullName || 'Usuario'}'s avatar`} className="size-24">
-                  <AvatarImage source={{ uri: imageUri || user?.imageUrl }} />
+                <Avatar
+                  alt={`${user ? `${user.firstName} ${user.lastName}` : 'Usuario'}'s avatar`}
+                  className="size-24">
+                  <AvatarImage source={{ uri: imageUri || user?.imageUrl || undefined }} />
                   <AvatarFallback>
                     <Text className="text-2xl">{userInitials}</Text>
                   </AvatarFallback>
@@ -215,11 +211,8 @@ export default function PerfilScreen() {
             </Pressable>
             <View className="items-center gap-1">
               <Text className="text-center text-2xl font-semibold">
-                {user?.fullName || 'Usuario'}
+                {user ? `${user.firstName} ${user.lastName}`.trim() : 'Usuario'}
               </Text>
-              {user?.username && (
-                <Text className="text-center text-muted-foreground">@{user.username}</Text>
-              )}
             </View>
             <Button
               variant="outline"
@@ -244,13 +237,9 @@ export default function PerfilScreen() {
               </View>
               <View className="flex-1">
                 <Text className="text-sm text-muted-foreground">Email</Text>
-                <Text className="font-medium">
-                  {user?.emailAddresses[0]?.emailAddress || 'No disponible'}
-                </Text>
+                <Text className="font-medium">{user?.email || 'No disponible'}</Text>
               </View>
-              {user?.emailAddresses[0]?.verification?.status === 'verified' && (
-                <Icon as={ShieldCheckIcon} className="size-5 text-green-600" />
-              )}
+              {user?.email && <Icon as={ShieldCheckIcon} className="size-5 text-green-600" />}
             </View>
 
             <Separator />

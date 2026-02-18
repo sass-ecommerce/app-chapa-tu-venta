@@ -1,4 +1,4 @@
-import { EditProfileForm } from '@/components/tabs/profile/edit-profile-form';
+import { EditProfileForm } from '@/features/profile/components/edit-profile-form';
 import { router, Stack } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';

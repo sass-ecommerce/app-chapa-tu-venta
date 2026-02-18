@@ -7,13 +7,13 @@ import { z } from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, Link, Sparkles, Package, DollarSign, Hash } from 'lucide-react-native';
 
-import { Text } from '@/components/ui/text';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { AnimatedCard } from '@/components/ui/animated-card';
-import { Icon } from '@/components/ui/icon';
+import { Text } from '@/shared/components/ui/text';
+import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { Label } from '@/shared/components/ui/label';
+import { Switch } from '@/shared/components/ui/switch';
+import { AnimatedCard } from '@/shared/components/ui/animated-card';
+import { Icon } from '@/shared/components/ui/icon';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +21,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ANIMATION } from '@/lib/constants';
+} from '@/shared/components/ui/dropdown-menu';
+import { ANIMATION } from '@/shared/config/constants';
 
 export default function CreateProductScreen() {
   const router = useRouter();

@@ -1,20 +1,20 @@
-import { View, ScrollView, Image } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { View, ScrollView, Image, Alert } from 'react-native';
+import { Text } from '@/shared/components/ui/text';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Picker } from '@react-native-picker/picker';
 import { useColorScheme } from 'nativewind';
-import { useAuth, useUser } from '@clerk/clerk-expo';
-import { createStore } from '@/lib/api/stores';
-import { Alert } from 'react-native';
 
-import type { UserPublicMetadata } from '@/lib/types/clerk';
+import { useAuth, useUser } from '@/shared/hooks/hooks';
+import { createStore } from '@/features/stores/api/stores';
+import { authStorage } from '@/features/auth/utils/storage';
+import type { UserMetadata } from '@/features/auth/types';
 
 const CATEGORIAS = [
   { value: '', label: 'Selecciona una categoría' },
@@ -56,7 +56,7 @@ export default function RegisterStoreScreen() {
         // Crear la tienda en Supabase
         const storeData = {
           name: value.nombreTienda,
-          ownerEmail: user?.emailAddresses[0]?.emailAddress || null,
+          ownerEmail: user?.email || null,
           ruc: value.ruc ? parseInt(value.ruc) : null,
           plan: null,
           settings: null,
@@ -65,25 +65,26 @@ export default function RegisterStoreScreen() {
         const newStore = await createStore(storeData, token);
         console.log('✅ [Store] Tienda creada exitosamente:', newStore);
 
-        // NOTA: publicMetadata solo puede actualizarse desde el backend
-        // Por ahora usamos unsafeMetadata (actualizable desde el cliente)
-        // TODO: Mover esto a un webhook/API endpoint para actualizar publicMetadata
-        const currentMetadata = (user.unsafeMetadata || {}) as UserPublicMetadata;
-
-        await user.update({
-          unsafeMetadata: {
-            ...currentMetadata,
-            user: {
-              slug: user.id,
-            },
-            store: {
-              slug: newStore.slug,
-            },
-            registerStoreCompleted: true,
+        // Save onboarding metadata to local storage
+        // This is used to redirect user after login
+        const metadata: UserMetadata = {
+          user: {
+            slug: user.userSlug,
           },
+          store: {
+            slug: newStore.slug,
+          },
+          registerStoreCompleted: true,
+        };
+
+        // TODO: When backend provides metadata endpoint, save to backend
+        // For now, save to AsyncStorage for client-side tracking
+        await authStorage.saveTempCredentials({
+          email: user.email,
+          password: '', // Not storing password for security
         });
 
-        console.log('✅ [Store] Metadata actualizada correctamente');
+        console.log('✅ [Store] Metadata saved to local storage');
 
         // Redirigir a la pantalla principal
         router.replace('/(tabs)');

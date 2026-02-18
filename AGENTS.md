@@ -3,11 +3,71 @@
 React Native + Expo + TypeScript mobile app for inventory/sales management for small businesses in Peru.
 
 **Stack**: React Native 0.81 | Expo 54 | TypeScript 5.9 | NativeWind 4.2  
-**Auth**: Clerk | **Data**: TanStack Query + Supabase | **UI**: React Native Reusables  
+**Auth**: Bearer token | **Data**: TanStack Query + Supabase | **UI**: React Native Reusables  
 **Forms**: TanStack Form + Zod | **State**: Zustand
 
-**Path alias**: `@/*` = project root  
+**Architecture**: Feature-First (organizad por funcionalidad de negocio)  
+**Path aliases**: `@/*` = root | `@/features/*` = features | `@/shared/*` = shared code  
 **Language**: Spanish UI, English code | **Currency**: S/ (Soles)
+
+---
+
+## Architecture: Feature-First
+
+Este proyecto usa **Feature-First Architecture** para mejor escalabilidad y mantenibilidad.
+
+### Estructura del Proyecto
+
+```
+src/
+├── features/               # 🎯 Features de negocio (auto-contenidos)
+│   ├── auth/              # Autenticación
+│   │   ├── components/    # Componentes específicos del feature
+│   │   ├── api/           # Llamadas a API
+│   │   ├── queries/       # React Query hooks
+│   │   ├── utils/         # Utils específicas
+│   │   ├── types.ts       # Types del feature
+│   │   └── index.ts       # Public API
+│   ├── products/          # Gestión de productos
+│   ├── profile/           # Perfil de usuario
+│   ├── home/              # Dashboard principal
+│   ├── stores/            # Gestión de tiendas
+│   └── onboarding/        # Flujo de onboarding
+│
+└── shared/                # 🔄 Código compartido
+    ├── components/        # UI components reutilizables
+    │   └── ui/            # shadcn/ui components
+    ├── hooks/             # Hooks genéricos
+    ├── utils/             # Utilidades globales
+    ├── config/            # Configuración global
+    ├── context/           # Contextos globales
+    └── types/             # Types compartidos
+```
+
+### Reglas de Importación
+
+**✅ CORRECTO - Usar Public API del feature:**
+
+```typescript
+// Importar desde el index.ts del feature
+import { ProductCard, useProductsQuery } from '@/features/products';
+import { SignInForm, useLoginMutation } from '@/features/auth';
+import { Button, Input } from '@/shared/components/ui/button';
+```
+
+**❌ INCORRECTO - Importar internals directamente:**
+
+```typescript
+// NO importar de carpetas internas
+import { ProductCard } from '@/features/products/components/product-card';
+import { SignInForm } from '@/features/auth/components/sign-in-form';
+```
+
+### Principios
+
+1. **Colocation**: Todo lo de un feature en un solo lugar
+2. **Encapsulación**: Cada feature expone solo lo necesario vía `index.ts`
+3. **Shared vs Feature**: Si es usado por 2+ features → `shared/`, si es específico → `features/[name]/`
 
 ---
 
@@ -74,22 +134,22 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { router } from 'expo-router';
-import { useUser } from '@clerk/clerk-expo';
 
-// 3. UI components (@/components/ui/)
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+// 3. UI components (@/shared/components/ui/)
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Card } from '@/shared/components/ui/card';
 
-// 4. Custom components
-import { ProductCard } from '@/components/product-card';
+// 4. Feature components (@/features/*)
+import { ProductCard } from '@/features/products';
+import { SignInForm } from '@/features/auth';
 
 // 5. Icons (Lucide React Native)
 import { Search, Plus, ChevronRight } from 'lucide-react-native';
 
 // 6. Utils & types
-import { getProducts } from '@/lib/api/products';
-import type { Product } from '@/lib/api/products';
+import { formatCurrency } from '@/shared/utils/format';
+import type { Product } from '@/features/products';
 ```
 
 **Use `import type` for TypeScript types only**

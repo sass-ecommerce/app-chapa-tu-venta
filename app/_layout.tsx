@@ -1,11 +1,10 @@
 import '@/global.css';
 
-import { NAV_THEME } from '@/lib/theme';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { NAV_THEME } from '@/shared/context/theme';
+import { useAuth } from '@/shared/hooks/hooks';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
@@ -31,51 +30,67 @@ export default function RootLayout() {
   const { colorScheme } = useColorScheme();
 
   return (
-    <ClerkProvider tokenCache={tokenCache}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Routes />
-          <PortalHost />
-        </ThemeProvider>
-      </QueryClientProvider>
-    </ClerkProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
+        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        <Routes />
+        <PortalHost />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
 SplashScreen.preventAutoHideAsync();
 
 function Routes() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   React.useEffect(() => {
-    if (isLoaded) {
+    if (!isLoading) {
       SplashScreen.hideAsync();
     }
-  }, [isLoaded]);
+  }, [isLoading]);
 
-  if (!isLoaded) {
+  // Redirigir automáticamente cuando cambia el estado de autenticación
+  React.useEffect(() => {
+    if (isLoading) return; // Esperar a que termine de cargar
+
+    if (!isAuthenticated) {
+      // Usuario no autenticado → redirigir a sign-in
+      console.log('🔒 [Routes] User not authenticated. Redirecting to sign-in...');
+      router.replace('/(auth)/sign-in');
+    } else {
+      // Usuario autenticado → redirigir a index (pantalla de bienvenida animada)
+      console.log('✅ [Routes] User authenticated. Redirecting to welcome screen...');
+      router.replace('/');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  if (isLoading) {
     return null;
   }
 
   return (
     <Stack>
-      {/* Screens only shown when the user is NOT signed in */}
-      <Stack.Protected guard={!isSignedIn}>
-        <Stack.Screen name="(auth)/sign-in" options={SIGN_IN_SCREEN_OPTIONS} />
-        <Stack.Screen name="(auth)/sign-up" options={SIGN_UP_SCREEN_OPTIONS} />
-        <Stack.Screen name="(auth)/reset-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
-        <Stack.Screen name="(auth)/forgot-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
-      </Stack.Protected>
-
-      {/* Screens only shown when the user IS signed in */}
-      <Stack.Protected guard={isSignedIn}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(onboarding)/register-store" options={{ headerShown: false }} />
-        <Stack.Screen name="products/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="products/create" options={{ headerShown: false }} />
-        <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
-      </Stack.Protected>
+      {!isAuthenticated ? (
+        <>
+          {/* Screens only shown when the user is NOT authenticated */}
+          <Stack.Screen name="(auth)/sign-in" options={SIGN_IN_SCREEN_OPTIONS} />
+          <Stack.Screen name="(auth)/sign-up" options={SIGN_UP_SCREEN_OPTIONS} />
+          <Stack.Screen name="(auth)/reset-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
+          <Stack.Screen name="(auth)/forgot-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
+        </>
+      ) : (
+        <>
+          {/* Screens only shown when the user IS authenticated */}
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(onboarding)/register-store" options={{ headerShown: false }} />
+          <Stack.Screen name="products/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="products/create" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+        </>
+      )}
 
       {/* Screens outside the guards are accessible to everyone (e.g. not found) */}
       <Stack.Screen name="+not-found" />
@@ -85,7 +100,7 @@ function Routes() {
 
 const SIGN_IN_SCREEN_OPTIONS = {
   headerShown: false,
-  title: 'Sign in',
+  title: 'Sign in2',
 };
 
 const SIGN_UP_SCREEN_OPTIONS = {

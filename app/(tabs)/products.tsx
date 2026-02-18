@@ -4,20 +4,21 @@ import { Alert, View, Pressable, RefreshControl, ScrollView } from 'react-native
 import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useAuth, useUser } from '@clerk/clerk-expo';
 
-import { Text } from '@/components/ui/text';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Tabs } from '@/components/ui/tabs';
-import { Chip } from '@/components/ui/chip';
-import { FAB } from '@/components/ui/fab';
-import { Icon } from '@/components/ui/icon';
+import { useAuth, useUser } from '@/shared/hooks/hooks';
 
-import { ProductCard } from '@/components/tabs/products/product-card';
-import { ProductCardList } from '@/components/tabs/products/product-card-list';
-import { ProductSkeletonGrid } from '@/components/tabs/products/product-skeleton';
-import { StatsHero } from '@/components/tabs/products/stats-hero';
+import { Text } from '@/shared/components/ui/text';
+import { Input } from '@/shared/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { Tabs } from '@/shared/components/ui/tabs';
+import { Chip } from '@/shared/components/ui/chip';
+import { FAB } from '@/shared/components/ui/fab';
+import { Icon } from '@/shared/components/ui/icon';
+
+import { ProductCard } from '@/features/products/components/product-card';
+import { ProductCardList } from '@/features/products/components/product-card-list';
+import { ProductSkeletonGrid } from '@/features/products/components/product-skeleton';
+import { StatsHero } from '@/features/products/components/stats-hero';
 
 import { Search, Bell, Menu, Plus, FolderPlus, Grid3x3, List } from 'lucide-react-native';
 import {
@@ -25,14 +26,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/shared/components/ui/dropdown-menu';
 
-import { useProductsStore } from '@/lib/store/products-store';
-import type { TabValue } from '@/lib/store/products-store';
-import { getProducts } from '@/lib/api/products';
-import type { Product } from '@/lib/api/products';
-import type { UserPublicMetadata } from '@/lib/types/clerk';
-import { REFRESH_COLORS } from '@/lib/constants';
+import { useProductsStore } from '@/features/products/utils/products-store';
+import type { TabValue } from '@/features/products/utils/products-store';
+import { getProducts } from '@/features/products/api/products';
+import type { Product } from '@/features/products/api/products';
+import { REFRESH_COLORS } from '@/shared/config/constants';
 
 // Type guard to validate tab value
 function isValidTabValue(value: string): value is TabValue {
@@ -44,9 +44,11 @@ export default function ProductosScreen() {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  // Get storeSlug from user metadata
-  const metadata = (user?.unsafeMetadata || {}) as UserPublicMetadata;
-  const storeSlug = metadata?.store?.slug;
+  // TODO: Get storeSlug from backend API endpoint or AsyncStorage
+  // Metadata is no longer part of User type
+  // Option 1: Create endpoint GET /api/users/{userSlug}/store that returns store info
+  // Option 2: Store storeSlug in AsyncStorage after onboarding
+  const storeSlug = null; // TEMPORARY: Disabled until backend provides store endpoint
 
   // Zustand store states
   const searchQuery = useProductsStore((state) => state.searchQuery);

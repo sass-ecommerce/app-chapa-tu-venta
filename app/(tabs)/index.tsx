@@ -2,20 +2,20 @@ import * as React from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth, useUser } from '@clerk/clerk-expo';
 import { router } from 'expo-router';
-
 import { ShoppingBag, Package } from 'lucide-react-native';
-import { Icon } from '@/components/ui/icon';
 
-import { HomeHeader } from '@/components/tabs/home/home-header';
-import { SalesSummaryCard } from '@/components/tabs/home/sales-summary-card';
-import { RecentProductsSection } from '@/components/tabs/home/recent-products-section';
-import { RecentSalesSection } from '@/components/tabs/home/recent-sales-section';
-import type { SalesSummary, Transaction } from '@/components/tabs/home/types';
-import type { UserPublicMetadata } from '@/lib/types/clerk';
-import { getProducts } from '@/lib/api/products';
-import { REFRESH_COLORS } from '@/lib/constants';
+import { Icon } from '@/shared/components/ui/icon';
+
+import { HomeHeader } from '@/features/home/components/home-header';
+import { SalesSummaryCard } from '@/features/home/components/sales-summary-card';
+import { RecentProductsSection } from '@/features/home/components/recent-products-section';
+import { RecentSalesSection } from '@/features/home/components/recent-sales-section';
+
+import { useAuth, useUser } from '@/shared/hooks/hooks';
+import type { SalesSummary, Transaction } from '@/features/home/types';
+import { getProducts } from '@/features/products/api/products';
+import { REFRESH_COLORS } from '@/shared/config/constants';
 
 // Chart colors using project palette
 const CHART_COLORS = {
@@ -62,9 +62,11 @@ export default function HomeScreen() {
   const { getToken } = useAuth();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Get storeSlug from user metadata
-  const metadata = (user?.unsafeMetadata || {}) as UserPublicMetadata;
-  const storeSlug = metadata?.store?.slug;
+  // TODO: Get storeSlug from backend API endpoint or AsyncStorage
+  // Metadata is no longer part of User type
+  // Option 1: Create endpoint GET /api/users/{userSlug}/store that returns store info
+  // Option 2: Store storeSlug in AsyncStorage after onboarding
+  const storeSlug = null; // TEMPORARY: Disabled until backend provides store endpoint
 
   // Fetch recent products from API
   const {
@@ -87,14 +89,14 @@ export default function HomeScreen() {
   });
 
   // Handle onboarding redirect - if store not completed, redirect to register-store
-  React.useEffect(() => {
-    console.log('📍 [Home] User metadata:', metadata);
+  // React.useEffect(() => {
+  //   console.log('📍 [Home] User metadata:', user?.metadata);
 
-    if (user && metadata?.registerStoreCompleted !== true) {
-      console.log('⚠️ [Home] Store not completed, redirecting to register-store');
-      router.replace('/(onboarding)/register-store');
-    }
-  }, [user, metadata]);
+  //   if (user && user.metadata?.registerStoreCompleted !== true) {
+  //     console.log('⚠️ [Home] Store not completed, redirecting to register-store');
+  //     router.replace('/(onboarding)/register-store');
+  //   }
+  // }, [user]);
 
   // Pull-to-refresh handler
   const onRefresh = React.useCallback(async () => {
@@ -117,9 +119,9 @@ export default function HomeScreen() {
       <View className="px-5 pt-12">
         {/* Modern Header with Avatar and Actions */}
         <HomeHeader
-          firstName={user?.firstName || undefined}
-          lastName={user?.lastName || undefined}
-          avatarUrl={user?.imageUrl}
+          firstName={user?.firstName}
+          lastName={user?.lastName}
+          avatarUrl={user?.imageUrl ?? undefined}
           notificationCount={3}
           onNotificationsPress={() => {
             console.log('📬 [Home] Notifications pressed');
