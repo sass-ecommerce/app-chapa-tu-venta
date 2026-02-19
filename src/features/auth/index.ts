@@ -33,5 +33,9 @@ export { authStorage } from './utils/storage';
 export { authKeys } from './utils/query-keys';
 export { redirectAfterAuth } from './utils/navigation-helpers';
 
+// API
+export { getUserMetadata } from './api/metadata';
+
 // Types
 export type { RegisterPayload, LoginPayload, User, AuthTokens } from './types';
+export type { PublicMetadata } from './api/metadata';

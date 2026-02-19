@@ -1,3 +1,13 @@
+// 1. React & React Native
+import * as React from 'react';
+import { type TextInput, View } from 'react-native';
+
+// 2. Third-party libraries
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
+import { Link, router } from 'expo-router';
+
+// 3. UI components
 import { Button } from '@/shared/components/ui/button';
 import {
   Card,
@@ -9,94 +19,82 @@ import {
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
+
+// 4. Utils & hooks
 import { useAuth } from '@/shared/hooks/hooks';
-import { Link, router } from 'expo-router';
-import * as React from 'react';
-import { TextInput, View } from 'react-native';
 
 export function SignUpForm() {
+  // Auth hooks
   const { register, saveTempCredentials, isLoading } = useAuth();
-  const [firstName, setFirstName] = React.useState('');
-  const [lastName, setLastName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+
+  // Refs for keyboard navigation
   const lastNameInputRef = React.useRef<TextInput>(null);
   const emailInputRef = React.useRef<TextInput>(null);
   const passwordInputRef = React.useRef<TextInput>(null);
-  const [error, setError] = React.useState<{
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    password?: string;
-  }>({});
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  async function onSubmit() {
-    if (isLoading || isSubmitting) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError({});
-
-    try {
-      console.log('📝 [SignUp] Starting registration...');
-
-      // Call register API
-      const response = await register({
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      console.log('✅ [SignUp] Registration successful, sessionId:', response.sessionId);
-
-      // Save credentials temporarily for auto-login after email verification
-      await saveTempCredentials({ email, password });
-
-      // Navigate to verification screen with sessionId and email
-      router.push({
-        pathname: '/(auth)/sign-up/verify-email',
-        params: {
-          sessionId: response.sessionId,
-          email,
-        },
-      });
-    } catch (err) {
-      console.error('❌ [SignUp] Registration failed:', err);
-
-      if (err instanceof Error) {
-        const message = err.message;
-        // Determine which field has the error
-        const isEmailError = message.toLowerCase().includes('email');
-        const isPasswordError =
-          message.toLowerCase().includes('password') ||
-          message.toLowerCase().includes('contraseña');
-        const isFirstNameError =
-          message.toLowerCase().includes('first') || message.toLowerCase().includes('nombre');
-        const isLastNameError =
-          message.toLowerCase().includes('last') || message.toLowerCase().includes('apellido');
-
-        if (isEmailError) {
-          setError({ email: message });
-        } else if (isPasswordError) {
-          setError({ password: message });
-        } else if (isFirstNameError) {
-          setError({ firstName: message });
-        } else if (isLastNameError) {
-          setError({ lastName: message });
-        } else {
-          setError({ email: 'Error al registrar usuario' });
-        }
-      } else {
-        setError({ email: 'Error al registrar usuario' });
+  // Form with TanStack Form
+  const form = useForm({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (isLoading) {
+        return;
       }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
 
+      try {
+        console.log('📝 [SignUp] Starting registration...');
+
+        // Call register API
+        const response = await register({
+          email: value.email,
+          password: value.password,
+          firstName: value.firstName,
+          lastName: value.lastName,
+        });
+
+        console.log('✅ [SignUp] Registration successful, sessionId:', response.sessionId);
+
+        // Save credentials temporarily for auto-login after email verification
+        await saveTempCredentials({ email: value.email, password: value.password });
+
+        // Navigate to verification screen with sessionId and email
+        router.push({
+          pathname: '/(auth)/sign-up/verify-email',
+          params: {
+            sessionId: response.sessionId,
+            email: value.email,
+          },
+        });
+      } catch (err) {
+        console.error('❌ [SignUp] Registration failed:', err);
+
+        // Return field errors to be displayed under corresponding fields
+        if (err instanceof Error) {
+          const message = err.message;
+
+          return {
+            fields: {
+              email: message.toLowerCase().includes('email')
+                ? message
+                : 'Error al registrar usuario',
+            },
+          };
+        } else {
+          return {
+            fields: {
+              email: 'Error al registrar usuario',
+            },
+          };
+        }
+      }
+    },
+  });
+
+  // Event handlers for keyboard navigation
   function onFirstNameSubmitEditing() {
     lastNameInputRef.current?.focus();
   }
@@ -109,6 +107,7 @@ export function SignUpForm() {
     passwordInputRef.current?.focus();
   }
 
+  // Render
   return (
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
@@ -120,77 +119,154 @@ export function SignUpForm() {
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
-            <View className="gap-1.5">
-              <Label htmlFor="firstName">Nombre</Label>
-              <Input
-                id="firstName"
-                placeholder="Tu nombre"
-                autoComplete="given-name"
-                autoCapitalize="words"
-                onChangeText={setFirstName}
-                onSubmitEditing={onFirstNameSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-              {error.firstName ? (
-                <Text className="text-sm font-medium text-destructive">{error.firstName}</Text>
-              ) : null}
-            </View>
-            <View className="gap-1.5">
-              <Label htmlFor="lastName">Apellido</Label>
-              <Input
-                ref={lastNameInputRef}
-                id="lastName"
-                placeholder="Tu apellido"
-                autoComplete="family-name"
-                autoCapitalize="words"
-                onChangeText={setLastName}
-                onSubmitEditing={onLastNameSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-              {error.lastName ? (
-                <Text className="text-sm font-medium text-destructive">{error.lastName}</Text>
-              ) : null}
-            </View>
-            <View className="gap-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                ref={emailInputRef}
-                id="email"
-                placeholder="correo@ejemplo.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onChangeText={setEmail}
-                onSubmitEditing={onEmailSubmitEditing}
-                returnKeyType="next"
-                submitBehavior="submit"
-              />
-              {error.email ? (
-                <Text className="text-sm font-medium text-destructive">{error.email}</Text>
-              ) : null}
-            </View>
-            <View className="gap-1.5">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Contraseña</Label>
-              </View>
-              <Input
-                ref={passwordInputRef}
-                id="password"
-                secureTextEntry
-                onChangeText={setPassword}
-                returnKeyType="send"
-                onSubmitEditing={onSubmit}
-              />
-              {error.password ? (
-                <Text className="text-sm font-medium text-destructive">{error.password}</Text>
-              ) : null}
-            </View>
-            <Button className="w-full" onPress={onSubmit} disabled={isSubmitting}>
-              <Text>{isSubmitting ? 'Registrando...' : 'Continuar'}</Text>
-            </Button>
+            {/* First Name Field */}
+            <form.Field
+              name="firstName"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'El nombre es requerido')
+                  .min(2, 'Debe tener al menos 2 caracteres')
+                  .max(50, 'No puede exceder 50 caracteres'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="firstName">Nombre</Label>
+                  <Input
+                    id="firstName"
+                    placeholder="Tu nombre"
+                    autoComplete="given-name"
+                    autoCapitalize="words"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    onSubmitEditing={onFirstNameSubmitEditing}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0]?.message)}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Last Name Field */}
+            <form.Field
+              name="lastName"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'El apellido es requerido')
+                  .min(2, 'Debe tener al menos 2 caracteres')
+                  .max(50, 'No puede exceder 50 caracteres'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="lastName">Apellido</Label>
+                  <Input
+                    ref={lastNameInputRef}
+                    id="lastName"
+                    placeholder="Tu apellido"
+                    autoComplete="family-name"
+                    autoCapitalize="words"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    onSubmitEditing={onLastNameSubmitEditing}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0]?.message)}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Email Field */}
+            <form.Field
+              name="email"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'El correo es requerido')
+                  .email('Ingresa un correo válido'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Input
+                    ref={emailInputRef}
+                    id="email"
+                    placeholder="correo@ejemplo.com"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    onSubmitEditing={onEmailSubmitEditing}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0]?.message)}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Password Field */}
+            <form.Field
+              name="password"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'La contraseña es requerida')
+                  .min(6, 'Debe tener al menos 6 caracteres'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input
+                    ref={passwordInputRef}
+                    id="password"
+                    secureTextEntry
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    returnKeyType="send"
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0]?.message)}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Submit Button */}
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  className="w-full"
+                  onPress={form.handleSubmit}
+                  disabled={!canSubmit || isSubmitting}>
+                  <Text>{isSubmitting ? 'Registrando...' : 'Continuar'}</Text>
+                </Button>
+              )}
+            </form.Subscribe>
           </View>
+
           <Text className="text-center text-sm">
             ¿Ya tienes una cuenta?{' '}
             <Link href="/(auth)/sign-in" dismissTo className="text-sm underline underline-offset-4">

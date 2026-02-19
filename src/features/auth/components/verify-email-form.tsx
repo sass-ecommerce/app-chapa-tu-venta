@@ -1,90 +1,122 @@
+// 1. React & React Native
+import * as React from 'react';
+import { type TextStyle, View } from 'react-native';
+
+// 2. Third-party libraries
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
+import { router, useLocalSearchParams } from 'expo-router';
+
+// 3. UI components
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
+
+// 4. Utils & hooks
 import { useAuth, useUser } from '@/shared/hooks/hooks';
 import { redirectAfterAuth } from '@/features/auth/utils/navigation-helpers';
-import { router, useLocalSearchParams } from 'expo-router';
-import * as React from 'react';
-import { type TextStyle, View } from 'react-native';
 
 const RESEND_CODE_INTERVAL_SECONDS = 30;
 
 const TABULAR_NUMBERS_STYLE: TextStyle = { fontVariant: ['tabular-nums'] };
 
 export function VerifyEmailForm() {
-  const { verifyEmail, resendVerification, login, getTempCredentials, clearTempCredentials } =
-    useAuth();
-  const { user } = useUser();
+  // Router/navigation hooks
   const { sessionId = '', email = '' } = useLocalSearchParams<{
     sessionId?: string;
     email?: string;
   }>();
-  const [code, setCode] = React.useState('');
-  const [error, setError] = React.useState('');
+
+  // Auth/user hooks
+  const { verifyEmail, resendVerification, login, getTempCredentials, clearTempCredentials } =
+    useAuth();
+  const { user } = useUser();
+
+  // Local state
   const [currentSessionId, setCurrentSessionId] = React.useState(sessionId);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Custom hooks
   const { countdown, restartCountdown } = useCountdown(RESEND_CODE_INTERVAL_SECONDS);
 
-  async function onSubmit() {
-    if (isSubmitting) return;
+  // Form with TanStack Form
+  const form = useForm({
+    defaultValues: {
+      code: '',
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        console.log('📧 [VerifyEmail] Verifying email with code...');
 
-    setIsSubmitting(true);
-    setError('');
+        // Verify email with OTP code
+        await verifyEmail(currentSessionId, value.code);
 
-    try {
-      console.log('📧 [VerifyEmail] Verifying email with code...');
+        console.log('✅ [VerifyEmail] Email verified successfully');
 
-      // Verify email with OTP code
-      await verifyEmail(currentSessionId, code);
+        // Get temporary credentials saved during registration
+        const tempCredentials = await getTempCredentials();
 
-      console.log('✅ [VerifyEmail] Email verified successfully');
+        if (tempCredentials) {
+          console.log('🔑 [VerifyEmail] Auto-logging in with saved credentials...');
 
-      // Get temporary credentials saved during registration
-      const tempCredentials = await getTempCredentials();
+          // Auto-login with saved credentials
+          await login(tempCredentials.email, tempCredentials.password);
 
-      if (tempCredentials) {
-        console.log('🔑 [VerifyEmail] Auto-logging in with saved credentials...');
+          // Clear temporary credentials
+          await clearTempCredentials();
 
-        // Auto-login with saved credentials
-        await login(tempCredentials.email, tempCredentials.password);
+          console.log('✅ [VerifyEmail] Auto-login successful');
 
-        // Clear temporary credentials
-        await clearTempCredentials();
+          // Redirect based on onboarding status
+          setTimeout(async () => {
+            if (user) {
+              await redirectAfterAuth(user, router);
+            } else {
+              // Fallback if user not loaded yet
+              router.replace('/(onboarding)/register-store');
+            }
+          }, 100);
+        } else {
+          console.log('⚠️ [VerifyEmail] No temp credentials found, redirecting to sign-in');
+          // If no temp credentials, redirect to sign-in
+          router.replace('/(auth)/sign-in');
+        }
+      } catch (err) {
+        console.error('❌ [VerifyEmail] Verification failed:', err);
 
-        console.log('✅ [VerifyEmail] Auto-login successful');
-
-        // Redirect based on onboarding status
-        setTimeout(() => {
-          if (user) {
-            redirectAfterAuth(user, router);
-          } else {
-            // Fallback if user not loaded yet
-            router.replace('/(onboarding)/register-store');
-          }
-        }, 100);
-      } else {
-        console.log('⚠️ [VerifyEmail] No temp credentials found, redirecting to sign-in');
-        // If no temp credentials, redirect to sign-in
-        router.replace('/(auth)/sign-in');
+        // Return field error to be displayed under code field
+        if (err instanceof Error) {
+          return {
+            fields: {
+              code: err.message,
+            },
+          };
+        } else {
+          return {
+            fields: {
+              code: 'Error al verificar el código',
+            },
+          };
+        }
       }
-    } catch (err) {
-      console.error('❌ [VerifyEmail] Verification failed:', err);
+    },
+  });
 
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Error al verificar el código');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
+  // Event handlers
   async function onResendCode() {
     if (!currentSessionId) {
-      setError('No se encontró el ID de sesión');
+      // Show error using form field meta
+      form.setFieldMeta('code', (prev) => ({
+        ...prev,
+        errors: ['No se encontró el ID de sesión'],
+      }));
       return;
     }
 
@@ -96,21 +128,36 @@ export function VerifyEmailForm() {
       // Update session ID with the new one
       setCurrentSessionId(response.sessionId);
 
+      // Clear code input and errors
+      form.setFieldValue('code', '');
+      form.setFieldMeta('code', (prev) => ({
+        ...prev,
+        errors: [],
+      }));
+
+      // Restart countdown
       restartCountdown();
-      setError('');
 
       console.log('✅ [VerifyEmail] Verification code resent, new sessionId:', response.sessionId);
     } catch (err) {
       console.error('❌ [VerifyEmail] Resend failed:', err);
 
+      // Show error under code field
       if (err instanceof Error) {
-        setError(err.message);
+        form.setFieldMeta('code', (prev) => ({
+          ...prev,
+          errors: [err.message],
+        }));
       } else {
-        setError('Error al reenviar el código');
+        form.setFieldMeta('code', (prev) => ({
+          ...prev,
+          errors: ['Error al reenviar el código'],
+        }));
       }
     }
   }
 
+  // Render
   return (
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
@@ -122,37 +169,59 @@ export function VerifyEmailForm() {
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
-            <View className="gap-1.5">
-              <Label htmlFor="code">Código de verificación</Label>
-              <Input
-                id="code"
-                autoCapitalize="none"
-                onChangeText={setCode}
-                returnKeyType="send"
-                keyboardType="numeric"
-                autoComplete="sms-otp"
-                textContentType="oneTimeCode"
-                onSubmitEditing={onSubmit}
-                maxLength={6}
-              />
-              {!error ? null : (
-                <Text className="text-sm font-medium text-destructive">{error}</Text>
-              )}
-              <Button variant="link" size="sm" disabled={countdown > 0} onPress={onResendCode}>
-                <Text className="text-center text-xs">
-                  ¿No recibiste el código? Reenviar{' '}
-                  {countdown > 0 ? (
-                    <Text className="text-xs" style={TABULAR_NUMBERS_STYLE}>
-                      ({countdown})
+            {/* Code Field */}
+            <form.Field
+              name="code"
+              validators={{
+                onChange: z.string().min(1, 'El código es requerido'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="code">Código de verificación</Label>
+                  <Input
+                    id="code"
+                    autoCapitalize="none"
+                    keyboardType="numeric"
+                    autoComplete="sms-otp"
+                    textContentType="oneTimeCode"
+                    maxLength={6}
+                    returnKeyType="send"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0])}
                     </Text>
-                  ) : null}
-                </Text>
-              </Button>
-            </View>
+                  )}
+                  <Button variant="link" size="sm" disabled={countdown > 0} onPress={onResendCode}>
+                    <Text className="text-center text-xs">
+                      ¿No recibiste el código? Reenviar{' '}
+                      {countdown > 0 ? (
+                        <Text className="text-xs" style={TABULAR_NUMBERS_STYLE}>
+                          ({countdown})
+                        </Text>
+                      ) : null}
+                    </Text>
+                  </Button>
+                </View>
+              )}
+            </form.Field>
+
+            {/* Submit and Cancel Buttons */}
             <View className="gap-3">
-              <Button className="w-full" onPress={onSubmit} disabled={isSubmitting}>
-                <Text>{isSubmitting ? 'Verificando...' : 'Continuar'}</Text>
-              </Button>
+              <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+                {([canSubmit, isSubmitting]) => (
+                  <Button
+                    className="w-full"
+                    onPress={form.handleSubmit}
+                    disabled={!canSubmit || isSubmitting}>
+                    <Text>{isSubmitting ? 'Verificando...' : 'Continuar'}</Text>
+                  </Button>
+                )}
+              </form.Subscribe>
               <Button variant="link" className="mx-auto" onPress={router.back}>
                 <Text>Cancelar</Text>
               </Button>

@@ -1,8 +1,13 @@
+// 1. React & React Native
 import * as React from 'react';
-import { TextInput, View, Alert } from 'react-native';
+import { type TextInput, View, Alert } from 'react-native';
 
+// 2. Third-party libraries
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 import { router, useLocalSearchParams } from 'expo-router';
 
+// 3. UI components
 import { Button } from '@/shared/components/ui/button';
 import {
   Card,
@@ -15,80 +20,92 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
+// 4. Utils & hooks
 import { useAuth, useUser } from '@/shared/hooks/hooks';
 import { redirectAfterAuth } from '@/features/auth/utils/navigation-helpers';
 
 export function ResetPasswordForm() {
+  // Router/navigation hooks
   const { email = '', sessionId = '' } = useLocalSearchParams<{
     email?: string;
     sessionId?: string;
   }>();
+
+  // Auth/user hooks
   const { resetPassword, login } = useAuth();
   const { user } = useUser();
-  const [password, setPassword] = React.useState('');
-  const [code, setCode] = React.useState('');
-  const [error, setError] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
+
+  // Refs
   const codeInputRef = React.useRef<TextInput>(null);
 
-  async function onSubmit() {
-    if (!password) {
-      setError('La contraseña es requerida');
-      return;
-    }
-    if (!code) {
-      setError('El código de verificación es requerido');
-      return;
-    }
-    if (!sessionId) {
-      setError('Sesión inválida. Por favor, solicita el código nuevamente.');
-      return;
-    }
+  // Form
+  const form = useForm({
+    defaultValues: {
+      password: '',
+      code: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (!sessionId) {
+        return {
+          fields: {
+            code: 'Sesión inválida. Por favor, solicita el código nuevamente.',
+          },
+        };
+      }
 
-    setIsLoading(true);
-    setError('');
+      try {
+        console.log('📝 [ResetPassword] Resetting password...');
 
-    try {
-      // Reset password
-      await resetPassword(sessionId, code, password);
+        // Reset password
+        await resetPassword(sessionId, value.code, value.password);
 
-      Alert.alert('Éxito', 'Tu contraseña ha sido restablecida correctamente');
+        console.log('✅ [ResetPassword] Password reset successful');
+        Alert.alert('Éxito', 'Tu contraseña ha sido restablecida correctamente');
 
-      // Auto-login with email and new password
-      if (email) {
-        try {
-          await login(email, password);
+        // Auto-login with email and new password
+        if (email) {
+          try {
+            console.log('🚪 [ResetPassword] Auto-logging in...');
+            await login(email, value.password);
 
-          // Wait a moment for user data to load
-          setTimeout(() => {
-            if (user) {
-              redirectAfterAuth(user, router);
-            } else {
-              // Fallback to home if user data isn't loaded yet
-              router.replace('/(tabs)');
-            }
-          }, 500);
-        } catch (loginError) {
-          console.error('❌ [ResetPassword] Auto-login failed:', loginError);
-          // If auto-login fails, just go to sign-in
+            // Wait a moment for user data to load
+            setTimeout(async () => {
+              if (user) {
+                await redirectAfterAuth(user, router);
+              } else {
+                // Fallback to home if user data isn't loaded yet
+                router.replace('/(tabs)');
+              }
+            }, 500);
+          } catch (loginError) {
+            console.error('❌ [ResetPassword] Auto-login failed:', loginError);
+            // If auto-login fails, just go to sign-in
+            router.replace('/(auth)/sign-in');
+          }
+        } else {
+          // No email, redirect to sign-in
           router.replace('/(auth)/sign-in');
         }
-      } else {
-        // No email, redirect to sign-in
-        router.replace('/(auth)/sign-in');
+      } catch (err) {
+        console.error('❌ [ResetPassword] Error:', err);
+        if (err instanceof Error) {
+          // Return error to show under the code field
+          return {
+            fields: {
+              code: err.message,
+            },
+          };
+        }
+        return {
+          fields: {
+            code: 'Error al restablecer la contraseña',
+          },
+        };
       }
-    } catch (err) {
-      console.error('❌ [ResetPassword] Error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Error al restablecer la contraseña');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
+    },
+  });
 
+  // Event handlers
   function onPasswordSubmitEditing() {
     codeInputRef.current?.focus();
   }
@@ -104,37 +121,81 @@ export function ResetPasswordForm() {
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
-            <View className="gap-1.5">
-              <View className="flex-row items-center">
-                <Label htmlFor="password">Nueva contraseña</Label>
-              </View>
-              <Input
-                id="password"
-                secureTextEntry
-                onChangeText={setPassword}
-                returnKeyType="next"
-                submitBehavior="submit"
-                onSubmitEditing={onPasswordSubmitEditing}
-              />
-            </View>
-            <View className="gap-1.5">
-              <Label htmlFor="code">Código de verificación</Label>
-              <Input
-                id="code"
-                ref={codeInputRef}
-                autoCapitalize="none"
-                onChangeText={setCode}
-                returnKeyType="send"
-                keyboardType="numeric"
-                autoComplete="sms-otp"
-                textContentType="oneTimeCode"
-                onSubmitEditing={onSubmit}
-              />
-            </View>
-            {error ? <Text className="text-sm font-medium text-destructive">{error}</Text> : null}
-            <Button className="w-full" onPress={onSubmit} disabled={isLoading}>
-              <Text>{isLoading ? 'Restableciendo...' : 'Restablecer contraseña'}</Text>
-            </Button>
+            {/* Password field */}
+            <form.Field
+              name="password"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'La contraseña es requerida')
+                  .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <View className="flex-row items-center">
+                    <Label htmlFor="password">Nueva contraseña</Label>
+                  </View>
+                  <Input
+                    id="password"
+                    secureTextEntry
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    returnKeyType="next"
+                    submitBehavior="submit"
+                    onSubmitEditing={onPasswordSubmitEditing}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0])}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Code field */}
+            <form.Field
+              name="code"
+              validators={{
+                onChange: z.string().min(1, 'El código de verificación es requerido'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="code">Código de verificación</Label>
+                  <Input
+                    id="code"
+                    ref={codeInputRef}
+                    autoCapitalize="none"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    returnKeyType="send"
+                    keyboardType="numeric"
+                    autoComplete="sms-otp"
+                    textContentType="oneTimeCode"
+                    onSubmitEditing={() => form.handleSubmit()}
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0])}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Submit button */}
+            <form.Subscribe selector={(state) => [state.isSubmitting, state.canSubmit]}>
+              {([isSubmitting, canSubmit]) => (
+                <Button
+                  className="w-full"
+                  onPress={() => form.handleSubmit()}
+                  disabled={!canSubmit || isSubmitting}>
+                  <Text>{isSubmitting ? 'Restableciendo...' : 'Restablecer contraseña'}</Text>
+                </Button>
+              )}
+            </form.Subscribe>
           </View>
         </CardContent>
       </Card>

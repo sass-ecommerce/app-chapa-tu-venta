@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { HomeIcon, ShoppingBagIcon, UserIcon, MoonStarIcon, SunIcon } from 'lucide-react-native';
+import { HomeIcon, ShoppingBagIcon, UserIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 export default function TabsLayout() {
@@ -11,8 +11,6 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
@@ -24,6 +22,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <HomeIcon size={size} color={color} />,
         }}
       />
@@ -31,6 +30,7 @@ export default function TabsLayout() {
         name="products"
         options={{
           title: 'Productos',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <ShoppingBagIcon size={size} color={color} />,
         }}
       />
@@ -38,6 +38,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Perfil',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => <UserIcon size={size} color={color} />,
         }}
       />

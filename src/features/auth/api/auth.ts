@@ -93,7 +93,10 @@ async function refreshToken(payload: RefreshTokenPayload): Promise<ApiResponse<A
 /**
  * Logout user
  */
-async function logout(payload: LogoutPayload, accessToken: string): Promise<ApiResponse<{}>> {
+async function logout(
+  payload: LogoutPayload,
+  accessToken: string
+): Promise<ApiResponse<{ code: string; message: string; data: null }>> {
   const response = await fetch(`${API_CONFIG.baseUrl}/auth/logout`, {
     method: 'POST',
     headers: {
@@ -110,7 +113,12 @@ async function logout(payload: LogoutPayload, accessToken: string): Promise<ApiR
 
   const data = await response.json();
   console.log('✅ [AuthAPI] Logout successful');
-  return data;
+
+  return {
+    code: data.code,
+    message: data.message,
+    data: data.data,
+  };
 }
 
 export const authApi = {

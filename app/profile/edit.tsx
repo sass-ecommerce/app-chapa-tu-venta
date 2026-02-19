@@ -23,7 +23,7 @@ export default function EditProfileScreen() {
         }}
       />
       <ScrollView className="flex-1 bg-background">
-        <View className="p-4 pt-6">
+        <View className="px-5 pt-12">
           <EditProfileForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </View>
       </ScrollView>

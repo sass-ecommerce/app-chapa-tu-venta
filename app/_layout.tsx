@@ -71,24 +71,27 @@ function Routes() {
   }
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}>
       {!isAuthenticated ? (
         <>
           {/* Screens only shown when the user is NOT authenticated */}
-          <Stack.Screen name="(auth)/sign-in" options={SIGN_IN_SCREEN_OPTIONS} />
-          <Stack.Screen name="(auth)/sign-up" options={SIGN_UP_SCREEN_OPTIONS} />
-          <Stack.Screen name="(auth)/reset-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
-          <Stack.Screen name="(auth)/forgot-password" options={DEFAULT_AUTH_SCREEN_OPTIONS} />
+          <Stack.Screen name="(auth)/sign-in" />
+          <Stack.Screen name="(auth)/sign-up" />
+          <Stack.Screen name="(auth)/reset-password" />
+          <Stack.Screen name="(auth)/forgot-password" />
         </>
       ) : (
         <>
           {/* Screens only shown when the user IS authenticated */}
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(onboarding)/register-store" options={{ headerShown: false }} />
-          <Stack.Screen name="products/[id]" options={{ headerShown: false }} />
-          <Stack.Screen name="products/create" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/edit" options={{ headerShown: false }} />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(onboarding)/register-store" />
+          <Stack.Screen name="products/[id]" />
+          <Stack.Screen name="products/create" />
+          <Stack.Screen name="profile/edit" />
         </>
       )}
 
@@ -97,21 +100,3 @@ function Routes() {
     </Stack>
   );
 }
-
-const SIGN_IN_SCREEN_OPTIONS = {
-  headerShown: false,
-  title: 'Sign in2',
-};
-
-const SIGN_UP_SCREEN_OPTIONS = {
-  presentation: 'modal',
-  title: '',
-  headerTransparent: true,
-  gestureEnabled: false,
-} as const;
-
-const DEFAULT_AUTH_SCREEN_OPTIONS = {
-  title: '',
-  headerShadowVisible: false,
-  headerTransparent: true,
-};

@@ -111,15 +111,17 @@ export interface TempCredentials {
 }
 
 /**
- * User metadata stored locally for onboarding flow
- * This is client-side only until backend provides metadata endpoint
+ * Public metadata structure from backend
+ * Contains user onboarding state and preferences
+ */
+export interface PublicMetadata {
+  storeSlug?: string;
+}
+
+/**
+ * User metadata from backend
+ * Maps to GET /api/users/{userSlug}/metadata response
  */
 export interface UserMetadata {
-  registerStoreCompleted?: boolean;
-  store?: {
-    slug: string;
-  };
-  user?: {
-    slug: string;
-  };
+  publicMetadata: PublicMetadata;
 }

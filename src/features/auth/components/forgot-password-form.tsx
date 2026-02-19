@@ -1,8 +1,13 @@
+// 1. React & React Native
 import * as React from 'react';
 import { View } from 'react-native';
 
+// 2. Third-party libraries
+import { useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 import { router, useLocalSearchParams } from 'expo-router';
 
+// 3. UI components
 import { Button } from '@/shared/components/ui/button';
 import {
   Card,
@@ -15,41 +20,53 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
+// 4. Utils & hooks
 import { useAuth } from '@/shared/hooks/hooks';
 
 export function ForgotPasswordForm() {
+  // Router/navigation hooks
   const { email: emailParam = '' } = useLocalSearchParams<{ email?: string }>();
-  const [email, setEmail] = React.useState(emailParam);
+
+  // Auth hooks
   const { forgotPassword } = useAuth();
-  const [error, setError] = React.useState<string>('');
-  const [isLoading, setIsLoading] = React.useState(false);
 
-  const onSubmit = async () => {
-    if (!email) {
-      setError('El correo electrónico es requerido');
-      return;
-    }
+  // Form with TanStack Form
+  const form = useForm({
+    defaultValues: {
+      email: emailParam,
+    },
+    onSubmit: async ({ value }) => {
+      try {
+        console.log('🔑 [ForgotPassword] Requesting password reset code...');
 
-    setIsLoading(true);
-    setError('');
+        const result = await forgotPassword(value.email);
 
-    try {
-      const result = await forgotPassword(email);
+        console.log('✅ [ForgotPassword] Reset code sent successfully');
 
-      // Navigate to reset password form with email and sessionId
-      router.push(`/(auth)/reset-password?email=${email}&sessionId=${result.sessionId}`);
-    } catch (err) {
-      console.error('❌ [ForgotPassword] Error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Error al enviar el código de recuperación');
+        // Navigate to reset password form with email and sessionId
+        router.push(`/(auth)/reset-password?email=${value.email}&sessionId=${result.sessionId}`);
+      } catch (err) {
+        console.error('❌ [ForgotPassword] Error:', err);
+
+        // Return field error to be displayed under email field
+        if (err instanceof Error) {
+          return {
+            fields: {
+              email: err.message,
+            },
+          };
+        } else {
+          return {
+            fields: {
+              email: 'Error al enviar el código de recuperación',
+            },
+          };
+        }
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
 
+  // Render
   return (
     <View className="gap-6">
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
@@ -63,24 +80,50 @@ export function ForgotPasswordForm() {
         </CardHeader>
         <CardContent className="gap-6">
           <View className="gap-6">
-            <View className="gap-1.5">
-              <Label htmlFor="email">Correo electrónico</Label>
-              <Input
-                id="email"
-                defaultValue={email}
-                placeholder="correo@ejemplo.com"
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                onChangeText={setEmail}
-                onSubmitEditing={onSubmit}
-                returnKeyType="send"
-              />
-              {error ? <Text className="text-sm font-medium text-destructive">{error}</Text> : null}
-            </View>
-            <Button className="w-full" onPress={onSubmit} disabled={isLoading}>
-              <Text>{isLoading ? 'Enviando...' : 'Restablecer contraseña'}</Text>
-            </Button>
+            {/* Email Field */}
+            <form.Field
+              name="email"
+              validators={{
+                onChange: z
+                  .string()
+                  .min(1, 'El correo es requerido')
+                  .email('Ingresa un correo válido'),
+              }}>
+              {(field) => (
+                <View className="gap-1.5">
+                  <Label htmlFor="email">Correo electrónico</Label>
+                  <Input
+                    id="email"
+                    placeholder="correo@ejemplo.com"
+                    keyboardType="email-address"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    value={field.state.value}
+                    onChangeText={field.handleChange}
+                    onBlur={field.handleBlur}
+                    onSubmitEditing={form.handleSubmit}
+                    returnKeyType="send"
+                  />
+                  {field.state.meta.errors.length > 0 && (
+                    <Text className="text-sm font-medium text-destructive">
+                      {String(field.state.meta.errors[0])}
+                    </Text>
+                  )}
+                </View>
+              )}
+            </form.Field>
+
+            {/* Submit Button */}
+            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  className="w-full"
+                  onPress={form.handleSubmit}
+                  disabled={!canSubmit || isSubmitting}>
+                  <Text>{isSubmitting ? 'Enviando...' : 'Restablecer contraseña'}</Text>
+                </Button>
+              )}
+            </form.Subscribe>
           </View>
         </CardContent>
       </Card>

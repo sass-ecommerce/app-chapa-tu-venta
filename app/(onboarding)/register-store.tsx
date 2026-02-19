@@ -3,7 +3,13 @@ import { Text } from '@/shared/components/ui/text';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { useForm } from '@tanstack/react-form';
@@ -13,8 +19,6 @@ import { useColorScheme } from 'nativewind';
 
 import { useAuth, useUser } from '@/shared/hooks/hooks';
 import { createStore } from '@/features/stores/api/stores';
-import { authStorage } from '@/features/auth/utils/storage';
-import type { UserMetadata } from '@/features/auth/types';
 
 const CATEGORIAS = [
   { value: '', label: 'Selecciona una categoría' },
@@ -65,26 +69,9 @@ export default function RegisterStoreScreen() {
         const newStore = await createStore(storeData, token);
         console.log('✅ [Store] Tienda creada exitosamente:', newStore);
 
-        // Save onboarding metadata to local storage
-        // This is used to redirect user after login
-        const metadata: UserMetadata = {
-          user: {
-            slug: user.userSlug,
-          },
-          store: {
-            slug: newStore.slug,
-          },
-          registerStoreCompleted: true,
-        };
-
-        // TODO: When backend provides metadata endpoint, save to backend
-        // For now, save to AsyncStorage for client-side tracking
-        await authStorage.saveTempCredentials({
-          email: user.email,
-          password: '', // Not storing password for security
-        });
-
-        console.log('✅ [Store] Metadata saved to local storage');
+        // Backend automatically updates user metadata with storeSlug
+        // No need to save metadata locally anymore
+        console.log('✅ [Store] User metadata updated on backend');
 
         // Redirigir a la pantalla principal
         router.replace('/(tabs)');
