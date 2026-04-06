@@ -21,19 +21,14 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useAuth, useUser } from '@/shared/hooks/hooks';
-import { redirectAfterAuth } from '@/features/auth/utils/navigation-helpers';
+import { useAuth } from '@/shared/hooks/hooks';
 
 export function ResetPasswordForm() {
   // Router/navigation hooks
-  const { email = '', sessionId = '' } = useLocalSearchParams<{
-    email?: string;
-    sessionId?: string;
-  }>();
+  const { email = '' } = useLocalSearchParams<{ email?: string }>();
 
   // Auth/user hooks
   const { resetPassword, login } = useAuth();
-  const { user } = useUser();
 
   // Refs
   const codeInputRef = React.useRef<TextInput>(null);
@@ -45,10 +40,10 @@ export function ResetPasswordForm() {
       code: '',
     },
     onSubmit: async ({ value }) => {
-      if (!sessionId) {
+      if (!email) {
         return {
           fields: {
-            code: 'Sesión inválida. Por favor, solicita el código nuevamente.',
+            code: 'No se encontró el correo. Por favor, solicita el código nuevamente.',
           },
         };
       }
@@ -56,8 +51,7 @@ export function ResetPasswordForm() {
       try {
         console.log('📝 [ResetPassword] Resetting password...');
 
-        // Reset password
-        await resetPassword(sessionId, value.code, value.password);
+        await resetPassword(email, value.code, value.password);
 
         console.log('✅ [ResetPassword] Password reset successful');
         Alert.alert('Éxito', 'Tu contraseña ha sido restablecida correctamente');
@@ -67,23 +61,12 @@ export function ResetPasswordForm() {
           try {
             console.log('🚪 [ResetPassword] Auto-logging in...');
             await login(email, value.password);
-
-            // Wait a moment for user data to load
-            setTimeout(async () => {
-              if (user) {
-                await redirectAfterAuth(user, router);
-              } else {
-                // Fallback to home if user data isn't loaded yet
-                router.replace('/(tabs)');
-              }
-            }, 500);
+            router.replace('/(tabs)');
           } catch (loginError) {
             console.error('❌ [ResetPassword] Auto-login failed:', loginError);
-            // If auto-login fails, just go to sign-in
             router.replace('/(auth)/sign-in');
           }
         } else {
-          // No email, redirect to sign-in
           router.replace('/(auth)/sign-in');
         }
       } catch (err) {

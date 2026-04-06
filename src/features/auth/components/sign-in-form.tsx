@@ -21,13 +21,11 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useAuth, useUser } from '@/shared/hooks/hooks';
-import { redirectAfterAuth } from '@/features/auth/utils/navigation-helpers';
+import { useAuth } from '@/shared/hooks/hooks';
 
 export function SignInForm() {
   // Router/navigation hooks
   const { login, isLoading } = useAuth();
-  const { user } = useUser();
 
   // Refs for keyboard navigation
   const passwordInputRef = React.useRef<TextInput>(null);
@@ -48,17 +46,7 @@ export function SignInForm() {
         await login(value.email, value.password);
 
         console.log('✅ [SignIn] Login successful');
-
-        // Redirect based on onboarding status
-        // Wait a bit for user to be loaded in context
-        setTimeout(() => {
-          if (user) {
-            redirectAfterAuth(user, router);
-          } else {
-            // Fallback if user not loaded yet
-            router.replace('/(tabs)');
-          }
-        }, 100);
+        router.replace('/(tabs)');
       } catch (err) {
         console.error('❌ [SignIn] Login failed:', err);
 

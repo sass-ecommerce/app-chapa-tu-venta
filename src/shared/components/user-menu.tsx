@@ -89,9 +89,8 @@ function UserAvatar(props: Omit<React.ComponentProps<typeof Avatar>, 'alt'>) {
       .map((name: string) => name[0])
       .join('');
 
-    const imageSource = user?.imageUrl ? { uri: user.imageUrl } : undefined;
-    return { initials, imageSource, userName };
-  }, [user?.imageUrl, user?.firstName, user?.lastName, user?.email]);
+    return { initials, imageSource: undefined, userName };
+  }, [user?.firstName, user?.lastName, user?.email]);
 
   return (
     <Avatar alt={`${userName}'s avatar`} {...props}>

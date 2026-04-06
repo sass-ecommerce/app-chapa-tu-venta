@@ -13,8 +13,5 @@
 // Components
 export { EditProfileForm } from './components/edit-profile-form';
 
-// API
-export { userApi } from './api/user';
-
 // Types
 export type { User, UpdateProfilePayload } from './types';

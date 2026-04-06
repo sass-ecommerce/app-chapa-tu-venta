@@ -9,6 +9,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 // 3. UI components
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Text } from '@/shared/components/ui/text';
 import {
   Card,
   CardContent,
@@ -16,9 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
 import { useAuth } from '@/shared/hooks/hooks';
@@ -39,12 +39,11 @@ export function ForgotPasswordForm() {
       try {
         console.log('🔑 [ForgotPassword] Requesting password reset code...');
 
-        const result = await forgotPassword(value.email);
+        await forgotPassword(value.email);
 
         console.log('✅ [ForgotPassword] Reset code sent successfully');
 
-        // Navigate to reset password form with email and sessionId
-        router.push(`/(auth)/reset-password?email=${value.email}&sessionId=${result.sessionId}`);
+        router.push(`/(auth)/reset-password?email=${value.email}`);
       } catch (err) {
         console.error('❌ [ForgotPassword] Error:', err);
 

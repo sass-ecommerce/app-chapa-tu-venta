@@ -9,6 +9,9 @@ import { Link, router } from 'expo-router';
 
 // 3. UI components
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { Label } from '@/shared/components/ui/label';
+import { Text } from '@/shared/components/ui/text';
 import {
   Card,
   CardContent,
@@ -16,16 +19,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
 import { useAuth } from '@/shared/hooks/hooks';
 
 export function SignUpForm() {
   // Auth hooks
-  const { register, saveTempCredentials, isLoading } = useAuth();
+  const { register, isLoading } = useAuth();
 
   // Refs for keyboard navigation
   const lastNameInputRef = React.useRef<TextInput>(null);
@@ -48,26 +48,20 @@ export function SignUpForm() {
       try {
         console.log('📝 [SignUp] Starting registration...');
 
-        // Call register API
-        const response = await register({
+        // Register via Cognito — triggers verification email automatically
+        await register({
           email: value.email,
           password: value.password,
           firstName: value.firstName,
           lastName: value.lastName,
         });
 
-        console.log('✅ [SignUp] Registration successful, sessionId:', response.sessionId);
+        console.log('✅ [SignUp] Registration successful');
 
-        // Save credentials temporarily for auto-login after email verification
-        await saveTempCredentials({ email: value.email, password: value.password });
-
-        // Navigate to verification screen with sessionId and email
+        // Navigate to verification screen with email (no sessionId needed with Cognito)
         router.push({
           pathname: '/(auth)/sign-up/verify-email',
-          params: {
-            sessionId: response.sessionId,
-            email: value.email,
-          },
+          params: { email: value.email },
         });
       } catch (err) {
         console.error('❌ [SignUp] Registration failed:', err);
