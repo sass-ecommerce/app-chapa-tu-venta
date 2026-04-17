@@ -21,7 +21,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useAuth } from '@/shared/hooks/hooks';
+import { useConfirmRegistrationMutation, useResendCodeMutation } from '@/features/auth/queries';
 
 const RESEND_CODE_INTERVAL_SECONDS = 30;
 
@@ -31,8 +31,8 @@ export function VerifyEmailForm() {
   // Router/navigation hooks
   const { email = '' } = useLocalSearchParams<{ email?: string }>();
 
-  // Auth/user hooks — username = email in Cognito
-  const { verifyEmail, resendVerification } = useAuth();
+  const confirmMutation = useConfirmRegistrationMutation();
+  const resendMutation = useResendCodeMutation();
 
   // Custom hooks
   const { countdown, restartCountdown } = useCountdown(RESEND_CODE_INTERVAL_SECONDS);
@@ -44,8 +44,7 @@ export function VerifyEmailForm() {
       try {
         console.log('📧 [VerifyEmail] Verifying email with code...');
 
-        // verifyEmail handles confirmSignUp + autoSignIn + fetching user profile
-        await verifyEmail(email, value.code);
+        await confirmMutation.mutateAsync({ email, code: value.code });
 
         console.log('✅ [VerifyEmail] Email verified and signed in');
         router.replace('/(tabs)');
@@ -72,7 +71,7 @@ export function VerifyEmailForm() {
 
     try {
       console.log('📧 [VerifyEmail] Resending verification code...');
-      await resendVerification(email);
+      await resendMutation.mutateAsync(email);
 
       form.setFieldValue('code', '');
       form.setFieldMeta('code', (prev) => ({ ...prev, errors: [] }));
