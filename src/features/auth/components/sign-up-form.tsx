@@ -21,11 +21,10 @@ import {
 } from '@/shared/components/ui/card';
 
 // 4. Utils & hooks
-import { useAuth } from '@/shared/hooks/hooks';
+import { useRegisterMutation } from '@/features/auth/queries';
 
 export function SignUpForm() {
-  // Auth hooks
-  const { register, isLoading } = useAuth();
+  const registerMutation = useRegisterMutation();
 
   // Refs for keyboard navigation
   const lastNameInputRef = React.useRef<TextInput>(null);
@@ -41,15 +40,10 @@ export function SignUpForm() {
       password: '',
     },
     onSubmit: async ({ value }) => {
-      if (isLoading) {
-        return;
-      }
-
       try {
         console.log('📝 [SignUp] Starting registration...');
 
-        // Register via Cognito — triggers verification email automatically
-        await register({
+        await registerMutation.mutateAsync({
           email: value.email,
           password: value.password,
           firstName: value.firstName,
