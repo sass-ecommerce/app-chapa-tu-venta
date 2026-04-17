@@ -6,12 +6,16 @@ import { type TextInput, View } from 'react-native';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Link, router } from 'expo-router';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { Icon } from '@/shared/components/ui/icon';
 
 // 3. UI components
+import { StatusDialog } from '@/src/shared/components/status-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
+import { Pressable } from 'react-native';
 import {
   Card,
   CardContent,
@@ -22,9 +26,12 @@ import {
 
 // 4. Utils & hooks
 import { useRegisterMutation } from '@/features/auth/queries';
+import { logError } from '@/shared/utils/utils';
 
 export function SignUpForm() {
   const registerMutation = useRegisterMutation();
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [errorDialogOpen, setErrorDialogOpen] = React.useState(false);
 
   // Refs for keyboard navigation
   const lastNameInputRef = React.useRef<TextInput>(null);
@@ -58,26 +65,8 @@ export function SignUpForm() {
           params: { email: value.email },
         });
       } catch (err) {
-        console.error('❌ [SignUp] Registration failed:', err);
-
-        // Return field errors to be displayed under corresponding fields
-        if (err instanceof Error) {
-          const message = err.message;
-
-          return {
-            fields: {
-              email: message.toLowerCase().includes('email')
-                ? message
-                : 'Error al registrar usuario',
-            },
-          };
-        } else {
-          return {
-            fields: {
-              email: 'Error al registrar usuario',
-            },
-          };
-        }
+        logError('[SignUp] Registration failed:', err);
+        setErrorDialogOpen(true);
       }
     },
   });
@@ -223,16 +212,28 @@ export function SignUpForm() {
               {(field) => (
                 <View className="gap-1.5">
                   <Label htmlFor="password">Contraseña</Label>
-                  <Input
-                    ref={passwordInputRef}
-                    id="password"
-                    secureTextEntry
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    onBlur={field.handleBlur}
-                    returnKeyType="send"
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View className="relative">
+                    <Input
+                      ref={passwordInputRef}
+                      id="password"
+                      secureTextEntry={!showPassword}
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      onBlur={field.handleBlur}
+                      returnKeyType="send"
+                      onSubmitEditing={form.handleSubmit}
+                      className="pr-10"
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Icon
+                        as={showPassword ? EyeOff : Eye}
+                        size={20}
+                        className="text-muted-foreground"
+                      />
+                    </Pressable>
+                  </View>
                   {field.state.meta.errors.length > 0 && (
                     <Text className="text-sm font-medium text-destructive">
                       {String(field.state.meta.errors[0]?.message)}
@@ -263,6 +264,15 @@ export function SignUpForm() {
           </Text>
         </CardContent>
       </Card>
+      <StatusDialog
+        open={errorDialogOpen}
+        onOpenChange={setErrorDialogOpen}
+        variant="error"
+        title="No pudimos crear tu cuenta"
+        description="Ocurrió un problema al registrar tu cuenta. Puedes intentarlo nuevamente o continuar más tarde."
+        actionLabel="Reintentar ahora"
+        onAction={() => setErrorDialogOpen(false)}
+      />
     </View>
   );
 }

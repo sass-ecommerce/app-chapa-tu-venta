@@ -1,22 +1,31 @@
-import { apiFetch } from '../../../shared/config/fetch';
+import { apiClient } from '@/shared/config/api';
 import type { CreateStorePayload, StoreApiResponse } from '../types';
 
 export async function createStore(
   data: CreateStorePayload,
   token: string
 ): Promise<StoreApiResponse> {
-  console.log('Creating store with data:', data);
-  return apiFetch<StoreApiResponse>('/stores', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify(data),
-  });
+  try {
+    const { data: result } = await apiClient.post<StoreApiResponse>('/stores', data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('✅ [createStore] Response:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ [createStore] Error:', error);
+    throw error;
+  }
 }
 
 export async function getStoreBySlug(slug: string, token: string): Promise<StoreApiResponse[]> {
-  console.log('Fetching store with slug:', slug);
-  return apiFetch<StoreApiResponse[]>(`/stores/${slug}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  try {
+    const { data: result } = await apiClient.get<StoreApiResponse[]>(`/stores/${slug}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    console.log('✅ [getStoreBySlug] Response:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ [getStoreBySlug] Error:', error);
+    throw error;
+  }
 }

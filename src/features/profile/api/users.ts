@@ -1,4 +1,4 @@
-import { apiFetch } from '../../../shared/config/fetch';
+import { apiClient } from '@/shared/config/api';
 
 export interface User {
   id: number;
@@ -24,27 +24,31 @@ export interface UpdateUserPayload {
 }
 
 export async function updateUserBySlug(slug: string, data: UpdateUserPayload): Promise<User> {
-  return apiFetch<User>(`/users?slug=eq.${slug}`, {
-    method: 'PATCH',
-    body: JSON.stringify({
-      ...data,
-      updated_at: new Date().toISOString(),
-    }),
-    headers: {
-      Prefer: 'return=representation',
-    },
-  });
+  try {
+    const { data: result } = await apiClient.patch<User>(
+      `/users?slug=eq.${slug}`,
+      { ...data, updated_at: new Date().toISOString() },
+      { headers: { Prefer: 'return=representation' } }
+    );
+    console.log('✅ [updateUserBySlug] Response:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ [updateUserBySlug] Error:', error);
+    throw error;
+  }
 }
 
 export async function updateUserById(id: number, data: UpdateUserPayload): Promise<User> {
-  return apiFetch<User>(`/users?id=eq.${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({
-      ...data,
-      updated_at: new Date().toISOString(),
-    }),
-    headers: {
-      Prefer: 'return=representation',
-    },
-  });
+  try {
+    const { data: result } = await apiClient.patch<User>(
+      `/users?id=eq.${id}`,
+      { ...data, updated_at: new Date().toISOString() },
+      { headers: { Prefer: 'return=representation' } }
+    );
+    console.log('✅ [updateUserById] Response:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ [updateUserById] Error:', error);
+    throw error;
+  }
 }

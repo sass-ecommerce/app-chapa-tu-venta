@@ -1,17 +1,19 @@
-import { apiFetch } from '@/shared/config/fetch';
+import { apiClient } from '@/shared/config/api';
+import type { ApiResponse } from '@/src/shared/interfaces/api-response';
 import type { RegisterPayload } from '../types';
 
 export async function registerUser(data: RegisterPayload): Promise<{ userSub: string }> {
-  return apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(data) });
+  const { data: result } = await apiClient.post<ApiResponse<{ userSub: string }>>(
+    '/auth/register',
+    data
+  );
+  return result.data;
 }
 
 export async function confirmRegistration(email: string, code: string): Promise<void> {
-  await apiFetch('/auth/confirm-registration', {
-    method: 'POST',
-    body: JSON.stringify({ email, code }),
-  });
+  await apiClient.post<ApiResponse>('/auth/confirm-registration', { email, code });
 }
 
 export async function resendCode(email: string): Promise<void> {
-  await apiFetch('/auth/resend-code', { method: 'POST', body: JSON.stringify({ email }) });
+  return apiClient.post('/auth/resend-code', { email });
 }
