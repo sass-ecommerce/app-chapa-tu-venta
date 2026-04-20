@@ -7,7 +7,15 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      fontFamily: {
+        serif: ['InstrumentSerif_400Regular', 'serif'],
+        'serif-italic': ['InstrumentSerif_400Regular_Italic', 'serif'],
+      },
       colors: {
+        brand: {
+          DEFAULT: 'hsl(26 75% 49%)',
+          foreground: 'hsl(0 0% 100%)',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

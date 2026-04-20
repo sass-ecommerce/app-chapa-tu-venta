@@ -10,6 +10,7 @@
     "clean": "rm -rf .expo node_modules"
   },
   "dependencies": {
+    "@expo-google-fonts/instrument-serif": "^0.4.1",
     "@react-native-picker/picker": "2.11.1",
     "@react-navigation/native": "^7.0.0",
     "@rn-primitives/alert-dialog": "^1.2.0",
@@ -33,6 +34,7 @@
     "expo": "~54.0.29",
     "expo-auth-session": "~7.0.10",
     "expo-constants": "~18.0.12",
+    "expo-font": "~14.0.11",
     "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.10",
     "expo-linear-gradient": "~15.0.8",

@@ -10,6 +10,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  useFonts,
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -28,6 +33,12 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const { colorScheme } = useColorScheme();
+  const [fontsLoaded] = useFonts({
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
+  });
+
+  if (!fontsLoaded) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
