@@ -21,11 +21,10 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useAuth } from '@/shared/hooks/hooks';
+import { useLoginMutation, authStorage } from '@/features/auth';
 
 export function SignInForm() {
-  // Router/navigation hooks
-  const { login, isLoading } = useAuth();
+  const loginMutation = useLoginMutation();
 
   // Refs for keyboard navigation
   const passwordInputRef = React.useRef<TextInput>(null);
@@ -37,36 +36,20 @@ export function SignInForm() {
       password: '',
     },
     onSubmit: async ({ value }) => {
-      if (isLoading) {
-        return;
-      }
-
       try {
-        // Login with custom auth API
-        await login(value.email, value.password);
-
-        console.log('✅ [SignIn] Login successful');
+        const tokens = await loginMutation.mutateAsync({
+          email: value.email,
+          password: value.password,
+        });
+        await authStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
         router.replace('/(tabs)');
       } catch (err) {
-        console.error('❌ [SignIn] Login failed:', err);
-
-        // Return field errors to be displayed under password field
         if (err instanceof Error) {
           const message = err.message;
           const errorMessage = message.includes('contraseña') ? message : 'Credenciales inválidas';
-
-          return {
-            fields: {
-              password: errorMessage,
-            },
-          };
-        } else {
-          return {
-            fields: {
-              password: 'Error al iniciar sesión',
-            },
-          };
+          return { fields: { password: errorMessage } };
         }
+        return { fields: { password: 'Error al iniciar sesión' } };
       }
     },
   });
@@ -175,8 +158,8 @@ export function SignInForm() {
                 <Button
                   className="w-full"
                   onPress={form.handleSubmit}
-                  disabled={!canSubmit || isSubmitting}>
-                  <Text>{isSubmitting ? 'Iniciando sesión...' : 'Continuar'}</Text>
+                  disabled={!canSubmit || isSubmitting || loginMutation.isPending}>
+                  <Text>{isSubmitting || loginMutation.isPending ? 'Iniciando sesión...' : 'Continuar'}</Text>
                 </Button>
               )}
             </form.Subscribe>

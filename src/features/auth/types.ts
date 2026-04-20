@@ -24,6 +24,13 @@ export interface UpdateProfilePayload {
   lastName?: string;
 }
 
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
 export interface PublicMetadata {
   storeSlug?: string;
 }

@@ -1,9 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
-import { registerUser, confirmRegistration, resendCode } from '../api';
-import type { RegisterPayload } from '../types';
-
-const USER_KEY = ['auth', 'user'] as const;
+import {
+  registerUser,
+  confirmRegistration,
+  resendCode,
+  loginUser,
+  forgotPasswordRequest,
+  resetPasswordRequest,
+} from '../api';
+import type { RegisterPayload, LoginPayload } from '../types';
 
 export function useRegisterMutation() {
   return useMutation({
@@ -12,15 +17,40 @@ export function useRegisterMutation() {
 }
 
 export function useConfirmRegistrationMutation() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ email, code }: { email: string; code: string }) =>
       confirmRegistration(email, code),
   });
 }
 
+export function useLoginMutation() {
+  return useMutation({
+    mutationFn: (data: LoginPayload) => loginUser(data),
+  });
+}
+
 export function useResendCodeMutation() {
   return useMutation({
     mutationFn: (email: string) => resendCode(email),
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (email: string) => forgotPasswordRequest(email),
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: ({
+      email,
+      code,
+      newPassword,
+    }: {
+      email: string;
+      code: string;
+      newPassword: string;
+    }) => resetPasswordRequest(email, code, newPassword),
   });
 }

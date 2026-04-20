@@ -21,14 +21,11 @@ import {
 } from '@/shared/components/ui/card';
 
 // 4. Utils & hooks
-import { useAuth } from '@/shared/hooks/hooks';
+import { useForgotPasswordMutation } from '@/features/auth';
 
 export function ForgotPasswordForm() {
-  // Router/navigation hooks
   const { email: emailParam = '' } = useLocalSearchParams<{ email?: string }>();
-
-  // Auth hooks
-  const { forgotPassword } = useAuth();
+  const forgotPasswordMutation = useForgotPasswordMutation();
 
   // Form with TanStack Form
   const form = useForm({
@@ -37,30 +34,13 @@ export function ForgotPasswordForm() {
     },
     onSubmit: async ({ value }) => {
       try {
-        console.log('🔑 [ForgotPassword] Requesting password reset code...');
-
-        await forgotPassword(value.email);
-
-        console.log('✅ [ForgotPassword] Reset code sent successfully');
-
+        await forgotPasswordMutation.mutateAsync(value.email);
         router.push(`/(auth)/reset-password?email=${value.email}`);
       } catch (err) {
-        console.error('❌ [ForgotPassword] Error:', err);
-
-        // Return field error to be displayed under email field
         if (err instanceof Error) {
-          return {
-            fields: {
-              email: err.message,
-            },
-          };
-        } else {
-          return {
-            fields: {
-              email: 'Error al enviar el código de recuperación',
-            },
-          };
+          return { fields: { email: err.message } };
         }
+        return { fields: { email: 'Error al enviar el código de recuperación' } };
       }
     },
   });
@@ -118,8 +98,8 @@ export function ForgotPasswordForm() {
                 <Button
                   className="w-full"
                   onPress={form.handleSubmit}
-                  disabled={!canSubmit || isSubmitting}>
-                  <Text>{isSubmitting ? 'Enviando...' : 'Restablecer contraseña'}</Text>
+                  disabled={!canSubmit || isSubmitting || forgotPasswordMutation.isPending}>
+                  <Text>{isSubmitting || forgotPasswordMutation.isPending ? 'Enviando...' : 'Restablecer contraseña'}</Text>
                 </Button>
               )}
             </form.Subscribe>

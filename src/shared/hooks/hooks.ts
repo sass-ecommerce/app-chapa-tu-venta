@@ -2,16 +2,10 @@ import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { authStorage } from '@/features/auth/utils/storage';
-import type { User, LoginPayload, RegisterPayload, UpdateProfilePayload } from '@/features/auth/types';
+import { loginUser, forgotPasswordRequest, resetPasswordRequest } from '@/features/auth/api';
+import type { User, UpdateProfilePayload } from '@/features/auth/types';
 
 const USER_KEY = ['auth', 'user'] as const;
-
-const MOCK_USER: User = {
-  userSlug: 'demo-user',
-  email: 'demo@chapatu.venta',
-  firstName: 'Gabriel',
-  lastName: 'Demo',
-};
 
 function useUserQuery() {
   return useQuery({
@@ -26,23 +20,9 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const userQuery = useUserQuery();
 
-  async function login(email: string, _password: string) {
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      const user: User = { ...MOCK_USER, email };
-      await authStorage.saveUser(user);
-      queryClient.setQueryData(USER_KEY, user);
-      return user;
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error al iniciar sesión';
-      Alert.alert('Error', msg);
-      throw e;
-    }
-  }
-
   async function logout() {
     try {
-      await authStorage.clearUser();
+      await Promise.all([authStorage.clearUser(), authStorage.clearTokens()]);
       queryClient.setQueryData(USER_KEY, null);
       queryClient.removeQueries({ queryKey: ['auth'] });
       router.replace('/(auth)/sign-in');
@@ -53,34 +33,12 @@ export function useAuth() {
     }
   }
 
-  async function register(_data: RegisterPayload) {
-    await new Promise((r) => setTimeout(r, 600));
+  async function forgotPassword(email: string) {
+    await forgotPasswordRequest(email);
   }
 
-  async function verifyEmail(username: string, _code: string) {
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      const user: User = { ...MOCK_USER, email: username };
-      await authStorage.saveUser(user);
-      queryClient.setQueryData(USER_KEY, user);
-      return user;
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error al verificar email';
-      Alert.alert('Error', msg);
-      throw e;
-    }
-  }
-
-  async function resendVerification(_username: string) {
-    await new Promise((r) => setTimeout(r, 400));
-  }
-
-  async function forgotPassword(_email: string) {
-    await new Promise((r) => setTimeout(r, 600));
-  }
-
-  async function resetPassword(_email: string, _code: string, _newPassword: string) {
-    await new Promise((r) => setTimeout(r, 600));
+  async function resetPassword(email: string, code: string, newPassword: string) {
+    await resetPasswordRequest(email, code, newPassword);
   }
 
   return {
@@ -91,12 +49,9 @@ export function useAuth() {
     login: (email: string, password: string) => login(email, password),
     logout,
     signOut: logout,
-    register: (data: LoginPayload & RegisterPayload) => register(data),
-    verifyEmail,
-    resendVerification,
     forgotPassword,
     resetPassword,
-    getToken: async () => 'mock-access-token',
+    getToken: () => authStorage.getAccessToken(),
   };
 }
 

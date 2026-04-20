@@ -21,14 +21,12 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useAuth } from '@/shared/hooks/hooks';
+import { useResetPasswordMutation, useLoginMutation, authStorage } from '@/features/auth';
 
 export function ResetPasswordForm() {
-  // Router/navigation hooks
   const { email = '' } = useLocalSearchParams<{ email?: string }>();
-
-  // Auth/user hooks
-  const { resetPassword, login } = useAuth();
+  const resetPasswordMutation = useResetPasswordMutation();
+  const loginMutation = useLoginMutation();
 
   // Refs
   const codeInputRef = React.useRef<TextInput>(null);
@@ -41,49 +39,25 @@ export function ResetPasswordForm() {
     },
     onSubmit: async ({ value }) => {
       if (!email) {
-        return {
-          fields: {
-            code: 'No se encontró el correo. Por favor, solicita el código nuevamente.',
-          },
-        };
+        return { fields: { code: 'No se encontró el correo. Por favor, solicita el código nuevamente.' } };
       }
 
       try {
-        console.log('📝 [ResetPassword] Resetting password...');
-
-        await resetPassword(email, value.code, value.password);
-
-        console.log('✅ [ResetPassword] Password reset successful');
+        await resetPasswordMutation.mutateAsync({ email, code: value.code, newPassword: value.password });
         Alert.alert('Éxito', 'Tu contraseña ha sido restablecida correctamente');
 
-        // Auto-login with email and new password
-        if (email) {
-          try {
-            console.log('🚪 [ResetPassword] Auto-logging in...');
-            await login(email, value.password);
-            router.replace('/(tabs)');
-          } catch (loginError) {
-            console.error('❌ [ResetPassword] Auto-login failed:', loginError);
-            router.replace('/(auth)/sign-in');
-          }
-        } else {
+        try {
+          const tokens = await loginMutation.mutateAsync({ email, password: value.password });
+          await authStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
+          router.replace('/(tabs)');
+        } catch {
           router.replace('/(auth)/sign-in');
         }
       } catch (err) {
-        console.error('❌ [ResetPassword] Error:', err);
         if (err instanceof Error) {
-          // Return error to show under the code field
-          return {
-            fields: {
-              code: err.message,
-            },
-          };
+          return { fields: { code: err.message } };
         }
-        return {
-          fields: {
-            code: 'Error al restablecer la contraseña',
-          },
-        };
+        return { fields: { code: 'Error al restablecer la contraseña' } };
       }
     },
   });
@@ -174,8 +148,8 @@ export function ResetPasswordForm() {
                 <Button
                   className="w-full"
                   onPress={() => form.handleSubmit()}
-                  disabled={!canSubmit || isSubmitting}>
-                  <Text>{isSubmitting ? 'Restableciendo...' : 'Restablecer contraseña'}</Text>
+                  disabled={!canSubmit || isSubmitting || resetPasswordMutation.isPending || loginMutation.isPending}>
+                  <Text>{isSubmitting || resetPasswordMutation.isPending || loginMutation.isPending ? 'Restableciendo...' : 'Restablecer contraseña'}</Text>
                 </Button>
               )}
             </form.Subscribe>
