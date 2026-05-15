@@ -13,12 +13,10 @@ import { ShoppingBag } from 'lucide-react-native';
 
 import { Text } from '@/shared/components/ui/text';
 
-import { useAuth } from '@/shared/hooks/hooks';
-
 const ANIMATION_DURATION = 2000; // 2 segundos
 
 export default function AnimatedWelcomeScreen() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = { isAuthenticated: true, isLoading: false };
 
   // Shared values para animaciones
   const logoOpacity = useSharedValue(0);
