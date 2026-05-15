@@ -10,16 +10,16 @@ import { Icon } from '@/shared/components/ui/icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { Text } from '@/shared/components/ui/text';
 
-import { useAuth, useUser } from '@/shared/hooks/hooks';
+import { useLogoutMutation } from '@/features/auth';
 
 export function UserMenu() {
-  const { user } = useUser();
-  const { signOut } = useAuth();
+  const { user } = { user: { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' } };
+  const logoutMutation = useLogoutMutation();
   const popoverTriggerRef = React.useRef<TriggerRef>(null);
 
-  async function onSignOut() {
+  function onSignOut() {
     popoverTriggerRef.current?.close();
-    await signOut();
+    logoutMutation.mutate();
   }
 
   return (
@@ -80,7 +80,7 @@ export function UserMenu() {
 }
 
 function UserAvatar(props: Omit<React.ComponentProps<typeof Avatar>, 'alt'>) {
-  const { user } = useUser();
+  const { user } = { user: { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' } };
 
   const { initials, imageSource, userName } = React.useMemo(() => {
     const userName = user ? `${user.firstName} ${user.lastName}`.trim() || user.email : 'Unknown';

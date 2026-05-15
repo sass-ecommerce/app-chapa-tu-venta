@@ -21,10 +21,11 @@ import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
 // 4. Utils & hooks
-import { useLoginMutation, authStorage } from '@/features/auth';
+import { useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
 
 export function SignInForm() {
   const loginMutation = useLoginMutation();
+  const onboardingStatusMutation = useOnboardingStatusMutation();
 
   // Refs for keyboard navigation
   const passwordInputRef = React.useRef<TextInput>(null);
@@ -37,12 +38,18 @@ export function SignInForm() {
     },
     onSubmit: async ({ value }) => {
       try {
-        const tokens = await loginMutation.mutateAsync({
+        await loginMutation.mutateAsync({
           email: value.email,
           password: value.password,
         });
-        await authStorage.saveTokens(tokens.accessToken, tokens.refreshToken);
-        router.replace('/(tabs)');
+
+        const onboarding = await onboardingStatusMutation.mutateAsync();
+
+        if (!onboarding.createTenant.completed) {
+          router.replace('/(onboarding)/register-store');
+        } else {
+          router.replace('/(tabs)');
+        }
       } catch (err) {
         if (err instanceof Error) {
           const message = err.message;
@@ -159,7 +166,9 @@ export function SignInForm() {
                   className="w-full"
                   onPress={form.handleSubmit}
                   disabled={!canSubmit || isSubmitting || loginMutation.isPending}>
-                  <Text>{isSubmitting || loginMutation.isPending ? 'Iniciando sesión...' : 'Continuar'}</Text>
+                  <Text>
+                    {isSubmitting || loginMutation.isPending ? 'Iniciando sesión...' : 'Continuar'}
+                  </Text>
                 </Button>
               )}
             </form.Subscribe>

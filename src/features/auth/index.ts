@@ -12,6 +12,7 @@ export {
   loginUser,
   forgotPasswordRequest,
   resetPasswordRequest,
+  getOnboardingStatus,
 } from './api';
 
 // Queries
@@ -22,4 +23,6 @@ export {
   useResendCodeMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useOnboardingStatusMutation,
+  useLogoutMutation,
 } from './queries';

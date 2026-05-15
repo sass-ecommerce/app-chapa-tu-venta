@@ -1,4 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation,  } from '@tanstack/react-query';
+import { router } from 'expo-router';
+
+import { authStorage } from '../utils/storage';
 
 import {
   registerUser,
@@ -7,6 +10,7 @@ import {
   loginUser,
   forgotPasswordRequest,
   resetPasswordRequest,
+  getOnboardingStatus,
 } from '../api';
 import type { RegisterPayload, LoginPayload } from '../types';
 
@@ -26,6 +30,17 @@ export function useConfirmRegistrationMutation() {
 export function useLoginMutation() {
   return useMutation({
     mutationFn: (data: LoginPayload) => loginUser(data),
+    onSuccess: async (tokens, variables) => {
+      await Promise.all([
+        authStorage.saveTokens(tokens.accessToken, tokens.refreshToken),
+        authStorage.saveUser({
+          userSlug: variables.email.split('@')[0],
+          email: variables.email,
+          firstName: '',
+          lastName: '',
+        }),
+      ]);
+    },
   });
 }
 
@@ -52,5 +67,24 @@ export function useResetPasswordMutation() {
       code: string;
       newPassword: string;
     }) => resetPasswordRequest(email, code, newPassword),
+  });
+}
+
+export function useOnboardingStatusMutation() {
+  return useMutation({
+    mutationFn: () => getOnboardingStatus(),
+  });
+}
+
+export function useLogoutMutation() {
+  return useMutation({
+    mutationFn: async () => {
+      await Promise.all([authStorage.clearUser(), authStorage.clearTokens()]);
+    },
+    onSuccess: () => {
+      authStorage.clearTokens();
+
+      router.replace('/(auth)/sign-in');
+    },
   });
 }

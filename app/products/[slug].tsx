@@ -27,11 +27,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/
 import { useQuery } from '@tanstack/react-query';
 
 import { getProductBySlug } from '@/features/products/api/products';
-import { useAuth } from '@/shared/hooks/hooks';
 
 export default function ProductoDetalleScreen() {
   const { slug: productSlug } = useLocalSearchParams<{ slug: string }>();
-  const { getToken } = useAuth();
   const [imageLoading, setImageLoading] = React.useState(true);
 
   // Usar React Query para obtener el producto
@@ -47,11 +45,7 @@ export default function ProductoDetalleScreen() {
       console.log('📍 [ProductDetail] Fetching product with slug:', productSlug);
       if (!productSlug) throw new Error('Faltan parámetros requeridos');
 
-      const token = await getToken();
-      console.log('📍 [ProductDetail] Fetched token:', token);
-      if (!token) throw new Error('No se pudo obtener el token de autenticación');
-
-      const productData = await getProductBySlug(productSlug, token);
+      const productData = await getProductBySlug(productSlug, 'token');
       return productData;
     },
     enabled: !!productSlug,

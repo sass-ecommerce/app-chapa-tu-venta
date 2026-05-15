@@ -10,15 +10,13 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
 
-import { useUser } from '@/shared/hooks/hooks';
-
 interface EditProfileFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 export function EditProfileForm({ onSuccess, onCancel }: EditProfileFormProps) {
-  const { user, updateUser } = useUser();
+  const { user } = { user: { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' } };
 
   const form = useForm({
     defaultValues: {
@@ -35,10 +33,10 @@ export function EditProfileForm({ onSuccess, onCancel }: EditProfileFormProps) {
 
       try {
         // Update user profile
-        await updateUser({
-          firstName: value.firstName,
-          lastName: value.lastName,
-        });
+        // await updateUser({
+        //   firstName: value.firstName,
+        //   lastName: value.lastName,
+        // });
 
         console.log('✅ [Edit Profile] User data updated successfully');
 

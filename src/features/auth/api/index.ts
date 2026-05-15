@@ -34,3 +34,17 @@ export async function resetPasswordRequest(
 ): Promise<void> {
   await apiClient.post<ApiResponse>('/auth/reset-password', { email, code, newPassword });
 }
+
+export interface OnboardingStatus {
+  createTenant: {
+    completed: boolean;
+    tenant: unknown | null;
+  };
+}
+
+export async function getOnboardingStatus(): Promise<OnboardingStatus> {
+  const { data: result } = await apiClient.get<ApiResponse<OnboardingStatus>>(
+    '/tenants/onboarding'
+  );
+  return result.data;
+}
