@@ -2,7 +2,6 @@ import * as React from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
 import { ShoppingBag, Package } from 'lucide-react-native';
 
 import { Icon } from '@/shared/components/ui/icon';
@@ -12,7 +11,6 @@ import { SalesSummaryCard } from '@/features/home/components/sales-summary-card'
 import { RecentProductsSection } from '@/features/home/components/recent-products-section';
 import { RecentSalesSection } from '@/features/home/components/recent-sales-section';
 
-import { useAuth, useUser } from '@/shared/hooks/hooks';
 import type { SalesSummary, Transaction } from '@/features/home/types';
 import { getProducts } from '@/features/products/api/products';
 import { REFRESH_COLORS } from '@/shared/config/constants';
@@ -58,8 +56,14 @@ const transactions: Transaction[] = [
 ];
 
 export default function HomeScreen() {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user } = {
+    user: {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      imageUrl: undefined,
+    },
+  };
   const [refreshing, setRefreshing] = React.useState(false);
 
   // TODO: Get storeSlug from backend API endpoint or AsyncStorage
@@ -78,9 +82,8 @@ export default function HomeScreen() {
     queryKey: ['recentProducts', storeSlug],
     queryFn: async () => {
       if (!storeSlug) throw new Error('No se encontró el identificador de la tienda');
-      const token = await getToken();
-      if (!token) throw new Error('No se pudo obtener el token de autenticación');
-      const products = await getProducts(storeSlug, token);
+
+      const products = await getProducts(storeSlug, 'token');
       return products.slice(0, 5); // Get only the 5 most recent products
     },
     enabled: !!storeSlug,

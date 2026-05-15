@@ -12,7 +12,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from 'nativewind';
 import { router } from 'expo-router';
 
-import { useAuth, useUser } from '@/shared/hooks/hooks';
 import {
   LogOutIcon,
   MailIcon,
@@ -51,8 +50,15 @@ import {
 import { ANIMATION, REFRESH_COLORS } from '@/shared/config/constants';
 
 export default function PerfilScreen() {
-  const { user, refreshUser } = useUser();
-  const { signOut } = useAuth();
+  const { user } = {
+    user: {
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@example.com',
+      createdAt: new Date(),
+      imageUrl: null,
+    },
+  };
   const { colorScheme, setColorScheme } = useColorScheme();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const [imageUri, setImageUri] = React.useState<string | null>(null);
@@ -129,7 +135,7 @@ export default function PerfilScreen() {
   }, [user?.firstName, user?.lastName, user?.email]);
 
   const createdAt = React.useMemo(() => {
-    if (!user?.createdAt) return null;
+    if (user.createdAt) return null;
     return new Date(user.createdAt).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -150,7 +156,7 @@ export default function PerfilScreen() {
           try {
             setIsSigningOut(true);
             console.log('🚪 [Profile] User initiated sign out');
-            await signOut();
+            //await signOut();
             console.log('✅ [Profile] Sign out successful');
           } catch (error) {
             console.error('❌ [Profile] Sign out error:', error);
@@ -168,12 +174,12 @@ export default function PerfilScreen() {
     console.log(`🎨 [Profile] Theme changed to: ${newScheme}`);
   };
 
-  const onRefresh = React.useCallback(async () => {
-    setRefreshing(true);
-    // Reload user data from API
-    await refreshUser();
-    setRefreshing(false);
-  }, [refreshUser]);
+  // const onRefresh = React.useCallback(async () => {
+  //   setRefreshing(true);
+  //   // Reload user data from API
+  //   await refreshUser();
+  //   setRefreshing(false);
+  // }, [refreshUser]);
 
   return (
     <ScrollView
@@ -181,7 +187,7 @@ export default function PerfilScreen() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={onRefresh}
+          //onRefresh={onRefresh}
           colors={[REFRESH_COLORS.LIGHT]}
           tintColor={REFRESH_COLORS.LIGHT}
         />

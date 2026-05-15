@@ -5,8 +5,6 @@ import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
-import { useAuth, useUser } from '@/shared/hooks/hooks';
-
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
@@ -41,8 +39,6 @@ function isValidTabValue(value: string): value is TabValue {
 
 export default function ProductosScreen() {
   const router = useRouter();
-  const { user } = useUser();
-  const { getToken } = useAuth();
 
   // TODO: Get storeSlug from backend API endpoint or AsyncStorage
   // Metadata is no longer part of User type
@@ -76,10 +72,7 @@ export default function ProductosScreen() {
       console.log('✅ [Products] Fetching for storeSlug:', storeSlug);
       if (!storeSlug) throw new Error('No se encontró el identificador de la tienda');
 
-      const token = await getToken();
-      if (!token) throw new Error('No se pudo obtener el token de autenticación');
-
-      return getProducts(storeSlug, token);
+      return getProducts(storeSlug, 'token');
     },
     enabled: !!storeSlug,
     staleTime: 5 * 60 * 1000,
