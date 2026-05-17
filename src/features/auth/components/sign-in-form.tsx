@@ -1,11 +1,12 @@
 // 1. React & React Native
 import * as React from 'react';
-import { type TextInput, View } from 'react-native';
+import { type TextInput, TouchableOpacity, View } from 'react-native';
 
 // 2. Third-party libraries
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Link, router } from 'expo-router';
+import { Eye, EyeOff } from 'lucide-react-native';
 
 // 3. UI components
 import { Button } from '@/shared/components/ui/button';
@@ -16,9 +17,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card';
+import { Icon } from '@/shared/components/ui/icon';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Text } from '@/shared/components/ui/text';
+import { StatusDialog } from '@/shared/components/status-dialog';
 
 // 4. Utils & hooks
 import { useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
@@ -26,6 +29,9 @@ import { useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
 export function SignInForm() {
   const loginMutation = useLoginMutation();
   const onboardingStatusMutation = useOnboardingStatusMutation();
+
+  const [errorDialog, setErrorDialog] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   // Refs for keyboard navigation
   const passwordInputRef = React.useRef<TextInput>(null);
@@ -50,13 +56,8 @@ export function SignInForm() {
         } else {
           router.replace('/(tabs)');
         }
-      } catch (err) {
-        if (err instanceof Error) {
-          const message = err.message;
-          const errorMessage = message.includes('contraseña') ? message : 'Credenciales inválidas';
-          return { fields: { password: errorMessage } };
-        }
-        return { fields: { password: 'Error al iniciar sesión' } };
+      } catch {
+        setErrorDialog(true);
       }
     },
   });
@@ -69,6 +70,15 @@ export function SignInForm() {
   // Render
   return (
     <View className="gap-6">
+      <StatusDialog
+        open={errorDialog}
+        onOpenChange={setErrorDialog}
+        variant="error"
+        title="Error al iniciar sesión"
+        description="Credenciales incorrectas. Verifica tu correo y contraseña e inténtalo de nuevo."
+        actionLabel="Intentar de nuevo"
+        onAction={() => setErrorDialog(false)}
+      />
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
           <CardTitle className="text-center text-xl sm:text-left">
@@ -140,16 +150,28 @@ export function SignInForm() {
                       )}
                     </form.Subscribe>
                   </View>
-                  <Input
-                    ref={passwordInputRef}
-                    id="password"
-                    secureTextEntry
-                    value={field.state.value}
-                    onChangeText={field.handleChange}
-                    onBlur={field.handleBlur}
-                    returnKeyType="send"
-                    onSubmitEditing={form.handleSubmit}
-                  />
+                  <View className="relative">
+                    <Input
+                      ref={passwordInputRef}
+                      id="password"
+                      secureTextEntry={!showPassword}
+                      value={field.state.value}
+                      onChangeText={field.handleChange}
+                      onBlur={field.handleBlur}
+                      returnKeyType="send"
+                      onSubmitEditing={form.handleSubmit}
+                      className="pr-10"
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      className="absolute bottom-0 right-0 top-0 items-center justify-center px-3">
+                      <Icon
+                        as={showPassword ? EyeOff : Eye}
+                        size={18}
+                        className="text-muted-foreground"
+                      />
+                    </TouchableOpacity>
+                  </View>
                   {field.state.meta.errors.length > 0 && (
                     <Text className="text-sm font-medium text-destructive">
                       {String(field.state.meta.errors[0]?.message)}
