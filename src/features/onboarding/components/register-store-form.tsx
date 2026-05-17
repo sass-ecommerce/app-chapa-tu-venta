@@ -18,7 +18,18 @@ import { Text } from '@/shared/components/ui/text';
 import { useLogoutMutation } from '@/features/auth';
 import { useCreateTenantMutation } from '../queries';
 
+function toSlug(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 export function RegisterStoreForm() {
+  const domainManuallyEdited = React.useRef(false);
   const logoutMutation = useLogoutMutation();
   const createTenantMutation = useCreateTenantMutation();
 
@@ -75,13 +86,18 @@ export function RegisterStoreForm() {
                     id="name"
                     placeholder="Mi Tienda"
                     value={field.state.value}
-                    onChangeText={field.handleChange}
+                    onChangeText={(text) => {
+                      field.handleChange(text);
+                      if (!domainManuallyEdited.current) {
+                        form.setFieldValue('domain', toSlug(text));
+                      }
+                    }}
                     onBlur={field.handleBlur}
-                    autoCapitalize="words"
+                    autoCapitalize="sentences"
                   />
                   {field.state.meta.errors.length > 0 && (
                     <Text className="text-sm font-medium text-destructive">
-                      {String(field.state.meta.errors[0])}
+                      {String(field.state.meta.errors[0]?.message)}
                     </Text>
                   )}
                 </View>
@@ -96,8 +112,8 @@ export function RegisterStoreForm() {
                   .min(1, 'El dominio es requerido')
                   .max(63, 'El dominio no puede exceder 63 caracteres')
                   .regex(
-                    /^[a-z0-9]+$/,
-                    'Solo letras minúsculas y números, sin espacios ni caracteres especiales'
+                    /^[a-z0-9]+(-[a-z0-9]+)*$/,
+                    'Solo letras minúsculas, números y guiones (sin espacios ni caracteres especiales)'
                   ),
               }}>
               {(field) => (
@@ -105,9 +121,12 @@ export function RegisterStoreForm() {
                   <Label htmlFor="domain">Dominio</Label>
                   <Input
                     id="domain"
-                    placeholder="mitienda"
+                    placeholder="mi-tienda"
                     value={field.state.value}
-                    onChangeText={(text) => field.handleChange(text.toLowerCase())}
+                    onChangeText={(text) => {
+                      domainManuallyEdited.current = true;
+                      field.handleChange(text.toLowerCase());
+                    }}
                     onBlur={field.handleBlur}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -115,7 +134,7 @@ export function RegisterStoreForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <Text className="text-sm font-medium text-destructive">
-                      {String(field.state.meta.errors[0])}
+                      {String(field.state.meta.errors[0]?.message)}
                     </Text>
                   )}
                 </View>
