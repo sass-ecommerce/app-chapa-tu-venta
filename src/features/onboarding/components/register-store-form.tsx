@@ -29,7 +29,6 @@ function toSlug(text: string) {
 }
 
 export function RegisterStoreForm() {
-  const domainManuallyEdited = React.useRef(false);
   const logoutMutation = useLogoutMutation();
   const createTenantMutation = useCreateTenantMutation();
 
@@ -88,9 +87,7 @@ export function RegisterStoreForm() {
                     value={field.state.value}
                     onChangeText={(text) => {
                       field.handleChange(text);
-                      if (!domainManuallyEdited.current) {
-                        form.setFieldValue('domain', toSlug(text));
-                      }
+                      form.setFieldValue('domain', toSlug(text));
                     }}
                     onBlur={field.handleBlur}
                     autoCapitalize="sentences"
@@ -123,10 +120,7 @@ export function RegisterStoreForm() {
                     id="domain"
                     placeholder="mi-tienda"
                     value={field.state.value}
-                    onChangeText={(text) => {
-                      domainManuallyEdited.current = true;
-                      field.handleChange(text.toLowerCase());
-                    }}
+                    onChangeText={(text) => field.handleChange(text.toLowerCase())}
                     onBlur={field.handleBlur}
                     autoCapitalize="none"
                     autoCorrect={false}
