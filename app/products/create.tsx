@@ -6,6 +6,7 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, ImageIcon, Link, Sparkles, Package, DollarSign, Hash } from 'lucide-react-native';
+import { CategoryPicker } from '@/features/categories';
 
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
@@ -28,6 +29,7 @@ export default function CreateProductScreen() {
   const router = useRouter();
   const [imagePreview, setImagePreview] = React.useState<string>('');
   const [showUrlInput, setShowUrlInput] = React.useState(false);
+  const [categoryName, setCategoryName] = React.useState<string | null>(null);
 
   // Función para seleccionar imagen de galería
   const pickImageFromGallery = async (handleChange: (value: string) => void) => {
@@ -330,12 +332,13 @@ export default function CreateProductScreen() {
                     <Label nativeID="category_id" className="mb-2 text-sm font-medium">
                       Categoría
                     </Label>
-                    <Input
-                      placeholder="Ej: Ropa"
-                      value={field.state.value || ''}
-                      onChangeText={field.handleChange}
-                      onBlur={field.handleBlur}
-                      className="h-12"
+                    <CategoryPicker
+                      value={field.state.value || null}
+                      valueName={categoryName}
+                      onChange={(slug, name) => {
+                        field.handleChange(slug ?? '');
+                        setCategoryName(name);
+                      }}
                     />
                   </View>
                 )}

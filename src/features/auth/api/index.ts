@@ -1,6 +1,7 @@
 import { apiClient } from '@/shared/config/api';
 import type { ApiResponse } from '@/src/shared/interfaces/api-response';
-import type { LoginPayload, LoginResponse, RegisterPayload } from '../types';
+import type { LoginPayload, LoginResponse, RefreshTokenResponse, RegisterPayload } from '../types';
+import { authStorage } from '../utils/storage';
 
 export async function registerUser(data: RegisterPayload): Promise<{ userSub: string }> {
   const { data: result } = await apiClient.post<ApiResponse<{ userSub: string }>>(
@@ -20,6 +21,20 @@ export async function resendCode(email: string): Promise<void> {
 
 export async function loginUser(data: LoginPayload): Promise<LoginResponse> {
   const { data: result } = await apiClient.post<ApiResponse<LoginResponse>>('/auth/login', data);
+  return result.data;
+}
+
+export async function logoutUser(): Promise<void> {
+  await apiClient.post<ApiResponse>('/auth/logout');
+  await authStorage.clearTokens();
+  await authStorage.clearUser();
+}
+
+export async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  const { data: result } = await apiClient.post<ApiResponse<RefreshTokenResponse>>(
+    '/auth/refresh-token',
+    { refreshToken }
+  );
   return result.data;
 }
 

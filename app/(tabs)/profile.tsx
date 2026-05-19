@@ -12,6 +12,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from 'nativewind';
 import { router } from 'expo-router';
 
+import { logoutUser } from '@/features/profile';
+
 import {
   LogOutIcon,
   MailIcon,
@@ -155,9 +157,8 @@ export default function PerfilScreen() {
         onPress: async () => {
           try {
             setIsSigningOut(true);
-            console.log('🚪 [Profile] User initiated sign out');
-            //await signOut();
-            console.log('✅ [Profile] Sign out successful');
+            await logoutUser();
+            router.replace('/(auth)/sign-in');
           } catch (error) {
             console.error('❌ [Profile] Sign out error:', error);
             Alert.alert('Error', 'No se pudo cerrar la sesión. Intenta nuevamente.');

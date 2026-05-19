@@ -31,6 +31,12 @@ export interface LoginResponse {
   tokenType: string;
 }
 
+export interface RefreshTokenResponse {
+  accessToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
 export interface PublicMetadata {
   storeSlug?: string;
 }

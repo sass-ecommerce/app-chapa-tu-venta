@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Alert, View, Pressable, RefreshControl, ScrollView } from 'react-native';
+import { View, Pressable, RefreshControl, ScrollView } from 'react-native';
 
 import { FlashList } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +18,7 @@ import { ProductCardList } from '@/features/products/components/product-card-lis
 import { ProductSkeletonGrid } from '@/features/products/components/product-skeleton';
 import { StatsHero } from '@/features/products/components/stats-hero';
 
-import { Search, Bell, Menu, Plus, FolderPlus, Grid3x3, List } from 'lucide-react-native';
+import { Search, Bell, Menu, Plus, Tag, Grid3x3, List } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -167,10 +167,10 @@ export default function ProductosScreen() {
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onPress={() => Alert.alert('Crear Colección', 'Navegar a crear colección')}
+                onPress={() => router.push('/categories')}
                 className="flex-row items-center gap-3">
-                <Icon as={FolderPlus} className="text-muted-foreground" size={18} />
-                <Text className="text-base">Crear colección</Text>
+                <Icon as={Tag} className="text-muted-foreground" size={18} />
+                <Text className="text-base">Gestionar categorías</Text>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
