@@ -34,17 +34,11 @@ import { REFRESH_COLORS } from '@/shared/config/constants';
 
 // Type guard to validate tab value
 function isValidTabValue(value: string): value is TabValue {
-  return value === 'all' || value === 'low-stock' || value === 'out-of-stock';
+  return value === 'all' || value === 'active' || value === 'inactive';
 }
 
 export default function ProductosScreen() {
   const router = useRouter();
-
-  // TODO: Get storeSlug from backend API endpoint or AsyncStorage
-  // Metadata is no longer part of User type
-  // Option 1: Create endpoint GET /api/users/{userSlug}/store that returns store info
-  // Option 2: Store storeSlug in AsyncStorage after onboarding
-  const storeSlug = null; // TEMPORARY: Disabled until backend provides store endpoint
 
   // Zustand store states
   const searchQuery = useProductsStore((state) => state.searchQuery);
@@ -67,14 +61,8 @@ export default function ProductosScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['products', storeSlug],
-    queryFn: async () => {
-      console.log('✅ [Products] Fetching for storeSlug:', storeSlug);
-      if (!storeSlug) throw new Error('No se encontró el identificador de la tienda');
-
-      return getProducts(storeSlug, 'token');
-    },
-    enabled: !!storeSlug,
+    queryKey: ['products'],
+    queryFn: getProducts,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,
@@ -83,15 +71,12 @@ export default function ProductosScreen() {
     refetchOnReconnect: true,
   });
 
-  // Extract unique categories from products (simulated - using trending as category)
+  // Extract unique category names from products
   const categories = React.useMemo(() => {
     if (!products) return [];
     const categorySet = new Set<string>();
     products.forEach((p) => {
-      // Simulating categories - in real app this would come from product.category
-      if (p.trending) categorySet.add('Destacados');
-      if (p.stockQuantity < 10) categorySet.add('Por Agotarse');
-      if (p.priceList > p.price) categorySet.add('Ofertas');
+      if (p.category?.name) categorySet.add(p.category.name);
     });
     return Array.from(categorySet);
   }, [products]);
@@ -101,27 +86,16 @@ export default function ProductosScreen() {
     if (!products) return [];
 
     return products.filter((product) => {
-      // Search filter
       const matchesSearch =
         searchQuery === '' || product.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Tab filter
       let matchesTab = true;
-      if (selectedTab === 'low-stock') {
-        matchesTab = product.stockQuantity > 0 && product.stockQuantity < 10;
-      } else if (selectedTab === 'out-of-stock') {
-        matchesTab = product.stockQuantity === 0;
-      }
+      if (selectedTab === 'active') matchesTab = product.isActive;
+      else if (selectedTab === 'inactive') matchesTab = !product.isActive;
 
-      // Category filter
-      let matchesCategory = selectedCategories.length === 0;
-      if (!matchesCategory) {
-        if (selectedCategories.includes('Destacados') && product.trending) matchesCategory = true;
-        if (selectedCategories.includes('Por Agotarse') && product.stockQuantity < 10)
-          matchesCategory = true;
-        if (selectedCategories.includes('Ofertas') && product.priceList > product.price)
-          matchesCategory = true;
-      }
+      const matchesCategory =
+        selectedCategories.length === 0 ||
+        (product.category?.name ? selectedCategories.includes(product.category.name) : false);
 
       return matchesSearch && matchesTab && matchesCategory;
     });
@@ -132,16 +106,8 @@ export default function ProductosScreen() {
     if (!products) return [];
     return [
       { value: 'all', label: 'Todos', count: products.length },
-      {
-        value: 'low-stock',
-        label: 'Bajo Stock',
-        count: products.filter((p) => p.stockQuantity > 0 && p.stockQuantity < 10).length,
-      },
-      {
-        value: 'out-of-stock',
-        label: 'Sin Stock',
-        count: products.filter((p) => p.stockQuantity === 0).length,
-      },
+      { value: 'active', label: 'Activos', count: products.filter((p) => p.isActive).length },
+      { value: 'inactive', label: 'Inactivos', count: products.filter((p) => !p.isActive).length },
     ];
   }, [products]);
 
@@ -242,13 +208,7 @@ export default function ProductosScreen() {
                     label={category}
                     selected={selectedCategories.includes(category)}
                     onPress={() => toggleCategory(category)}
-                    count={
-                      category === 'Destacados'
-                        ? products?.filter((p) => p.trending).length
-                        : category === 'Por Agotarse'
-                          ? products?.filter((p) => p.stockQuantity < 10).length
-                          : products?.filter((p) => p.priceList > p.price).length
-                    }
+                    count={products?.filter((p) => p.category?.name === category).length}
                   />
                 ))}
               </View>
@@ -348,7 +308,7 @@ export default function ProductosScreen() {
       <FlashList
         data={filteredProducts}
         renderItem={renderItem}
-        keyExtractor={(item) => item.slug}
+        keyExtractor={(item) => item.id}
         numColumns={viewMode === 'grid' ? 2 : 1}
         key={viewMode} // Force re-render when switching between grid and list
         ListHeaderComponent={renderHeader}

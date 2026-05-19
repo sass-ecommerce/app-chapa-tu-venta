@@ -79,14 +79,11 @@ export default function HomeScreen() {
     error: productsError,
     refetch: refetchProducts,
   } = useQuery({
-    queryKey: ['recentProducts', storeSlug],
+    queryKey: ['recentProducts'],
     queryFn: async () => {
-      if (!storeSlug) throw new Error('No se encontró el identificador de la tienda');
-
-      const products = await getProducts(storeSlug, 'token');
-      return products.slice(0, 5); // Get only the 5 most recent products
+      const products = await getProducts();
+      return products.slice(0, 5);
     },
-    enabled: !!storeSlug,
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
   });

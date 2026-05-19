@@ -1,15 +1,7 @@
 export type { Category, CategoryType, CreateCategoryData, UpdateCategoryData } from './types';
-export {
-  getCategories,
-  getCategoryBySlug,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-} from './api/categories';
+export { getCategories, createCategory, updateCategory, deleteCategory } from './api/categories';
 export {
   useCategories,
-  useCategoryNode,
-  useCategoryBySlug,
   useCreateCategory,
   useUpdateCategory,
   useDeleteCategory,

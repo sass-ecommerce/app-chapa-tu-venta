@@ -7,6 +7,7 @@ export interface Category {
   type: CategoryType;
   name: string;
   slug: string;
+  childrenCount: number;
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;

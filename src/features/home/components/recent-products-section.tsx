@@ -78,9 +78,9 @@ export function RecentProductsSection({
           contentContainerStyle={PRODUCTS_SCROLL_CONTENT_STYLE}>
           {products.map((product) => (
             <ProductCardHorizontal
-              key={product.slug}
+              key={product.id}
               product={product}
-              onPress={() => router.push(`/products/${product.slug}`)}
+              onPress={() => router.push(`/products/${product.id}`)}
             />
           ))}
         </ScrollView>

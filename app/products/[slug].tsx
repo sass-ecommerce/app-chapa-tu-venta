@@ -1,79 +1,30 @@
-import type { Product } from '@/features/products/api/products';
-import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
-import { Text } from '@/shared/components/ui/text';
-import { Skeleton } from '@/shared/components/ui/skeleton';
-import {
-  Archive,
-  Edit,
-  MoreVertical,
-  Flame,
-  ShoppingCart,
-  Star,
-  Trash2,
-} from 'lucide-react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Image } from 'expo-image';
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
-import { useQuery } from '@tanstack/react-query';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { Archive, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
-import { getProductBySlug } from '@/features/products/api/products';
+import { Text } from '@/shared/components/ui/text';
+import { Button } from '@/shared/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
+import type { Product } from '@/features/products/api/products';
 
 export default function ProductoDetalleScreen() {
-  const { slug: productSlug } = useLocalSearchParams<{ slug: string }>();
-  const [imageLoading, setImageLoading] = React.useState(true);
+  const { slug: productId } = useLocalSearchParams<{ slug: string }>();
+  const queryClient = useQueryClient();
 
-  // Usar React Query para obtener el producto
-  const {
-    data: product,
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ['product', productSlug],
-    queryFn: async () => {
-      console.log('📍 [ProductDetail] Fetching product with slug:', productSlug);
-      if (!productSlug) throw new Error('Faltan parámetros requeridos');
+  const products = queryClient.getQueryData<Product[]>(['products']);
+  const product = products?.find((p) => p.id === productId);
 
-      const productData = await getProductBySlug(productSlug, 'token');
-      return productData;
-    },
-    enabled: !!productSlug,
-  });
-
-  const handleEdit = () => {
-    Alert.alert('Editar', `Editar producto: ${product?.name}`);
-  };
-
-  const handleArchive = () => {
-    Alert.alert('Archivar', `Archivar producto: ${product?.name}`);
-  };
-
+  const handleEdit = () => Alert.alert('Editar', `Editar producto: ${product?.name}`);
+  const handleArchive = () => Alert.alert('Archivar', `Archivar producto: ${product?.name}`);
   const handleDelete = () => {
-    Alert.alert('Eliminar Producto', `¿Estás seguro de que deseas eliminar "${product?.name}"?`, [
+    Alert.alert('Eliminar Producto', `¿Eliminar "${product?.name}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: () => {
-          // Aquí iría la lógica de eliminación
-          Alert.alert('Eliminado', 'Producto eliminado exitosamente');
-        },
-      },
+      { text: 'Eliminar', style: 'destructive', onPress: () => Alert.alert('Eliminado', 'Producto eliminado') },
     ]);
   };
 
-  // Componente del menú de tres puntos
   const MenuButton = () => (
     <Popover>
       <PopoverTrigger asChild>
@@ -82,63 +33,28 @@ export default function ProductoDetalleScreen() {
         </Pressable>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-48 p-0">
-        <View>
-          <Pressable
-            onPress={handleEdit}
-            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-            <Edit size={18} color="#666" />
-            <Text className="text-base">Editar</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={handleArchive}
-            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-            <Archive size={18} color="#666" />
-            <Text className="text-base">Archivar</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={handleDelete}
-            className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-            <Trash2 size={18} color="#ef4444" />
-            <Text className="text-base text-destructive">Eliminar</Text>
-          </Pressable>
-        </View>
+        <Pressable onPress={handleEdit} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+          <Edit size={18} color="#666" />
+          <Text className="text-base">Editar</Text>
+        </Pressable>
+        <Pressable onPress={handleArchive} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+          <Archive size={18} color="#666" />
+          <Text className="text-base">Archivar</Text>
+        </Pressable>
+        <Pressable onPress={handleDelete} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+          <Trash2 size={18} color="#ef4444" />
+          <Text className="text-base text-destructive">Eliminar</Text>
+        </Pressable>
       </PopoverContent>
     </Popover>
   );
 
-  // Si no se encuentra el producto, mostrar mensaje
-  if (isLoading) {
+  if (!product) {
     return (
       <>
-        <Stack.Screen
-          options={{
-            title: 'Cargando...',
-            headerBackTitle: 'Productos',
-          }}
-        />
+        <Stack.Screen options={{ title: 'Producto No Encontrado', headerBackTitle: 'Productos' }} />
         <View className="flex-1 items-center justify-center bg-background p-4">
-          <ActivityIndicator size="large" color="#3b82f6" />
-          <Text className="mt-4 text-muted-foreground">Cargando producto...</Text>
-        </View>
-      </>
-    );
-  }
-
-  if (error || !product) {
-    return (
-      <>
-        <Stack.Screen
-          options={{
-            title: 'Producto No Encontrado',
-            headerBackTitle: 'Productos',
-          }}
-        />
-        <View className="flex-1 items-center justify-center bg-background p-4">
-          <Text className="text-lg text-destructive">
-            {error instanceof Error ? error.message : 'Producto no encontrado'}
-          </Text>
+          <Text className="text-lg text-destructive">Producto no encontrado</Text>
         </View>
       </>
     );
@@ -153,92 +69,35 @@ export default function ProductoDetalleScreen() {
           headerRight: () => <MenuButton />,
         }}
       />
-      <ScrollView
-        className="flex-1 bg-background"
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => refetch()}
-            colors={['#3b82f6']}
-            tintColor="#3b82f6"
-          />
-        }>
-        <View className="relative">
-          {imageLoading && product.imageUri ? (
-            <View style={{ width: '100%', height: 400 }}>
-              <Skeleton className="h-full w-full" />
-            </View>
-          ) : null}
-          {product.imageUri ? (
-            <Image
-              source={{ uri: product.imageUri }}
-              contentFit="cover"
-              transition={200}
-              cachePolicy="memory-disk"
-              style={{ width: '100%', height: 400 }}
-              onLoadStart={() => setImageLoading(true)}
-              onLoad={() => setImageLoading(false)}
-              onError={() => setImageLoading(false)}
-            />
-          ) : (
-            <View style={{ width: '100%', height: 400 }}>
-              <Skeleton className="h-full w-full" />
-            </View>
-          )}
-
-          {/* Badge de trending si aplica */}
-          {product.trending && (
-            <View className="absolute right-4 top-4">
-              <Badge variant="destructive" className="flex-row items-center gap-1">
-                <Flame size={14} color="white" />
-                <Text className="text-xs font-semibold text-white">Trending</Text>
-              </Badge>
-            </View>
-          )}
-
-          {/* Rating badge */}
-          {/* {product.rating && product.rating > 0 && (
-            <View className="absolute bottom-4 left-4">
-              <Badge variant="outline" className="flex-row items-center gap-1 bg-white">
-                <Star size={14} color="#FFD700" fill="#FFD700" />
-                <Text className="text-xs font-semibold">{product.rating.toFixed(1)}</Text>
-              </Badge>
-            </View>
-          )} */}
+      <ScrollView className="flex-1 bg-background">
+        {/* Placeholder imagen */}
+        <View className="h-64 w-full items-center justify-center bg-muted">
+          <Text className="text-6xl">📦</Text>
         </View>
 
-        {/* Información del producto */}
         <View className="p-6">
-          {/* Nombre y SKU */}
-          <Text className="text-2xl font-bold">{product.name}</Text>
-          {product.sku && (
-            <Text className="mt-1 text-xs text-muted-foreground">SKU: {product.sku}</Text>
+          <Text className="text-2xl font-bold text-foreground">{product.name}</Text>
+
+          {product.category && (
+            <Text className="mt-1 text-sm text-muted-foreground">{product.category.name}</Text>
           )}
 
-          {/* Precio */}
-          <View className="mt-4 flex-row items-center gap-3">
-            <Text className="text-3xl font-bold text-primary">S/ {product.price.toFixed(2)}</Text>
-            {product.priceList && product.priceList > product.price && (
-              <Text className="text-lg text-muted-foreground line-through">
-                S/ {product.priceList.toFixed(2)}
-              </Text>
-            )}
-          </View>
+          <Text className="mt-4 text-3xl font-bold text-primary">
+            S/ {product.basePrice.toFixed(2)}
+          </Text>
 
-          {/* Stock */}
           <View className="mt-3">
-            <Text className="text-sm">
-              Stock:{' '}
+            <View
+              className={`self-start rounded-full px-3 py-1 ${product.isActive ? 'bg-green-100 dark:bg-green-900/30' : 'bg-muted'}`}>
               <Text
-                className={`font-semibold ${product.stockQuantity < 10 ? 'text-destructive' : 'text-green-600'}`}>
-                {product.stockQuantity} unidades
+                className={`text-xs font-semibold ${product.isActive ? 'text-green-700 dark:text-green-400' : 'text-muted-foreground'}`}>
+                {product.isActive ? 'Activo' : 'Inactivo'}
               </Text>
-            </Text>
+            </View>
           </View>
 
-          {/* Descripción */}
           <View className="mt-6">
-            <Text className="text-lg font-semibold">Descripción</Text>
+            <Text className="text-lg font-semibold text-foreground">Descripción</Text>
             <Text className="mt-2 leading-6 text-muted-foreground">
               {product.description || 'Sin descripción disponible'}
             </Text>

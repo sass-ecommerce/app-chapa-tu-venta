@@ -1,16 +1,18 @@
 import * as React from 'react';
 import { Modal, View, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { ChevronRight, ChevronLeft, X } from 'lucide-react-native';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
-import { useCategories } from '../queries/use-categories';
+import { useCategories, categoryKeys } from '../queries/use-categories';
+import { getCategoryChildren } from '../api/categories';
 import type { Category } from '../types';
 
-interface BreadcrumbItem {
-  slug: string;
+interface StackFrame {
+  id: string;
   name: string;
-  children: Category[];
+  items: Category[];
 }
 
 // ─── Internal drill-down modal ──────────────────────────────────────────────
@@ -24,30 +26,39 @@ function CategoryPickerModal({
   onClose: () => void;
   onSelect: (slug: string, name: string) => void;
 }) {
+  const queryClient = useQueryClient();
   const { data: rootCategories, isLoading } = useCategories();
 
-  const [breadcrumb, setBreadcrumb] = React.useState<BreadcrumbItem[]>([]);
+  const [stack, setStack] = React.useState<StackFrame[]>([]);
+  const [drillLoading, setDrillLoading] = React.useState(false);
 
   React.useEffect(() => {
-    if (visible) setBreadcrumb([]);
+    if (visible) setStack([]);
   }, [visible]);
 
   const currentItems: Category[] =
-    breadcrumb.length > 0 ? breadcrumb[breadcrumb.length - 1].children : (rootCategories ?? []);
+    stack.length > 0 ? stack[stack.length - 1].items : (rootCategories ?? []);
 
-  const drillIn = (category: Category) => {
-    setBreadcrumb((prev) => [
-      ...prev,
-      { slug: category.slug, name: category.name, children: category.children },
-    ]);
+  const drillIn = async (category: Category) => {
+    setDrillLoading(true);
+    try {
+      const children = await queryClient.fetchQuery({
+        queryKey: categoryKeys.children(category.id),
+        queryFn: () => getCategoryChildren(category.id),
+        staleTime: 5 * 60 * 1000,
+      });
+      setStack((prev) => [...prev, { id: category.id, name: category.name, items: children }]);
+    } finally {
+      setDrillLoading(false);
+    }
   };
 
-  const drillOut = () => setBreadcrumb((prev) => prev.slice(0, -1));
+  const drillOut = () => setStack((prev) => prev.slice(0, -1));
 
-  const isRoot = breadcrumb.length === 0;
-  const currentTitle = breadcrumb.at(-1)?.name ?? 'Seleccionar categoría';
+  const isRoot = stack.length === 0;
+  const currentTitle = stack.at(-1)?.name ?? 'Seleccionar categoría';
   const parentLabel =
-    breadcrumb.length > 1 ? breadcrumb.slice(0, -1).map((b) => b.name).join(' › ') : null;
+    stack.length > 1 ? stack.slice(0, -1).map((b) => b.name).join(' › ') : null;
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -74,7 +85,10 @@ function CategoryPickerModal({
         {/* "Sin categoría" at root */}
         {isRoot && (
           <Pressable
-            onPress={() => { onSelect('', 'Sin categoría'); onClose(); }}
+            onPress={() => {
+              onSelect('', 'Sin categoría');
+              onClose();
+            }}
             className="flex-row items-center gap-4 border-b border-border px-5 py-4 active:bg-muted/50">
             <View className="h-3 w-3 rounded-sm border border-muted-foreground/40" />
             <Text className="flex-1 text-sm text-muted-foreground">Sin categoría</Text>
@@ -93,20 +107,28 @@ function CategoryPickerModal({
               <View className="flex-row items-stretch border-b border-border">
                 {/* Tap body = select */}
                 <Pressable
-                  onPress={() => { onSelect(item.slug, item.name); onClose(); }}
+                  onPress={() => {
+                    onSelect(item.id, item.name);
+                    onClose();
+                  }}
                   className="flex-1 flex-row items-center px-5 py-4 active:bg-muted/40">
                   <Text className="flex-1 text-sm font-medium text-foreground">{item.name}</Text>
                 </Pressable>
 
                 {/* Tap › = drill into children */}
-                {item.children.length > 0 && (
+                {item.childrenCount > 0 && (
                   <Pressable
                     onPress={() => drillIn(item)}
+                    disabled={drillLoading}
                     className="items-center justify-center border-l border-border px-4 active:bg-muted/40">
-                    <View className="flex-row items-center gap-1">
-                      <Text className="text-xs text-muted-foreground">{item.children.length}</Text>
-                      <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
-                    </View>
+                    {drillLoading ? (
+                      <ActivityIndicator size="small" color="#D9711A" />
+                    ) : (
+                      <View className="flex-row items-center gap-1">
+                        <Text className="text-xs text-muted-foreground">{item.childrenCount}</Text>
+                        <Icon as={ChevronRight} size={16} className="text-muted-foreground" />
+                      </View>
+                    )}
                   </Pressable>
                 )}
               </View>

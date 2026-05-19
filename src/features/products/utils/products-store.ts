@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 export type ViewMode = 'grid' | 'list';
-export type TabValue = 'all' | 'low-stock' | 'out-of-stock';
+export type TabValue = 'all' | 'active' | 'inactive';
 
 interface ProductsState {
   // Search & notifications

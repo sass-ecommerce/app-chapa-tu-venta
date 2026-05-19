@@ -1,51 +1,45 @@
-/**
- * ========================================
- * PRODUCTS FEATURE - TYPES
- * ========================================
- */
+export interface ProductCategory {
+  id: string;
+  parentId: string | null;
+  name: string;
+  slug: string;
+}
 
-// Product type - App domain model (camelCase)
 export interface Product {
-  slug: string; // UUID del producto (identificador único)
-  sku: string; // Código SKU
-  name: string; // Nombre del producto
-  description: string; // Descripción
-  price: number; // Precio actual
-  stockQuantity: number; // Stock (convertido de string a number)
-  isActive: boolean; // Estado activo/inactivo
-  priceList: number; // Precio de lista (convertido de string a number)
-  imageUri: string; // URL de la imagen
-  trending: boolean; // Es trending
+  id: string;
+  tenantId: string;
+  categoryId: string | null;
+  name: string;
+  description: string;
+  basePrice: number;
+  isActive: boolean;
+  category: ProductCategory | null;
 }
 
-// API Response type (before conversion)
 export interface ApiProductResponse {
-  slug: string;
-  sku: string;
+  id: string;
+  tenantId: string;
+  categoryId: string | null;
   name: string;
   description: string;
-  price: number;
-  stockQuantity: string; // Viene como string desde la API
+  basePrice: string;
   isActive: boolean;
-  priceList: string; // Viene como string desde la API
-  imageUri: string;
-  trending: boolean;
+  category: ProductCategory | null;
 }
 
-// Create Product Payload
+export interface ProductsMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface CreateProductData {
-  sku: string;
   name: string;
-  description: string;
-  price: number;
-  stockQuantity: number;
+  description?: string;
+  basePrice: number;
   isActive: boolean;
-  priceList: number;
-  imageUri?: string;
-  trending?: boolean;
+  categoryId?: string;
 }
 
-// Update Product Payload
-export interface UpdateProductData extends Partial<CreateProductData> {
-  slug: string;
-}
+export interface UpdateProductData extends Partial<CreateProductData> {}

@@ -30,6 +30,11 @@ export function CategoryLabel({ category, onPress, onEdit, onDelete }: CategoryL
         <Text className="flex-1 text-sm font-semibold text-foreground" numberOfLines={1}>
           {category.name}
         </Text>
+        {category.childrenCount > 0 && (
+          <View className="rounded-full bg-primary/10 px-2 py-0.5">
+            <Text className="text-xs font-semibold text-primary">{category.childrenCount}</Text>
+          </View>
+        )}
       </Pressable>
 
       <View className="flex-row items-center gap-1 pr-3">
