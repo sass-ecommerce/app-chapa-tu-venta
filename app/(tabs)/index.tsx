@@ -66,12 +66,6 @@ export default function HomeScreen() {
   };
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // TODO: Get storeSlug from backend API endpoint or AsyncStorage
-  // Metadata is no longer part of User type
-  // Option 1: Create endpoint GET /api/users/{userSlug}/store that returns store info
-  // Option 2: Store storeSlug in AsyncStorage after onboarding
-  const storeSlug = null; // TEMPORARY: Disabled until backend provides store endpoint
-
   // Fetch recent products from API
   const {
     data: recentProducts,
@@ -87,16 +81,6 @@ export default function HomeScreen() {
     staleTime: 5 * 60 * 1000, // 5 minutos
     gcTime: 10 * 60 * 1000, // 10 minutos
   });
-
-  // Handle onboarding redirect - if store not completed, redirect to register-store
-  // React.useEffect(() => {
-  //   console.log('📍 [Home] User metadata:', user?.metadata);
-
-  //   if (user && user.metadata?.registerStoreCompleted !== true) {
-  //     console.log('⚠️ [Home] Store not completed, redirecting to register-store');
-  //     router.replace('/(onboarding)/register-store');
-  //   }
-  // }, [user]);
 
   // Pull-to-refresh handler
   const onRefresh = React.useCallback(async () => {
