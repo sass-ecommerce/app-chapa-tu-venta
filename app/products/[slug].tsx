@@ -1,19 +1,15 @@
 import * as React from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Alert, ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Archive, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
-import { useQueryClient } from '@tanstack/react-query';
-
 import { Text } from '@/shared/components/ui/text';
-import { Button } from '@/shared/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
-import type { Product } from '@/features/products/api/products';
+import { useProductsQuery } from '@/features/products/queries';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
-  const queryClient = useQueryClient();
 
-  const products = queryClient.getQueryData<Product[]>(['products']);
+  const { data: products, isLoading } = useProductsQuery();
   const product = products?.find((p) => p.id === productId);
 
   const handleEdit = () => Alert.alert('Editar', `Editar producto: ${product?.name}`);
@@ -49,10 +45,21 @@ export default function ProductoDetalleScreen() {
     </Popover>
   );
 
+  if (isLoading) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: true, title: 'Cargando...' }} />
+        <View className="flex-1 items-center justify-center bg-background">
+          <ActivityIndicator size="large" color="#D9711A" />
+        </View>
+      </>
+    );
+  }
+
   if (!product) {
     return (
       <>
-        <Stack.Screen options={{ title: 'Producto No Encontrado', headerBackTitle: 'Productos' }} />
+        <Stack.Screen options={{ headerShown: true, title: 'No encontrado' }} />
         <View className="flex-1 items-center justify-center bg-background p-4">
           <Text className="text-lg text-destructive">Producto no encontrado</Text>
         </View>
@@ -64,13 +71,12 @@ export default function ProductoDetalleScreen() {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           title: product.name,
-          headerBackTitle: 'Productos',
           headerRight: () => <MenuButton />,
         }}
       />
       <ScrollView className="flex-1 bg-background">
-        {/* Placeholder imagen */}
         <View className="h-64 w-full items-center justify-center bg-muted">
           <Text className="text-6xl">📦</Text>
         </View>

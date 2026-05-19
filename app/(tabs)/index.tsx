@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
-import { useQuery } from '@tanstack/react-query';
+import { useProductsQuery } from '@/features/products/queries';
 import { ShoppingBag, Package } from 'lucide-react-native';
 
 import { Icon } from '@/shared/components/ui/icon';
@@ -12,7 +12,6 @@ import { RecentProductsSection } from '@/features/home/components/recent-product
 import { RecentSalesSection } from '@/features/home/components/recent-sales-section';
 
 import type { SalesSummary, Transaction } from '@/features/home/types';
-import { getProducts } from '@/features/products/api/products';
 import { REFRESH_COLORS } from '@/shared/config/constants';
 
 // Chart colors using project palette
@@ -66,21 +65,14 @@ export default function HomeScreen() {
   };
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // Fetch recent products from API
   const {
-    data: recentProducts,
+    data: allProducts,
     isLoading: productsLoading,
     error: productsError,
     refetch: refetchProducts,
-  } = useQuery({
-    queryKey: ['recentProducts'],
-    queryFn: async () => {
-      const products = await getProducts();
-      return products.slice(0, 5);
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
-  });
+  } = useProductsQuery();
+
+  const recentProducts = allProducts?.slice(0, 5);
 
   // Pull-to-refresh handler
   const onRefresh = React.useCallback(async () => {

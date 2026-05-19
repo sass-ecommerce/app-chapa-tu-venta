@@ -103,7 +103,7 @@ apiClient.interceptors.response.use(
       // Raw axios para no disparar este mismo interceptor
       const { data } = await axios.post<{
         data: { accessToken: string; refreshToken: string };
-      }>(`${API_CONFIG.baseUrl}/auth/refresh`, { refreshToken });
+      }>(`${API_CONFIG.baseUrl}/auth/refresh-token`, { refreshToken });
 
       const newAccessToken = data.data.accessToken;
       const newRefreshToken = data.data.refreshToken;

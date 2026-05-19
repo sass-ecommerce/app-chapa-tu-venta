@@ -2,7 +2,6 @@ import * as React from 'react';
 import { View, Pressable, RefreshControl, ScrollView } from 'react-native';
 
 import { FlashList } from '@shopify/flash-list';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 
 import { Text } from '@/shared/components/ui/text';
@@ -28,7 +27,7 @@ import {
 
 import { useProductsStore } from '@/features/products/utils/products-store';
 import type { TabValue } from '@/features/products/utils/products-store';
-import { getProducts } from '@/features/products/api/products';
+import { useProductsQuery } from '@/features/products/queries';
 import type { Product } from '@/features/products/api/products';
 import { REFRESH_COLORS } from '@/shared/config/constants';
 
@@ -53,23 +52,7 @@ export default function ProductosScreen() {
   const setSelectedTab = useProductsStore((state) => state.setSelectedTab);
   const toggleCategory = useProductsStore((state) => state.toggleCategory);
 
-  // React Query for products
-  const {
-    data: products,
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  });
+  const { data: products, isLoading, error, refetch, isRefetching } = useProductsQuery();
 
   // Extract unique category names from products
   const categories = React.useMemo(() => {

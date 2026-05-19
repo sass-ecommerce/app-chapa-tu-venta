@@ -6,7 +6,7 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Sparkles, Package, DollarSign } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
-import { createProduct } from '@/features/products/api/products';
+import { useCreateProductMutation } from '@/features/products/queries';
 
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
@@ -20,6 +20,7 @@ import { ANIMATION } from '@/shared/config/constants';
 export default function CreateProductScreen() {
   const router = useRouter();
   const [categoryName, setCategoryName] = React.useState<string | null>(null);
+  const createMutation = useCreateProductMutation();
 
   const form = useForm({
     defaultValues: {
@@ -30,20 +31,22 @@ export default function CreateProductScreen() {
       categoryId: '',
     },
     onSubmit: async ({ value }) => {
-      try {
-        await createProduct({
+      await createMutation.mutateAsync(
+        {
           name: value.name,
           description: value.description || undefined,
           basePrice: value.basePrice,
           isActive: value.isActive,
           categoryId: value.categoryId || undefined,
-        });
-        Alert.alert('Éxito', 'Producto creado correctamente', [
-          { text: 'OK', onPress: () => router.back() },
-        ]);
-      } catch {
-        Alert.alert('Error', 'No se pudo crear el producto. Intenta de nuevo.');
-      }
+        },
+        {
+          onSuccess: () =>
+            Alert.alert('Éxito', 'Producto creado correctamente', [
+              { text: 'OK', onPress: () => router.back() },
+            ]),
+          onError: () => Alert.alert('Error', 'No se pudo crear el producto. Intenta de nuevo.'),
+        }
+      );
     },
   });
 
