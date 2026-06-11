@@ -4,13 +4,12 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { Archive, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
-import { useProductsQuery } from '@/features/products/queries';
+import { useProductQuery } from '@/features/products/queries';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
 
-  const { data: products, isLoading } = useProductsQuery();
-  const product = products?.find((p) => p.id === productId);
+  const { data: product, isLoading } = useProductQuery(productId);
 
   const handleEdit = () => Alert.alert('Editar', `Editar producto: ${product?.name}`);
   const handleArchive = () => Alert.alert('Archivar', `Archivar producto: ${product?.name}`);

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Modal, View, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { Modal, View, KeyboardAvoidingView, Pressable } from 'react-native';
 import { X } from 'lucide-react-native';
 
 import { Text } from '@/shared/components/ui/text';
@@ -70,7 +70,7 @@ export function CategoryFormModal({
       onRequestClose={onClose}
       statusBarTranslucent>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior="padding"
         style={{ flex: 1 }}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <View className="rounded-t-3xl bg-background px-6 pb-10 pt-4">

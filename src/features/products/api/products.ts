@@ -25,6 +25,20 @@ export async function getProducts(): Promise<Product[]> {
   }
 }
 
+export async function getProduct(id: string): Promise<Product> {
+  try {
+    const { data } = await apiClient.get<{
+      code: number;
+      message: string;
+      data: ApiProductResponse;
+    }>(`/products/${id}`);
+    return { ...data.data, basePrice: parseFloat(data.data.basePrice) };
+  } catch (error) {
+    console.error('❌ [getProduct] Error:', error instanceof Error ? error.message : error);
+    throw error;
+  }
+}
+
 export async function createProduct(payload: CreateProductData): Promise<{ id: string }> {
   try {
     const { data } = await apiClient.post<{ code: number; message: string; data: { id: string } }>(
