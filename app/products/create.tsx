@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Sparkles, Package, DollarSign } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
 import { useCreateProductMutation } from '@/features/products/queries';
+import { ScreenHeader } from '@/shared/components/screen-header';
 
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
@@ -52,28 +53,11 @@ export default function CreateProductScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          title: 'Crear Producto',
-          headerBackTitle: 'Productos',
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScreenHeader title="Crear Producto" />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="px-5 pb-8 pt-12">
-          {/* Hero Header */}
-          <View className="mb-6">
-            <View className="mb-2 flex-row items-center gap-2">
-              <View className="rounded-full bg-primary/10 p-2">
-                <Icon as={Sparkles} className="text-primary" size={20} />
-              </View>
-              <Text className="text-2xl font-bold text-foreground">Nuevo Producto</Text>
-            </View>
-            <Text className="text-sm text-muted-foreground">
-              Completa la información para agregar un producto a tu inventario
-            </Text>
-          </View>
-
+        <View className="px-5 pb-8 pt-4">
           {/* Card 1: Información Básica */}
           <AnimatedCard delay={0} className="mb-4">
             <View className="p-5">

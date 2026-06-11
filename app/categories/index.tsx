@@ -6,6 +6,7 @@ import { Plus, Tag } from 'lucide-react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
 import { Button } from '@/shared/components/ui/button';
+import { ScreenHeader } from '@/shared/components/screen-header';
 
 import { CategoryLabel } from '@/features/categories/components/category-label';
 import { CategoryFormModal } from '@/features/categories/components/category-form-modal';
@@ -97,19 +98,17 @@ export default function CategoriesScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Categorías',
-          headerRight: () => (
-            <Pressable
-              onPress={handleOpenCreate}
-              className="mr-1 flex-row items-center gap-1 active:opacity-60">
-              <Icon as={Plus} size={20} className="text-primary" />
-              <Text className="text-sm font-semibold text-primary">Nueva</Text>
-            </Pressable>
-          ),
-        }}
+      <Stack.Screen options={{ headerShown: false }} />
+      <ScreenHeader
+        title="Categorías"
+        right={
+          <Pressable
+            onPress={handleOpenCreate}
+            className="flex-row items-center gap-1 active:opacity-60">
+            <Icon as={Plus} size={20} className="text-primary" />
+            <Text className="text-sm font-semibold text-primary">Nueva</Text>
+          </Pressable>
+        }
       />
 
       <FlatList

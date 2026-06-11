@@ -6,6 +6,7 @@ import { Plus, Tag } from 'lucide-react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
 import { Button } from '@/shared/components/ui/button';
+import { ScreenHeader } from '@/shared/components/screen-header';
 
 import { CategoryLabel } from '@/features/categories/components/category-label';
 import { CategoryFormModal } from '@/features/categories/components/category-form-modal';
@@ -61,33 +62,36 @@ export default function CategoryDetailScreen() {
     deleteMutation.mutate({ id: sub.id });
   };
 
+  const header = (
+    <ScreenHeader
+      title={name ?? 'Categoría'}
+      right={
+        <Pressable
+          onPress={handleOpenCreateSub}
+          className="flex-row items-center gap-1 active:opacity-60">
+          <Icon as={Plus} size={20} className="text-primary" />
+          <Text className="text-sm font-semibold text-primary">Nueva sub</Text>
+        </Pressable>
+      }
+    />
+  );
+
   if (isLoading) {
     return (
-      <>
-        <Stack.Screen options={{ headerShown: true, title: name ?? 'Cargando...' }} />
-        <View className="flex-1 items-center justify-center bg-background">
+      <View className="flex-1 bg-background">
+        <Stack.Screen options={{ headerShown: false }} />
+        {header}
+        <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#D9711A" />
         </View>
-      </>
+      </View>
     );
   }
 
   return (
     <View className="flex-1 bg-background">
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: name ?? 'Categoría',
-          headerRight: () => (
-            <Pressable
-              onPress={handleOpenCreateSub}
-              className="mr-1 flex-row items-center gap-1 active:opacity-60">
-              <Icon as={Plus} size={20} className="text-primary" />
-              <Text className="text-sm font-semibold text-primary">Nueva sub</Text>
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+      {header}
 
       <FlatList
         data={subcategories}
