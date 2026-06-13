@@ -1,10 +1,5 @@
 import { apiClient } from '@/shared/config/api';
-import type {
-  Product,
-  ApiProductResponse,
-  ProductsMeta,
-  CreateProductData,
-} from '../types';
+import type { Product, ApiProductResponse, ProductsMeta, CreateProductData } from '../types';
 
 export type { Product, ApiProductResponse, CreateProductData };
 

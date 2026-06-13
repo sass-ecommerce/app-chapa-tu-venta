@@ -3,12 +3,11 @@ import '@/global.css';
 import { NAV_THEME } from '@/shared/context/theme';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
-import { AppState } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export {
@@ -45,15 +44,6 @@ SplashScreen.preventAutoHideAsync();
 function Routes() {
   React.useEffect(() => {
     SplashScreen.hideAsync();
-  }, []);
-
-  React.useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (nextState === 'active') {
-        router.replace('/');
-      }
-    });
-    return () => subscription.remove();
   }, []);
 
   return (

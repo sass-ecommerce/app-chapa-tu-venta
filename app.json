@@ -32,7 +32,18 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    "plugins": ["expo-router", "expo-secure-store", "expo-web-browser"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app necesita acceso a tu biblioteca de fotos para agregar imágenes a tus productos.",
+          "cameraPermission": "La app necesita acceso a tu cámara para tomar fotos de tus productos."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },

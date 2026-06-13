@@ -1,10 +1,12 @@
 import * as React from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView, Alert, Pressable } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 
 import { Stack, useRouter } from 'expo-router';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Sparkles, Package, DollarSign } from 'lucide-react-native';
+import { Sparkles, Package, DollarSign, ImagePlus, Camera, X } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
 import { useCreateProductMutation } from '@/features/products/queries';
 import { ScreenHeader } from '@/shared/components/screen-header';
@@ -21,7 +23,46 @@ import { ANIMATION } from '@/shared/config/constants';
 export default function CreateProductScreen() {
   const router = useRouter();
   const [categoryName, setCategoryName] = React.useState<string | null>(null);
+  const [imageUri, setImageUri] = React.useState<string | null>(null);
   const createMutation = useCreateProductMutation();
+
+  const openCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu cámara para tomar fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const openLibrary = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso necesario', 'Necesitamos acceso a tu biblioteca de fotos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
+  const pickImage = () => {
+    Alert.alert('Imagen del producto', 'Elige una opción', [
+      { text: 'Cámara', onPress: openCamera },
+      { text: 'Biblioteca de fotos', onPress: openLibrary },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
+  };
 
   const form = useForm({
     defaultValues: {
@@ -58,7 +99,7 @@ export default function CreateProductScreen() {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-5 pb-8 pt-4">
-          {/* Card 1: Información Básica */}
+          {/* Card 0: Información Básica */}
           <AnimatedCard delay={0} className="mb-4">
             <View className="p-5">
               <View className="mb-4 flex-row items-center gap-2">
@@ -138,8 +179,62 @@ export default function CreateProductScreen() {
             </View>
           </AnimatedCard>
 
-          {/* Card 2: Precio */}
+          {/* Card 1: Imagen del Producto */}
           <AnimatedCard delay={ANIMATION.STAGGER} className="mb-4">
+            <View className="p-5">
+              <View className="mb-4 flex-row items-center gap-2">
+                <Icon as={ImagePlus} className="text-primary" size={18} />
+                <Label className="text-base font-semibold">Imagen del Producto</Label>
+              </View>
+
+              {imageUri ? (
+                <View>
+                  <View className="overflow-hidden rounded-xl">
+                    <Image
+                      source={{ uri: imageUri }}
+                      style={{ width: '100%', height: 220 }}
+                      contentFit="cover"
+                    />
+                  </View>
+                  <View className="mt-3 flex-row gap-2">
+                    <Button variant="outline" size="sm" onPress={pickImage} className="flex-1 gap-2">
+                      <Icon as={Camera} size={15} />
+                      <Text className="text-sm">Cambiar imagen</Text>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onPress={() => setImageUri(null)}
+                      className="gap-2">
+                      <Icon as={X} size={15} />
+                      <Text className="text-sm">Quitar</Text>
+                    </Button>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={pickImage}
+                  className="items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/20 py-10 active:bg-muted/40">
+                  <Icon as={ImagePlus} className="text-muted-foreground" size={40} />
+                  <Text className="text-sm font-medium text-muted-foreground">
+                    Toca para añadir una imagen
+                  </Text>
+                  <View className="flex-row gap-2">
+                    <View className="flex-row items-center gap-1 rounded-full bg-muted px-3 py-1">
+                      <Icon as={Camera} className="text-muted-foreground" size={12} />
+                      <Text className="text-xs text-muted-foreground">Cámara</Text>
+                    </View>
+                    <View className="rounded-full bg-muted px-3 py-1">
+                      <Text className="text-xs text-muted-foreground">Biblioteca</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )}
+            </View>
+          </AnimatedCard>
+
+          {/* Card 2: Precio */}
+          <AnimatedCard delay={ANIMATION.STAGGER * 2} className="mb-4">
             <View className="p-5">
               <View className="mb-4 flex-row items-center gap-2">
                 <Icon as={DollarSign} className="text-primary" size={18} />
@@ -176,7 +271,7 @@ export default function CreateProductScreen() {
           </AnimatedCard>
 
           {/* Card 3: Configuración */}
-          <AnimatedCard delay={ANIMATION.STAGGER * 2} className="mb-6">
+          <AnimatedCard delay={ANIMATION.STAGGER * 3} className="mb-6">
             <View className="p-5">
               <Label className="mb-4 text-base font-semibold">Configuración</Label>
 
