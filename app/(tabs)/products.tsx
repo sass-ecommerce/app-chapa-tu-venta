@@ -149,7 +149,7 @@ export default function ProductosScreen() {
         </View>
 
         {/* Stats Hero Section */}
-        {!isLoading && !error && products && <StatsHero products={products} />}
+        {/* {!isLoading && !error && products && <StatsHero products={products} />} */}
 
         {/* Tabs Navigation */}
         {!isLoading && !error && products && (

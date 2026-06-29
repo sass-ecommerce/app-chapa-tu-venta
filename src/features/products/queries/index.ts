@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProducts, getProduct, createProduct } from '../api/products';
+import { getPresignedUploadUrl, uploadToS3 } from '@/shared/config/storage';
+import { STORAGE_FOLDERS } from '@/shared/config/constants';
 import type { CreateProductData } from '../types';
 
 export const productKeys = {
@@ -29,6 +31,34 @@ export function useProductQuery(id: string) {
     gcTime: 10 * 60 * 1000,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+  });
+}
+
+export function useUploadProductImageMutation() {
+  return useMutation({
+    mutationFn: async ({
+      fileUri,
+      fileName,
+      contentType,
+      primaryIdentifier,
+      secondaryIdentifier,
+    }: {
+      fileUri: string;
+      fileName: string;
+      contentType: string;
+      primaryIdentifier: string;
+      secondaryIdentifier?: string;
+    }) => {
+      const { uploadUrl, key } = await getPresignedUploadUrl({
+        folder: STORAGE_FOLDERS.PRODUCTS,
+        fileName,
+        contentType,
+        primaryIdentifier,
+        secondaryIdentifier,
+      });
+      await uploadToS3(uploadUrl, fileUri, contentType);
+      return { key };
+    },
   });
 }
 

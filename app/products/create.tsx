@@ -8,7 +8,10 @@ import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { Sparkles, Package, DollarSign, ImagePlus, Camera, X } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
-import { useCreateProductMutation } from '@/features/products/queries';
+import {
+  useCreateProductMutation,
+  useUploadProductImageMutation,
+} from '@/features/products/queries';
 import { ScreenHeader } from '@/shared/components/screen-header';
 
 import { Text } from '@/shared/components/ui/text';
@@ -19,12 +22,18 @@ import { Switch } from '@/shared/components/ui/switch';
 import { AnimatedCard } from '@/shared/components/ui/animated-card';
 import { Icon } from '@/shared/components/ui/icon';
 import { ANIMATION } from '@/shared/config/constants';
+import { cn } from '@/shared/utils/utils';
 
 export default function CreateProductScreen() {
   const router = useRouter();
   const [categoryName, setCategoryName] = React.useState<string | null>(null);
-  const [imageUri, setImageUri] = React.useState<string | null>(null);
+  const [imageAsset, setImageAsset] = React.useState<{
+    uri: string;
+    mimeType: string;
+    fileName: string;
+  } | null>(null);
   const createMutation = useCreateProductMutation();
+  const uploadImageMutation = useUploadProductImageMutation();
 
   const openCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -37,7 +46,14 @@ export default function CreateProductScreen() {
       quality: 0.8,
     });
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType ?? 'image/jpeg';
+      const ext = mimeType.split('/')[1] ?? 'jpeg';
+      setImageAsset({
+        uri: asset.uri,
+        mimeType,
+        fileName: asset.fileName ?? `product_${Date.now()}.${ext}`,
+      });
     }
   };
 
@@ -52,7 +68,14 @@ export default function CreateProductScreen() {
       quality: 0.8,
     });
     if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      const mimeType = asset.mimeType ?? 'image/jpeg';
+      const ext = mimeType.split('/')[1] ?? 'jpeg';
+      setImageAsset({
+        uri: asset.uri,
+        mimeType,
+        fileName: asset.fileName ?? `product_${Date.now()}.${ext}`,
+      });
     }
   };
 
@@ -73,22 +96,30 @@ export default function CreateProductScreen() {
       categoryId: '',
     },
     onSubmit: async ({ value }) => {
-      await createMutation.mutateAsync(
-        {
+      try {
+        const { id } = await createMutation.mutateAsync({
           name: value.name,
           description: value.description || undefined,
           basePrice: value.basePrice,
           isActive: value.isActive,
           categoryId: value.categoryId || undefined,
-        },
-        {
-          onSuccess: () =>
-            Alert.alert('Éxito', 'Producto creado correctamente', [
-              { text: 'OK', onPress: () => router.back() },
-            ]),
-          onError: () => Alert.alert('Error', 'No se pudo crear el producto. Intenta de nuevo.'),
+        });
+
+        if (imageAsset) {
+          await uploadImageMutation.mutateAsync({
+            fileUri: imageAsset.uri,
+            fileName: imageAsset.fileName,
+            contentType: imageAsset.mimeType,
+            primaryIdentifier: id,
+          });
         }
-      );
+
+        Alert.alert('Éxito', 'Producto creado correctamente', [
+          { text: 'OK', onPress: () => router.back() },
+        ]);
+      } catch {
+        Alert.alert('Error', 'No se pudo crear el producto. Intenta de nuevo.');
+      }
     },
   });
 
@@ -102,8 +133,10 @@ export default function CreateProductScreen() {
           {/* Card 0: Información Básica */}
           <AnimatedCard delay={0} className="mb-4">
             <View className="p-5">
-              <View className="mb-4 flex-row items-center gap-2">
-                <Icon as={Package} className="text-primary" size={18} />
+              <View className="mb-5 flex-row items-center gap-3">
+                <View className="rounded-lg bg-primary/10 p-2">
+                  <Icon as={Package} className="text-primary" size={16} />
+                </View>
                 <Label className="text-base font-semibold">Información Básica</Label>
               </View>
 
@@ -119,7 +152,7 @@ export default function CreateProductScreen() {
                 {(field) => (
                   <View className="mb-4">
                     <Label nativeID="name" className="mb-2 text-sm font-medium">
-                      Nombre del Producto *
+                      Nombre del Producto <Text className="text-destructive">*</Text>
                     </Label>
                     <Input
                       placeholder="Ej: Camiseta Premium"
@@ -129,7 +162,7 @@ export default function CreateProductScreen() {
                       className="h-12"
                     />
                     {field.state.meta.errors.length > 0 && (
-                      <Text className="mt-1 text-sm font-medium text-destructive">
+                      <Text className="mt-1.5 text-xs font-medium text-destructive">
                         {String(field.state.meta.errors[0]?.message)}
                       </Text>
                     )}
@@ -140,7 +173,7 @@ export default function CreateProductScreen() {
               {/* Descripción */}
               <form.Field name="description">
                 {(field) => (
-                  <View className="mb-4">
+                  <View>
                     <Label nativeID="description" className="mb-2 text-sm font-medium">
                       Descripción
                     </Label>
@@ -157,6 +190,8 @@ export default function CreateProductScreen() {
                   </View>
                 )}
               </form.Field>
+
+              <View className="h-6" />
 
               {/* Categoría */}
               <form.Field name="categoryId">
@@ -182,29 +217,35 @@ export default function CreateProductScreen() {
           {/* Card 1: Imagen del Producto */}
           <AnimatedCard delay={ANIMATION.STAGGER} className="mb-4">
             <View className="p-5">
-              <View className="mb-4 flex-row items-center gap-2">
-                <Icon as={ImagePlus} className="text-primary" size={18} />
+              <View className="mb-5 flex-row items-center gap-3">
+                <View className="rounded-lg bg-primary/10 p-2">
+                  <Icon as={ImagePlus} className="text-primary" size={16} />
+                </View>
                 <Label className="text-base font-semibold">Imagen del Producto</Label>
               </View>
 
-              {imageUri ? (
+              {imageAsset ? (
                 <View>
-                  <View className="overflow-hidden rounded-xl">
+                  <View className="overflow-hidden rounded-2xl">
                     <Image
-                      source={{ uri: imageUri }}
-                      style={{ width: '100%', height: 220 }}
+                      source={{ uri: imageAsset.uri }}
+                      style={{ width: '100%', height: 240 }}
                       contentFit="cover"
                     />
                   </View>
                   <View className="mt-3 flex-row gap-2">
-                    <Button variant="outline" size="sm" onPress={pickImage} className="flex-1 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onPress={pickImage}
+                      className="flex-1 gap-2">
                       <Icon as={Camera} size={15} />
                       <Text className="text-sm">Cambiar imagen</Text>
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onPress={() => setImageUri(null)}
+                      onPress={() => setImageAsset(null)}
                       className="gap-2">
                       <Icon as={X} size={15} />
                       <Text className="text-sm">Quitar</Text>
@@ -214,18 +255,30 @@ export default function CreateProductScreen() {
               ) : (
                 <Pressable
                   onPress={pickImage}
-                  className="items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border bg-muted/20 py-10 active:bg-muted/40">
-                  <Icon as={ImagePlus} className="text-muted-foreground" size={40} />
-                  <Text className="text-sm font-medium text-muted-foreground">
-                    Toca para añadir una imagen
-                  </Text>
-                  <View className="flex-row gap-2">
-                    <View className="flex-row items-center gap-1 rounded-full bg-muted px-3 py-1">
-                      <Icon as={Camera} className="text-muted-foreground" size={12} />
-                      <Text className="text-xs text-muted-foreground">Cámara</Text>
+                  className="overflow-hidden rounded-2xl border border-dashed border-border active:opacity-70">
+                  <View className="items-center gap-4 bg-muted/20 px-6 py-14">
+                    <View className="rounded-2xl bg-primary/10 p-5">
+                      <Icon as={ImagePlus} className="text-primary" size={34} />
                     </View>
-                    <View className="rounded-full bg-muted px-3 py-1">
-                      <Text className="text-xs text-muted-foreground">Biblioteca</Text>
+                    <View className="items-center gap-1">
+                      <Text className="text-sm font-semibold text-foreground">
+                        Añadir imagen del producto
+                      </Text>
+                      <Text className="text-xs text-muted-foreground">
+                        Toca para seleccionar una fuente
+                      </Text>
+                    </View>
+                    <View className="flex-row gap-2">
+                      <View className="flex-row items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5">
+                        <Icon as={Camera} className="text-muted-foreground" size={11} />
+                        <Text className="text-xs font-medium text-muted-foreground">Cámara</Text>
+                      </View>
+                      <View className="flex-row items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5">
+                        <Icon as={ImagePlus} className="text-muted-foreground" size={11} />
+                        <Text className="text-xs font-medium text-muted-foreground">
+                          Biblioteca
+                        </Text>
+                      </View>
                     </View>
                   </View>
                 </Pressable>
@@ -236,8 +289,10 @@ export default function CreateProductScreen() {
           {/* Card 2: Precio */}
           <AnimatedCard delay={ANIMATION.STAGGER * 2} className="mb-4">
             <View className="p-5">
-              <View className="mb-4 flex-row items-center gap-2">
-                <Icon as={DollarSign} className="text-primary" size={18} />
+              <View className="mb-5 flex-row items-center gap-3">
+                <View className="rounded-lg bg-primary/10 p-2">
+                  <Icon as={DollarSign} className="text-primary" size={16} />
+                </View>
                 <Label className="text-base font-semibold">Precio</Label>
               </View>
 
@@ -249,18 +304,23 @@ export default function CreateProductScreen() {
                 {(field) => (
                   <View>
                     <Label nativeID="basePrice" className="mb-2 text-sm font-medium">
-                      Precio Base * <Text className="text-muted-foreground">(S/)</Text>
+                      Precio Base <Text className="text-destructive">*</Text>
                     </Label>
-                    <Input
-                      placeholder="0.00"
-                      value={field.state.value?.toString()}
-                      onChangeText={(text) => field.handleChange(parseFloat(text) || 0)}
-                      onBlur={field.handleBlur}
-                      keyboardType="decimal-pad"
-                      className="h-12"
-                    />
+                    <View className="h-14 flex-row overflow-hidden rounded-xl border border-input bg-background shadow-sm shadow-black/5">
+                      <View className="w-16 items-center justify-center border-r border-input bg-muted/40">
+                        <Text className="text-sm font-bold text-primary">S/.</Text>
+                      </View>
+                      <Input
+                        placeholder="0.00"
+                        value={field.state.value?.toString()}
+                        onChangeText={(text) => field.handleChange(parseFloat(text) || 0)}
+                        onBlur={field.handleBlur}
+                        keyboardType="decimal-pad"
+                        className="h-14 flex-1 rounded-none border-0 text-xl font-semibold shadow-none"
+                      />
+                    </View>
                     {field.state.meta.errors.length > 0 && (
-                      <Text className="mt-1 text-sm font-medium text-destructive">
+                      <Text className="mt-1.5 text-xs font-medium text-destructive">
                         {String(field.state.meta.errors[0])}
                       </Text>
                     )}
@@ -277,14 +337,28 @@ export default function CreateProductScreen() {
 
               <form.Field name="isActive">
                 {(field) => (
-                  <View className="flex-row items-center justify-between rounded-xl border border-border bg-muted/30 p-4">
-                    <View>
-                      <Label nativeID="isActive" className="mb-1 text-base font-medium">
-                        Producto Activo
-                      </Label>
-                      <Text className="text-xs text-muted-foreground">
-                        Visible para los clientes
-                      </Text>
+                  <View
+                    className={cn(
+                      'flex-row items-center justify-between rounded-xl border p-4',
+                      field.state.value
+                        ? 'border-emerald-500/40 bg-emerald-500/5'
+                        : 'border-border bg-muted/30'
+                    )}>
+                    <View className="flex-row items-center gap-3">
+                      <View
+                        className={cn(
+                          'h-2.5 w-2.5 rounded-full',
+                          field.state.value ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                        )}
+                      />
+                      <View>
+                        <Label nativeID="isActive" className="text-base font-medium">
+                          Producto Activo
+                        </Label>
+                        <Text className="text-xs text-muted-foreground">
+                          Visible para los clientes
+                        </Text>
+                      </View>
                     </View>
                     <Switch
                       checked={field.state.value ?? true}

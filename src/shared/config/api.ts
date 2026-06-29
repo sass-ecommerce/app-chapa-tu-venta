@@ -69,6 +69,7 @@ apiClient.interceptors.response.use(
     // ── Regla 2: cualquier error que no sea 401 (o sin config) pasa directo ──
     if (!originalRequest || status !== 401 || originalRequest._retry) {
       console.warn(`[API] ❌ ${status ?? 'SIN_RESPUESTA'} ${url} — propagando error al caller`);
+      console.error(`[API] Detalles del error:`, error.response?.data ?? error.message ?? error);
       return Promise.reject(error);
     }
 
