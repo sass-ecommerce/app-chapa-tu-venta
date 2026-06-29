@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { View, ScrollView, Alert, Pressable } from 'react-native';
+import { View, ScrollView, Alert, Pressable, useWindowDimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 
 import { Stack, useRouter } from 'expo-router';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Sparkles, Package, DollarSign, ImagePlus, Camera, X } from 'lucide-react-native';
+import { Sparkles, Package, DollarSign, ImagePlus, Camera, X, Plus } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
 import {
   useCreateProductMutation,
@@ -24,16 +24,39 @@ import { Icon } from '@/shared/components/ui/icon';
 import { ANIMATION } from '@/shared/config/constants';
 import { cn } from '@/shared/utils/utils';
 
+type ImageAsset = {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+};
+
+const MAX_IMAGES = 6;
+
 export default function CreateProductScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const tileSize = (width - 40 - 40 - 16) / 3; // screen px-5 + card p-5 + 2 gaps
   const [categoryName, setCategoryName] = React.useState<string | null>(null);
-  const [imageAsset, setImageAsset] = React.useState<{
-    uri: string;
-    mimeType: string;
-    fileName: string;
-  } | null>(null);
+  const [imageAssets, setImageAssets] = React.useState<ImageAsset[]>([]);
   const createMutation = useCreateProductMutation();
   const uploadImageMutation = useUploadProductImageMutation();
+
+  const addImageAsset = (asset: ImagePicker.ImagePickerAsset) => {
+    const mimeType = asset.mimeType ?? 'image/jpeg';
+    const ext = mimeType.split('/')[1] ?? 'jpeg';
+    setImageAssets((prev) => [
+      ...prev,
+      {
+        uri: asset.uri,
+        mimeType,
+        fileName: asset.fileName ?? `product_${Date.now()}.${ext}`,
+      },
+    ]);
+  };
+
+  const removeImageAsset = (index: number) => {
+    setImageAssets((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const openCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -46,14 +69,7 @@ export default function CreateProductScreen() {
       quality: 0.8,
     });
     if (!result.canceled) {
-      const asset = result.assets[0];
-      const mimeType = asset.mimeType ?? 'image/jpeg';
-      const ext = mimeType.split('/')[1] ?? 'jpeg';
-      setImageAsset({
-        uri: asset.uri,
-        mimeType,
-        fileName: asset.fileName ?? `product_${Date.now()}.${ext}`,
-      });
+      addImageAsset(result.assets[0]);
     }
   };
 
@@ -63,23 +79,23 @@ export default function CreateProductScreen() {
       Alert.alert('Permiso necesario', 'Necesitamos acceso a tu biblioteca de fotos.');
       return;
     }
+    const remaining = MAX_IMAGES - imageAssets.length;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       quality: 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
     });
     if (!result.canceled) {
-      const asset = result.assets[0];
-      const mimeType = asset.mimeType ?? 'image/jpeg';
-      const ext = mimeType.split('/')[1] ?? 'jpeg';
-      setImageAsset({
-        uri: asset.uri,
-        mimeType,
-        fileName: asset.fileName ?? `product_${Date.now()}.${ext}`,
-      });
+      result.assets.forEach(addImageAsset);
     }
   };
 
   const pickImage = () => {
+    if (imageAssets.length >= MAX_IMAGES) {
+      Alert.alert('Límite alcanzado', `Puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+      return;
+    }
     Alert.alert('Imagen del producto', 'Elige una opción', [
       { text: 'Cámara', onPress: openCamera },
       { text: 'Biblioteca de fotos', onPress: openLibrary },
@@ -105,12 +121,14 @@ export default function CreateProductScreen() {
           categoryId: value.categoryId || undefined,
         });
 
-        if (imageAsset) {
+        for (let i = 0; i < imageAssets.length; i++) {
+          const img = imageAssets[i];
           await uploadImageMutation.mutateAsync({
-            fileUri: imageAsset.uri,
-            fileName: imageAsset.fileName,
-            contentType: imageAsset.mimeType,
+            fileUri: img.uri,
+            fileName: img.fileName,
+            contentType: img.mimeType,
             primaryIdentifier: id,
+            secondaryIdentifier: String(i),
           });
         }
 
@@ -214,42 +232,51 @@ export default function CreateProductScreen() {
             </View>
           </AnimatedCard>
 
-          {/* Card 1: Imagen del Producto */}
+          {/* Card 1: Imágenes del Producto */}
           <AnimatedCard delay={ANIMATION.STAGGER} className="mb-4">
             <View className="p-5">
-              <View className="mb-5 flex-row items-center gap-3">
-                <View className="rounded-lg bg-primary/10 p-2">
-                  <Icon as={ImagePlus} className="text-primary" size={16} />
+              <View className="mb-5 flex-row items-center justify-between">
+                <View className="flex-row items-center gap-3">
+                  <View className="rounded-lg bg-primary/10 p-2">
+                    <Icon as={ImagePlus} className="text-primary" size={16} />
+                  </View>
+                  <Label className="text-base font-semibold">Imágenes del Producto</Label>
                 </View>
-                <Label className="text-base font-semibold">Imagen del Producto</Label>
+                <Text className="text-xs text-muted-foreground">
+                  {imageAssets.length}/{MAX_IMAGES}
+                </Text>
               </View>
 
-              {imageAsset ? (
+              {imageAssets.length > 0 ? (
                 <View>
-                  <View className="overflow-hidden rounded-2xl">
-                    <Image
-                      source={{ uri: imageAsset.uri }}
-                      style={{ width: '100%', height: 240 }}
-                      contentFit="cover"
-                    />
-                  </View>
-                  <View className="mt-3 flex-row gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onPress={pickImage}
-                      className="flex-1 gap-2">
-                      <Icon as={Camera} size={15} />
-                      <Text className="text-sm">Cambiar imagen</Text>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onPress={() => setImageAsset(null)}
-                      className="gap-2">
-                      <Icon as={X} size={15} />
-                      <Text className="text-sm">Quitar</Text>
-                    </Button>
+                  <View className="flex-row flex-wrap gap-2">
+                    {imageAssets.map((img, index) => (
+                      <View
+                        key={index}
+                        style={{ width: tileSize, height: tileSize }}
+                        className="overflow-hidden rounded-xl">
+                        <Image
+                          source={{ uri: img.uri }}
+                          style={{ width: tileSize, height: tileSize }}
+                          contentFit="cover"
+                        />
+                        <Pressable
+                          onPress={() => removeImageAsset(index)}
+                          className="absolute right-1 top-1 rounded-full bg-black/60 p-1 active:opacity-70">
+                          <Icon as={X} size={12} className="text-white" />
+                        </Pressable>
+                      </View>
+                    ))}
+
+                    {imageAssets.length < MAX_IMAGES && (
+                      <Pressable onPress={pickImage} className="active:opacity-70">
+                        <View
+                          style={{ width: tileSize, height: tileSize }}
+                          className="items-center justify-center rounded-xl border border-dashed border-border bg-muted/20">
+                          <Icon as={Plus} className="text-muted-foreground" size={22} />
+                        </View>
+                      </Pressable>
+                    )}
                   </View>
                 </View>
               ) : (
@@ -262,10 +289,10 @@ export default function CreateProductScreen() {
                     </View>
                     <View className="items-center gap-1">
                       <Text className="text-sm font-semibold text-foreground">
-                        Añadir imagen del producto
+                        Añadir imágenes del producto
                       </Text>
                       <Text className="text-xs text-muted-foreground">
-                        Toca para seleccionar una fuente
+                        Hasta {MAX_IMAGES} imágenes · Toca para seleccionar
                       </Text>
                     </View>
                     <View className="flex-row gap-2">
