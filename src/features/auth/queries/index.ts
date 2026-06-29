@@ -79,7 +79,11 @@ export function useOnboardingStatusMutation() {
 export function useLogoutMutation() {
   return useMutation({
     mutationFn: async () => {
-      await Promise.all([authStorage.clearUser(), authStorage.clearTokens()]);
+      await Promise.all([
+        authStorage.clearUser(),
+        authStorage.clearTokens(),
+        authStorage.clearTenantId(),
+      ]);
     },
     onSuccess: () => {
       authStorage.clearTokens();

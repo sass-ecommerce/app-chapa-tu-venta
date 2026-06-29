@@ -25,6 +25,7 @@ import { StatusDialog } from '@/shared/components/status-dialog';
 
 // 4. Utils & hooks
 import { useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
+import { authStorage } from '@/features/auth/utils/storage';
 
 export function SignInForm() {
   const loginMutation = useLoginMutation();
@@ -54,6 +55,9 @@ export function SignInForm() {
         if (!onboarding.createTenant.completed) {
           router.replace('/(onboarding)/register-store');
         } else {
+          if (onboarding.createTenant.tenant?.id) {
+            await authStorage.saveTenantId(onboarding.createTenant.tenant.id);
+          }
           router.replace('/(tabs)');
         }
       } catch {

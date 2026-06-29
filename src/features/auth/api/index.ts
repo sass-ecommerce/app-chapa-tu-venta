@@ -50,10 +50,17 @@ export async function resetPasswordRequest(
   await apiClient.post<ApiResponse>('/auth/reset-password', { email, code, newPassword });
 }
 
+export interface Tenant {
+  id: string;
+  name: string;
+  domain: string;
+  createdAt: string;
+}
+
 export interface OnboardingStatus {
   createTenant: {
     completed: boolean;
-    tenant: unknown | null;
+    tenant: Tenant | null;
   };
 }
 
