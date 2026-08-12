@@ -1,6 +1,7 @@
 import '@/global.css';
 
 import { NAV_THEME } from '@/shared/context/theme';
+import { NetworkInspector } from '@/shared/components/dev/network-inspector';
 import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
 import { Stack } from 'expo-router';
@@ -33,6 +34,7 @@ export default function RootLayout() {
       <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
         <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         <Routes />
+        <NetworkInspector />
         <PortalHost />
       </ThemeProvider>
     </QueryClientProvider>

@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { router } from 'expo-router';
 import { authStorage } from '@/features/auth/utils/storage';
+import { useNetworkLogStore } from '@/shared/utils/network-log-store';
 
 export const API_CONFIG = {
   baseUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api',
@@ -11,10 +12,15 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+type TrackedRequestConfig = InternalAxiosRequestConfig & {
+  _logId?: string;
+  _startTime?: number;
+};
+
 // ─── Request interceptor ─────────────────────────────────────────────────────
 // Inyecta el access token en cada petición saliente.
 
-apiClient.interceptors.request.use(async (config) => {
+apiClient.interceptors.request.use(async (config: TrackedRequestConfig) => {
   const token = await authStorage.getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -22,6 +28,20 @@ apiClient.interceptors.request.use(async (config) => {
   } else {
     console.warn(`[API] ⚠️  ${config.method?.toUpperCase()} ${config.url} — sin access token`);
   }
+
+  if (__DEV__) {
+    config._logId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    config._startTime = Date.now();
+    useNetworkLogStore.getState().startLog({
+      id: config._logId,
+      method: config.method?.toUpperCase() ?? 'GET',
+      url: `${config.baseURL ?? ''}${config.url ?? ''}`,
+      path: config.url ?? '',
+      timestamp: config._startTime,
+      requestData: config.data,
+    });
+  }
+
   return config;
 });
 
@@ -59,12 +79,35 @@ const clearSessionAndRedirect = async () => {
 apiClient.interceptors.response.use(
   (response) => {
     console.log(`[API] ✅ ${response.status} ${response.config.url}`);
+
+    const config = response.config as TrackedRequestConfig;
+    if (__DEV__ && config._logId) {
+      useNetworkLogStore.getState().resolveLog(config._logId, {
+        state: 'success',
+        status: response.status,
+        statusText: response.statusText,
+        duration: config._startTime ? Date.now() - config._startTime : undefined,
+        responseData: response.data,
+      });
+    }
+
     return response;
   },
   async (error) => {
-    const originalRequest = error.config as typeof error.config & { _retry?: boolean };
+    const originalRequest = error.config as TrackedRequestConfig & { _retry?: boolean };
     const status = error.response?.status;
     const url = originalRequest?.url ?? 'unknown';
+
+    if (__DEV__ && originalRequest?._logId) {
+      useNetworkLogStore.getState().resolveLog(originalRequest._logId, {
+        state: 'error',
+        status,
+        statusText: error.response?.statusText,
+        duration: originalRequest._startTime ? Date.now() - originalRequest._startTime : undefined,
+        responseData: error.response?.data,
+        error: error.message,
+      });
+    }
 
     // ── Regla 2: cualquier error que no sea 401 (o sin config) pasa directo ──
     if (!originalRequest || status !== 401 || originalRequest._retry) {
