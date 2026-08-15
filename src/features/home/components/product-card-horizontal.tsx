@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
+import { Image } from 'expo-image';
 
 import { Package } from 'lucide-react-native';
 
@@ -8,6 +9,7 @@ import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
 
 import type { Product } from '@/features/products/api/products';
+import { useProductImageUrl } from '@/features/products/queries';
 
 interface ProductCardHorizontalProps {
   product: Product;
@@ -26,14 +28,25 @@ const PRESSABLE_STYLE = { opacity: 1 } as const;
 
 export const ProductCardHorizontal = React.memo(
   ({ product, onPress }: ProductCardHorizontalProps) => {
+    const primaryImage =
+      product.images.find((img) => img.isPrimary) ?? product.images[0] ?? null;
+    const { data: imageUrl } = useProductImageUrl(primaryImage?.s3Key);
+
     return (
       <Pressable onPress={onPress} className="mb-2 active:scale-95" style={PRESSABLE_STYLE}>
         <Card
           className="w-44 overflow-hidden shadow-md shadow-primary/10"
           style={CARD_SHADOW_STYLE}>
-          {/* Placeholder image */}
-          <View className="h-28 w-full items-center justify-center bg-muted">
-            <Text className="text-4xl">📦</Text>
+          <View className="h-28 w-full items-center justify-center overflow-hidden bg-muted">
+            {imageUrl ? (
+              <Image
+                source={{ uri: imageUrl }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+              />
+            ) : (
+              <Text className="text-4xl">📦</Text>
+            )}
           </View>
 
           {/* Product Info */}

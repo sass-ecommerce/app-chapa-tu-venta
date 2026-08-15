@@ -5,6 +5,7 @@ import { Archive, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
 import { Text } from '@/shared/components/ui/text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { useProductQuery } from '@/features/products/queries';
+import { ProductImageGallery } from '@/features/products/components/product-image-gallery';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
@@ -76,9 +77,7 @@ export default function ProductoDetalleScreen() {
         }}
       />
       <ScrollView className="flex-1 bg-background">
-        <View className="h-64 w-full items-center justify-center bg-muted">
-          <Text className="text-6xl">📦</Text>
-        </View>
+        <ProductImageGallery images={product.images} height={256} />
 
         <View className="p-6">
           <Text className="text-2xl font-bold text-foreground">{product.name}</Text>
