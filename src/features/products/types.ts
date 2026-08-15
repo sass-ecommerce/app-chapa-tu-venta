@@ -5,15 +5,25 @@ export interface ProductCategory {
   slug: string;
 }
 
+export interface ProductImage {
+  id: string;
+  s3Key: string;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
 export interface Product {
   id: string;
   tenantId: string;
   categoryId: string | null;
   name: string;
-  description: string;
+  description?: string;
   basePrice: number;
   isActive: boolean;
-  category: ProductCategory | null;
+  category?: ProductCategory | null;
+  images: ProductImage[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ApiProductResponse {
@@ -21,10 +31,13 @@ export interface ApiProductResponse {
   tenantId: string;
   categoryId: string | null;
   name: string;
-  description: string;
-  basePrice: string;
+  description?: string;
+  basePrice: number | string;
   isActive: boolean;
-  category: ProductCategory | null;
+  category?: ProductCategory | null;
+  images?: ProductImage[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ProductsMeta {

@@ -3,6 +3,14 @@ import type { Product, ApiProductResponse, ProductsMeta, CreateProductData } fro
 
 export type { Product, ApiProductResponse, CreateProductData };
 
+function normalizeProduct(item: ApiProductResponse): Product {
+  return {
+    ...item,
+    basePrice: typeof item.basePrice === 'string' ? parseFloat(item.basePrice) : item.basePrice,
+    images: item.images ?? [],
+  };
+}
+
 export async function getProducts(): Promise<Product[]> {
   try {
     const { data } = await apiClient.get<{
@@ -10,10 +18,7 @@ export async function getProducts(): Promise<Product[]> {
       message: string;
       data: { products: ApiProductResponse[]; meta: ProductsMeta };
     }>('/products');
-    return data.data.products.map((item) => ({
-      ...item,
-      basePrice: parseFloat(item.basePrice),
-    }));
+    return data.data.products.map(normalizeProduct);
   } catch (error) {
     console.error('❌ [getProducts] Error:', error instanceof Error ? error.message : error);
     throw error;
@@ -27,7 +32,7 @@ export async function getProduct(id: string): Promise<Product> {
       message: string;
       data: ApiProductResponse;
     }>(`/products/${id}`);
-    return { ...data.data, basePrice: parseFloat(data.data.basePrice) };
+    return normalizeProduct(data.data);
   } catch (error) {
     console.error('❌ [getProduct] Error:', error instanceof Error ? error.message : error);
     throw error;
@@ -42,6 +47,7 @@ export async function createProduct(payload: CreateProductData): Promise<{ id: s
     );
     return data.data;
   } catch (error) {
+    console.log('Payload:', payload);
     console.error('❌ [createProduct] Error:', error instanceof Error ? error.message : error);
     throw error;
   }

@@ -45,11 +45,6 @@ export const ProductCardHorizontal = React.memo(
               </Text>
             </View>
 
-            {product.category && (
-              <Text className="mb-1.5 text-xs text-muted-foreground" numberOfLines={1}>
-                {product.category.name}
-              </Text>
-            )}
 
             <Text className="text-lg font-bold text-primary">
               S/ {product.basePrice.toFixed(2)}

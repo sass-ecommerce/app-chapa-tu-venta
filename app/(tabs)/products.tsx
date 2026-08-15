@@ -28,6 +28,7 @@ import {
 import { useProductsStore } from '@/features/products/utils/products-store';
 import type { TabValue } from '@/features/products/utils/products-store';
 import { useProductsQuery } from '@/features/products/queries';
+import { useCategories } from '@/features/categories/queries/use-categories';
 import type { Product } from '@/features/products/api/products';
 import { REFRESH_COLORS } from '@/shared/config/constants';
 
@@ -53,16 +54,28 @@ export default function ProductosScreen() {
   const toggleCategory = useProductsStore((state) => state.toggleCategory);
 
   const { data: products, isLoading, error, refetch, isRefetching } = useProductsQuery();
+  const { data: categoriesData } = useCategories();
 
-  // Extract unique category names from products
+  // Map categoryId → name for chips and filtering
+  const categoryNameById = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    categoriesData?.forEach((c) => {
+      map[c.id] = c.name;
+    });
+    return map;
+  }, [categoriesData]);
+
+  // Extract unique category names from products using the categories map
   const categories = React.useMemo(() => {
     if (!products) return [];
     const categorySet = new Set<string>();
     products.forEach((p) => {
-      if (p.category?.name) categorySet.add(p.category.name);
+      if (p.categoryId && categoryNameById[p.categoryId]) {
+        categorySet.add(categoryNameById[p.categoryId]);
+      }
     });
     return Array.from(categorySet);
-  }, [products]);
+  }, [products, categoryNameById]);
 
   // Filter products based on all criteria
   const filteredProducts = React.useMemo(() => {
@@ -76,13 +89,16 @@ export default function ProductosScreen() {
       if (selectedTab === 'active') matchesTab = product.isActive;
       else if (selectedTab === 'inactive') matchesTab = !product.isActive;
 
+      const productCategoryName = product.categoryId
+        ? (categoryNameById[product.categoryId] ?? null)
+        : null;
       const matchesCategory =
         selectedCategories.length === 0 ||
-        (product.category?.name ? selectedCategories.includes(product.category.name) : false);
+        (productCategoryName ? selectedCategories.includes(productCategoryName) : false);
 
       return matchesSearch && matchesTab && matchesCategory;
     });
-  }, [products, searchQuery, selectedTab, selectedCategories]);
+  }, [products, searchQuery, selectedTab, selectedCategories, categoryNameById]);
 
   // Tab data with counts
   const tabs = React.useMemo(() => {
@@ -191,7 +207,9 @@ export default function ProductosScreen() {
                     label={category}
                     selected={selectedCategories.includes(category)}
                     onPress={() => toggleCategory(category)}
-                    count={products?.filter((p) => p.category?.name === category).length}
+                    count={products?.filter(
+                      (p) => p.categoryId ? categoryNameById[p.categoryId] === category : false
+                    ).length}
                   />
                 ))}
               </View>
@@ -212,6 +230,7 @@ export default function ProductosScreen() {
     selectedTab,
     setSelectedTab,
     categories,
+    categoryNameById,
     viewMode,
     setViewMode,
     selectedCategories,

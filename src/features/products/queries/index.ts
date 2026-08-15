@@ -1,12 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProducts, getProduct, createProduct } from '../api/products';
-import { getPresignedUploadUrl, uploadToS3 } from '@/shared/config/storage';
+import { getPresignedUploadUrl, getPresignedViewUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
+import { compressProductImage } from '@/shared/utils/image-compression';
 import type { CreateProductData } from '../types';
+
+// El link firmado expira a los 60 min (ver backend); lo refrescamos antes de eso.
+const PRESIGNED_VIEW_STALE_TIME = 50 * 60 * 1000;
+const PRESIGNED_VIEW_GC_TIME = 55 * 60 * 1000;
 
 export const productKeys = {
   all: ['products'] as const,
   detail: (id: string) => ['products', id] as const,
+  imageUrl: (key: string) => ['products', 'image-url', key] as const,
 };
 
 export function useProductsQuery() {
@@ -34,6 +40,18 @@ export function useProductQuery(id: string) {
   });
 }
 
+export function useProductImageUrl(key: string | null | undefined) {
+  return useQuery({
+    queryKey: productKeys.imageUrl(key ?? ''),
+    queryFn: () => getPresignedViewUrl(key as string),
+    enabled: !!key,
+    staleTime: PRESIGNED_VIEW_STALE_TIME,
+    gcTime: PRESIGNED_VIEW_GC_TIME,
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+  });
+}
+
 export function useUploadProductImageMutation() {
   return useMutation({
     mutationFn: async ({
@@ -49,14 +67,16 @@ export function useUploadProductImageMutation() {
       primaryIdentifier: string;
       secondaryIdentifier?: string;
     }) => {
+      const compressed = await compressProductImage({ uri: fileUri, contentType });
+
       const { uploadUrl, key } = await getPresignedUploadUrl({
         folder: STORAGE_FOLDERS.PRODUCTS,
         fileName,
-        contentType,
+        contentType: compressed.contentType,
         primaryIdentifier,
         secondaryIdentifier,
       });
-      await uploadToS3(uploadUrl, fileUri, contentType);
+      await uploadToS3(uploadUrl, compressed.uri, compressed.contentType);
       return { key };
     },
   });

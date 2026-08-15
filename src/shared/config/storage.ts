@@ -20,6 +20,15 @@ export async function getPresignedUploadUrl(params: {
   return data.data;
 }
 
+export async function getPresignedViewUrl(key: string): Promise<string> {
+  const { data } = await apiClient.get<{
+    code: number;
+    message: string;
+    data: { viewUrl: string };
+  }>('/storage/presigned-view', { params: { key } });
+  return data.data.viewUrl;
+}
+
 export async function uploadToS3(
   uploadUrl: string,
   fileUri: string,

@@ -13,7 +13,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gberdejo.appchapatuventa"
@@ -42,7 +44,8 @@
           "photosPermission": "La app necesita acceso a tu biblioteca de fotos para agregar imágenes a tus productos.",
           "cameraPermission": "La app necesita acceso a tu cámara para tomar fotos de tus productos."
         }
-      ]
+      ],
+      "react-native-compressor"
     ],
     "experiments": {
       "typedRoutes": true

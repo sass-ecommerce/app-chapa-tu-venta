@@ -83,9 +83,6 @@ export default function ProductoDetalleScreen() {
         <View className="p-6">
           <Text className="text-2xl font-bold text-foreground">{product.name}</Text>
 
-          {product.category && (
-            <Text className="mt-1 text-sm text-muted-foreground">{product.category.name}</Text>
-          )}
 
           <Text className="mt-4 text-3xl font-bold text-primary">
             S/ {product.basePrice.toFixed(2)}
