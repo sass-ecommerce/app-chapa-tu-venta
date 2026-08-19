@@ -332,7 +332,9 @@ export default function CreateProductScreen() {
   return (
     <View className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
-      <ScreenHeader title="Crear Producto" />
+      <form.Subscribe selector={(state) => state.isSubmitting}>
+        {(isSubmitting) => <ScreenHeader title="Crear Producto" disabled={isSubmitting} />}
+      </form.Subscribe>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-5 pb-8 pt-4">
@@ -820,14 +822,18 @@ export default function CreateProductScreen() {
                         Falta completar: {missingLabel}
                       </Text>
                     )}
+
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      disabled={isSubmitting}
+                      onPress={() => router.back()}>
+                      <Text>Cancelar</Text>
+                    </Button>
                   </>
                 );
               }}
             </form.Subscribe>
-
-            <Button variant="outline" size="lg" onPress={() => router.back()}>
-              <Text>Cancelar</Text>
-            </Button>
           </View>
         </View>
       </ScrollView>

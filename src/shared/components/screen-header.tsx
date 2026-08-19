@@ -11,9 +11,10 @@ interface ScreenHeaderProps {
   title: string;
   onBack?: () => void;
   right?: React.ReactNode;
+  disabled?: boolean;
 }
 
-export function ScreenHeader({ title, onBack, right }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack, right, disabled }: ScreenHeaderProps) {
   const router = useRouter();
   const { top } = useSafeAreaInsets();
 
@@ -22,7 +23,8 @@ export function ScreenHeader({ title, onBack, right }: ScreenHeaderProps) {
       <View className="flex-row items-center px-2 py-3">
         <Pressable
           onPress={onBack ?? (() => router.back())}
-          className="px-2 py-1 active:opacity-60">
+          disabled={disabled}
+          className="px-2 py-1 active:opacity-60 disabled:opacity-40">
           <Icon as={ChevronLeft} size={26} className="text-primary" />
         </Pressable>
 
