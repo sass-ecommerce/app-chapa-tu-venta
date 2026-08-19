@@ -11,16 +11,21 @@ function normalizeProduct(item: ApiProductResponse): Product {
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
+export async function getProductsPage(
+  page: number
+): Promise<{ products: Product[]; meta: ProductsMeta }> {
   try {
     const { data } = await apiClient.get<{
       code: number;
       message: string;
       data: { products: ApiProductResponse[]; meta: ProductsMeta };
-    }>('/products');
-    return data.data.products.map(normalizeProduct);
+    }>('/products', { params: { page } });
+    return {
+      products: data.data.products.map(normalizeProduct),
+      meta: data.data.meta,
+    };
   } catch (error) {
-    console.error('❌ [getProducts] Error:', error instanceof Error ? error.message : error);
+    console.error('❌ [getProductsPage] Error:', error instanceof Error ? error.message : error);
     throw error;
   }
 }

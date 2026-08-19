@@ -5,7 +5,12 @@ export { ProductSkeleton } from './components/product-skeleton';
 export { StatsHero } from './components/stats-hero';
 
 // Queries
-export { useProductsQuery, useProductQuery, useCreateProductMutation, productKeys } from './queries';
+export {
+  useProductsInfiniteQuery,
+  useProductQuery,
+  useCreateProductMutation,
+  productKeys,
+} from './queries';
 
 // Store
 export { useProductsStore } from './utils/products-store';

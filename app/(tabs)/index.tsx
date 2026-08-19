@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, ScrollView, RefreshControl } from 'react-native';
 
-import { useProductsQuery } from '@/features/products/queries';
+import { useProductsInfiniteQuery } from '@/features/products/queries';
 import { ShoppingBag, Package } from 'lucide-react-native';
 
 import { Icon } from '@/shared/components/ui/icon';
@@ -66,13 +66,13 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
 
   const {
-    data: allProducts,
+    data,
     isLoading: productsLoading,
     error: productsError,
     refetch: refetchProducts,
-  } = useProductsQuery();
+  } = useProductsInfiniteQuery();
 
-  const recentProducts = allProducts?.slice(0, 5);
+  const recentProducts = data?.pages[0]?.products.slice(0, 5);
 
   // Pull-to-refresh handler
   const onRefresh = React.useCallback(async () => {

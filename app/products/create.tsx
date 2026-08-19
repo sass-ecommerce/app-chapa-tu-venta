@@ -103,7 +103,7 @@ function StepCard({
       delay={delay}
       className={cn(
         'gap-0 overflow-hidden p-0',
-        isOpen ? 'border-[#D9711A]/35' : 'border-border'
+        isOpen ? 'border-primary/35' : 'border-border'
       )}>
       <Pressable
         onPress={onToggle}
@@ -111,16 +111,16 @@ function StepCard({
         <View
           className={cn(
             'h-7 w-7 items-center justify-center rounded-full border',
-            complete ? 'border-[#D9711A] bg-[#D9711A]' : 'border-border bg-muted/40'
+            complete ? 'border-primary bg-primary' : 'border-border bg-muted/40'
           )}>
           {complete ? (
-            <Icon as={Check} size={13} className="text-white" />
+            <Icon as={Check} size={13} className="text-primary-foreground" />
           ) : (
             <Text className="text-xs font-semibold text-muted-foreground">{index}</Text>
           )}
         </View>
 
-        <Icon as={icon} size={16} className={complete ? 'text-[#D9711A]' : 'text-muted-foreground'} />
+        <Icon as={icon} size={16} className={complete ? 'text-primary' : 'text-muted-foreground'} />
 
         <View className="flex-1">
           <View className="flex-row items-center gap-1.5">
@@ -366,7 +366,7 @@ export default function CreateProductScreen() {
                       <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         Progreso de la ficha
                       </Text>
-                      <Text className="text-xs font-semibold tabular-nums text-[#D9711A]">
+                      <Text className="text-xs font-semibold tabular-nums text-primary">
                         {completedCount}/5 completado
                       </Text>
                     </View>
@@ -376,7 +376,7 @@ export default function CreateProductScreen() {
                           key={id}
                           className={cn(
                             'h-1.5 flex-1 rounded-full',
-                            stepComplete[id] ? 'bg-[#D9711A]' : 'bg-muted'
+                            stepComplete[id] ? 'bg-primary' : 'bg-muted'
                           )}
                         />
                       ))}
@@ -510,8 +510,8 @@ export default function CreateProductScreen() {
                                 contentFit="cover"
                               />
                               {index === 0 && (
-                                <View className="absolute bottom-1 left-1 rounded-full bg-[#D9711A] px-2 py-0.5">
-                                  <Text className="text-[10px] font-semibold text-white">
+                                <View className="absolute bottom-1 left-1 rounded-full bg-primary px-2 py-0.5">
+                                  <Text className="text-[10px] font-semibold text-primary-foreground">
                                     Portada
                                   </Text>
                                 </View>
@@ -539,8 +539,8 @@ export default function CreateProductScreen() {
                           onPress={pickImage}
                           className="overflow-hidden rounded-2xl border border-dashed border-border active:opacity-70">
                           <View className="items-center gap-4 bg-muted/20 px-6 py-14">
-                            <View className="rounded-2xl bg-[#D9711A]/10 p-5">
-                              <Icon as={ImagePlus} className="text-[#D9711A]" size={34} />
+                            <View className="rounded-2xl bg-primary/10 p-5">
+                              <Icon as={ImagePlus} className="text-primary" size={34} />
                             </View>
                             <View className="items-center gap-1">
                               <Text className="text-sm font-semibold text-foreground">
@@ -591,7 +591,7 @@ export default function CreateProductScreen() {
                             </Label>
                             <View className="h-14 flex-row overflow-hidden rounded-xl border border-input bg-background shadow-sm shadow-black/5">
                               <View className="w-16 items-center justify-center border-r border-input bg-muted/40">
-                                <Text className="text-sm font-bold text-[#D9711A]">S/.</Text>
+                                <Text className="text-sm font-bold text-primary">S/.</Text>
                               </View>
                               <Input
                                 placeholder="0.00"
@@ -705,7 +705,7 @@ export default function CreateProductScreen() {
                                   <Pressable
                                     onPress={() => switchAttributeValueToList(index)}
                                     className="self-start active:opacity-70">
-                                    <Text className="text-xs font-medium text-[#D9711A]">
+                                    <Text className="text-xs font-medium text-primary">
                                       Volver a la lista
                                     </Text>
                                   </Pressable>
@@ -723,8 +723,8 @@ export default function CreateProductScreen() {
                           'flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 active:opacity-70',
                           allAttributeOptionsUsed && 'opacity-50'
                         )}>
-                        <Icon as={Plus} className="text-[#D9711A]" size={16} />
-                        <Text className="text-sm font-medium text-[#D9711A]">
+                        <Icon as={Plus} className="text-primary" size={16} />
+                        <Text className="text-sm font-medium text-primary">
                           {allAttributeOptionsUsed ? 'Todos los atributos agregados' : 'Agregar atributo'}
                         </Text>
                       </Pressable>
@@ -809,9 +809,9 @@ export default function CreateProductScreen() {
                       onPress={form.handleSubmit}
                       disabled={!canSubmit || blocked}
                       size="lg"
-                      className="gap-2 bg-[#D9711A] active:bg-[#D9711A]/90">
-                      <Icon as={Sparkles} className="text-white" size={18} />
-                      <Text className="font-semibold text-white">
+                      className="gap-2">
+                      <Icon as={Sparkles} className="text-primary-foreground" size={18} />
+                      <Text className="font-semibold text-primary-foreground">
                         {isSubmitting ? 'Creando...' : 'Crear Producto'}
                       </Text>
                     </Button>

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Pressable, RefreshControl, ScrollView } from 'react-native';
+import { View, Pressable, RefreshControl, ScrollView, ActivityIndicator } from 'react-native';
 
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
@@ -27,7 +27,7 @@ import {
 
 import { useProductsStore } from '@/features/products/utils/products-store';
 import type { TabValue } from '@/features/products/utils/products-store';
-import { useProductsQuery } from '@/features/products/queries';
+import { useProductsInfiniteQuery } from '@/features/products/queries';
 import { useCategories } from '@/features/categories/queries/use-categories';
 import type { Product } from '@/features/products/api/products';
 import { REFRESH_COLORS } from '@/shared/config/constants';
@@ -53,8 +53,25 @@ export default function ProductosScreen() {
   const setSelectedTab = useProductsStore((state) => state.setSelectedTab);
   const toggleCategory = useProductsStore((state) => state.toggleCategory);
 
-  const { data: products, isLoading, error, refetch, isRefetching } = useProductsQuery();
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useProductsInfiniteQuery();
   const { data: categoriesData } = useCategories();
+
+  const products = React.useMemo(() => data?.pages.flatMap((p) => p.products), [data]);
+
+  const handleEndReached = React.useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Map categoryId → name for chips and filtering
   const categoryNameById = React.useMemo(() => {
@@ -65,17 +82,8 @@ export default function ProductosScreen() {
     return map;
   }, [categoriesData]);
 
-  // Extract unique category names from products using the categories map
-  const categories = React.useMemo(() => {
-    if (!products) return [];
-    const categorySet = new Set<string>();
-    products.forEach((p) => {
-      if (p.categoryId && categoryNameById[p.categoryId]) {
-        categorySet.add(categoryNameById[p.categoryId]);
-      }
-    });
-    return Array.from(categorySet);
-  }, [products, categoryNameById]);
+  // Full category list from the API (not just categories currently in use by products)
+  const categories = categoriesData ?? [];
 
   // Filter products based on all criteria
   const filteredProducts = React.useMemo(() => {
@@ -203,13 +211,11 @@ export default function ProductosScreen() {
               <View className="flex-row gap-2">
                 {categories.map((category) => (
                   <Chip
-                    key={category}
-                    label={category}
-                    selected={selectedCategories.includes(category)}
-                    onPress={() => toggleCategory(category)}
-                    count={products?.filter(
-                      (p) => p.categoryId ? categoryNameById[p.categoryId] === category : false
-                    ).length}
+                    key={category.id}
+                    label={category.name}
+                    selected={selectedCategories.includes(category.name)}
+                    onPress={() => toggleCategory(category.name)}
+                    count={products?.filter((p) => p.categoryId === category.id).length}
                   />
                 ))}
               </View>
@@ -275,10 +281,14 @@ export default function ProductosScreen() {
     );
   }, [isLoading, error, refetch]);
 
-  // Render footer with spacer for FAB
+  // Render footer with pagination spinner + spacer for FAB
   const renderFooter = React.useCallback(() => {
-    return <View className="h-24" />;
-  }, []);
+    return (
+      <View className="h-24 items-center justify-center">
+        {isFetchingNextPage && <ActivityIndicator size="small" color={REFRESH_COLORS.LIGHT} />}
+      </View>
+    );
+  }, [isFetchingNextPage]);
 
   // Render item based on view mode
   const renderItem = React.useCallback(
@@ -316,6 +326,8 @@ export default function ProductosScreen() {
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

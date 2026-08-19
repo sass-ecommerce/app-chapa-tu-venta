@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProducts, getProduct, createProduct } from '../api/products';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getProductsPage, getProduct, createProduct } from '../api/products';
 import { getPresignedUploadUrl, getPresignedViewUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
 import { compressProductImage } from '@/shared/utils/image-compression';
@@ -12,13 +12,17 @@ const PRESIGNED_VIEW_GC_TIME = 55 * 60 * 1000;
 export const productKeys = {
   all: ['products'] as const,
   detail: (id: string) => ['products', id] as const,
+  infinite: () => ['products', 'infinite'] as const,
   imageUrl: (key: string) => ['products', 'image-url', key] as const,
 };
 
-export function useProductsQuery() {
-  return useQuery({
-    queryKey: productKeys.all,
-    queryFn: getProducts,
+export function useProductsInfiniteQuery() {
+  return useInfiniteQuery({
+    queryKey: productKeys.infinite(),
+    queryFn: ({ pageParam }) => getProductsPage(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,
