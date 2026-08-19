@@ -6,12 +6,17 @@ import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Sparkles, Package, DollarSign, ImagePlus, Camera, X, Plus } from 'lucide-react-native';
+import { Sparkles, Package, DollarSign, ImagePlus, Camera, X, Plus, Tag } from 'lucide-react-native';
 import { CategoryPicker } from '@/features/categories';
 import {
   useCreateProductMutation,
   useUploadProductImageMutation,
 } from '@/features/products/queries';
+import {
+  PRODUCT_ATTRIBUTE_OPTIONS,
+  PRODUCT_ATTRIBUTE_VALUE_SUGGESTIONS,
+} from '@/features/products/constants';
+import type { ProductAttributeInput } from '@/features/products/types';
 import { ScreenHeader } from '@/shared/components/screen-header';
 
 import { Text } from '@/shared/components/ui/text';
@@ -19,6 +24,16 @@ import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { Label } from '@/shared/components/ui/label';
 import { Switch } from '@/shared/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  type Option,
+} from '@/shared/components/ui/select';
 import { AnimatedCard } from '@/shared/components/ui/animated-card';
 import { Icon } from '@/shared/components/ui/icon';
 import { ANIMATION } from '@/shared/config/constants';
@@ -31,6 +46,14 @@ type ImageAsset = {
 };
 
 const MAX_IMAGES = 6;
+const CUSTOM_ATTRIBUTE_VALUE = '__custom__';
+
+type AttributeRowState = {
+  attributeKey: string;
+  attributeLabel: string;
+  value: string;
+  isCustomValue: boolean;
+};
 
 export default function CreateProductScreen() {
   const router = useRouter();
@@ -57,6 +80,65 @@ export default function CreateProductScreen() {
   const removeImageAsset = (index: number) => {
     setImageAssets((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const [attributeRows, setAttributeRows] = React.useState<AttributeRowState[]>([]);
+
+  const addAttributeRow = () => {
+    setAttributeRows((prev) => [
+      ...prev,
+      { attributeKey: '', attributeLabel: '', value: '', isCustomValue: false },
+    ]);
+  };
+
+  const removeAttributeRow = (index: number) => {
+    setAttributeRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAttributeType = (index: number, option: Option) => {
+    setAttributeRows((prev) =>
+      prev.map((row, i) =>
+        i === index
+          ? {
+              attributeKey: option?.value ?? '',
+              attributeLabel: option?.label ?? '',
+              value: '',
+              isCustomValue: false,
+            }
+          : row
+      )
+    );
+  };
+
+  const updateAttributeValueOption = (index: number, option: Option) => {
+    setAttributeRows((prev) =>
+      prev.map((row, i) => {
+        if (i !== index) return row;
+        if (option?.value === CUSTOM_ATTRIBUTE_VALUE) {
+          return { ...row, value: '', isCustomValue: true };
+        }
+        return { ...row, value: option?.value ?? '', isCustomValue: false };
+      })
+    );
+  };
+
+  const updateAttributeValueText = (index: number, text: string) => {
+    setAttributeRows((prev) => prev.map((row, i) => (i === index ? { ...row, value: text } : row)));
+  };
+
+  const switchAttributeValueToList = (index: number) => {
+    setAttributeRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, isCustomValue: false, value: '' } : row))
+    );
+  };
+
+  const availableOptionsFor = (rowIndex: number) =>
+    PRODUCT_ATTRIBUTE_OPTIONS.filter(
+      (opt) =>
+        opt.value === attributeRows[rowIndex].attributeKey ||
+        !attributeRows.some((r) => r.attributeKey === opt.value)
+    );
+
+  const allAttributeOptionsUsed = attributeRows.length >= PRODUCT_ATTRIBUTE_OPTIONS.length;
 
   const openCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -113,12 +195,17 @@ export default function CreateProductScreen() {
     },
     onSubmit: async ({ value }) => {
       try {
+        const validAttributes: ProductAttributeInput[] = attributeRows
+          .filter((row) => row.attributeKey && row.value.trim().length > 0)
+          .map(({ attributeKey, attributeLabel, value }) => ({ attributeKey, attributeLabel, value }));
+
         const { id } = await createMutation.mutateAsync({
           name: value.name,
           description: value.description || undefined,
           basePrice: value.basePrice,
           isActive: value.isActive,
           categoryId: value.categoryId || undefined,
+          attributes: validAttributes.length > 0 ? validAttributes : undefined,
         });
 
         for (let i = 0; i < imageAssets.length; i++) {
@@ -357,8 +444,122 @@ export default function CreateProductScreen() {
             </View>
           </AnimatedCard>
 
-          {/* Card 3: Configuración */}
-          <AnimatedCard delay={ANIMATION.STAGGER * 3} className="mb-6">
+          {/* Card 3: Atributos del Producto */}
+          <AnimatedCard delay={ANIMATION.STAGGER * 3} className="mb-4">
+            <View className="p-5">
+              <View className="mb-1 flex-row items-center gap-3">
+                <View className="rounded-lg bg-primary/10 p-2">
+                  <Icon as={Tag} className="text-primary" size={16} />
+                </View>
+                <Label className="text-base font-semibold">Atributos del Producto</Label>
+              </View>
+              <Text className="mb-4 ml-11 text-xs text-muted-foreground">
+                Opcional: agrega características como talla, color o material.
+              </Text>
+
+              {attributeRows.length > 0 && (
+                <View className="mb-3 gap-2">
+                  {attributeRows.map((row, index) => {
+                    const suggestions = PRODUCT_ATTRIBUTE_VALUE_SUGGESTIONS[row.attributeKey] ?? [];
+                    const showValueList = suggestions.length > 0 && !row.isCustomValue;
+
+                    return (
+                      <View key={index} className="gap-1.5">
+                        <View className="flex-row items-center gap-2">
+                          <Select
+                            value={
+                              row.attributeKey
+                                ? { value: row.attributeKey, label: row.attributeLabel }
+                                : undefined
+                            }
+                            onValueChange={(option) => updateAttributeType(index, option)}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {availableOptionsFor(index).map((opt) => (
+                                  <SelectItem key={opt.value} label={opt.label} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+
+                          {showValueList ? (
+                            <Select
+                              value={row.value ? { value: row.value, label: row.value } : undefined}
+                              onValueChange={(option) => updateAttributeValueOption(index, option)}>
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Valor" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {suggestions.map((suggestion) => (
+                                    <SelectItem
+                                      key={suggestion}
+                                      label={suggestion}
+                                      value={suggestion}>
+                                      {suggestion}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                                <SelectSeparator />
+                                <SelectItem label="Personalizado (escribir)" value={CUSTOM_ATTRIBUTE_VALUE}>
+                                  Personalizado (escribir)
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              placeholder="Valor"
+                              value={row.value}
+                              onChangeText={(text) => updateAttributeValueText(index, text)}
+                              editable={!!row.attributeKey}
+                              className={cn('h-10 flex-1', !row.attributeKey && 'opacity-50')}
+                            />
+                          )}
+
+                          <Pressable
+                            onPress={() => removeAttributeRow(index)}
+                            className="h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted/20 active:opacity-70">
+                            <Icon as={X} className="text-muted-foreground" size={16} />
+                          </Pressable>
+                        </View>
+
+                        {row.isCustomValue && suggestions.length > 0 && (
+                          <Pressable
+                            onPress={() => switchAttributeValueToList(index)}
+                            className="self-start active:opacity-70">
+                            <Text className="text-xs font-medium text-primary">
+                              Volver a la lista
+                            </Text>
+                          </Pressable>
+                        )}
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              <Pressable
+                onPress={addAttributeRow}
+                disabled={allAttributeOptionsUsed}
+                className={cn(
+                  'flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 active:opacity-70',
+                  allAttributeOptionsUsed && 'opacity-50'
+                )}>
+                <Icon as={Plus} className="text-primary" size={16} />
+                <Text className="text-sm font-medium text-primary">
+                  {allAttributeOptionsUsed ? 'Todos los atributos agregados' : 'Agregar atributo'}
+                </Text>
+              </Pressable>
+            </View>
+          </AnimatedCard>
+
+          {/* Card 4: Configuración */}
+          <AnimatedCard delay={ANIMATION.STAGGER * 4} className="mb-6">
             <View className="p-5">
               <Label className="mb-4 text-base font-semibold">Configuración</Label>
 

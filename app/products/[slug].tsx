@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { Alert, ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Archive, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
+import { Archive, ChevronRight, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
+import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { useProductQuery } from '@/features/products/queries';
 import { ProductImageGallery } from '@/features/products/components/product-image-gallery';
+import { AttributeValue } from '@/features/products/components/attribute-value';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
@@ -80,8 +82,35 @@ export default function ProductoDetalleScreen() {
         <ProductImageGallery images={product.images} height={256} />
 
         <View className="p-6">
-          <Text className="text-2xl font-bold text-foreground">{product.name}</Text>
+          {(() => {
+            const trail = product.categories?.length
+              ? product.categories
+              : product.category
+                ? [product.category]
+                : [];
+            if (!trail.length) return null;
+            return (
+              <View className="mb-2 flex-row flex-wrap items-center gap-1">
+                {trail.map((cat, index) => (
+                  <React.Fragment key={cat.id}>
+                    {index > 0 && (
+                      <Icon as={ChevronRight} size={12} className="text-muted-foreground" />
+                    )}
+                    <Text
+                      className={
+                        index === trail.length - 1
+                          ? 'text-xs font-semibold text-primary'
+                          : 'text-xs font-medium text-muted-foreground'
+                      }>
+                      {cat.name}
+                    </Text>
+                  </React.Fragment>
+                ))}
+              </View>
+            );
+          })()}
 
+          <Text className="text-2xl font-bold text-foreground">{product.name}</Text>
 
           <Text className="mt-4 text-3xl font-bold text-primary">
             S/ {product.basePrice.toFixed(2)}
@@ -103,6 +132,24 @@ export default function ProductoDetalleScreen() {
               {product.description || 'Sin descripción disponible'}
             </Text>
           </View>
+
+          {!!product.attributes?.length && (
+            <View className="mt-6">
+              <Text className="text-lg font-semibold text-foreground">Atributos</Text>
+              <View className="mt-2 rounded-xl border border-border">
+                {product.attributes.map((attribute, index) => (
+                  <View
+                    key={attribute.attributeKey}
+                    className={`flex-row items-center justify-between px-4 py-3 ${
+                      index < product.attributes!.length - 1 ? 'border-b border-border' : ''
+                    }`}>
+                    <Text className="text-muted-foreground">{attribute.attributeLabel}</Text>
+                    <AttributeValue attribute={attribute} />
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       </ScrollView>
     </>

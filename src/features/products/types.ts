@@ -12,6 +12,12 @@ export interface ProductImage {
   sortOrder: number;
 }
 
+export interface ProductAttribute {
+  attributeKey: string;
+  attributeLabel: string;
+  value: string;
+}
+
 export interface Product {
   id: string;
   tenantId: string;
@@ -21,7 +27,9 @@ export interface Product {
   basePrice: number;
   isActive: boolean;
   category?: ProductCategory | null;
+  categories?: ProductCategory[];
   images: ProductImage[];
+  attributes?: ProductAttribute[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -35,7 +43,9 @@ export interface ApiProductResponse {
   basePrice: number | string;
   isActive: boolean;
   category?: ProductCategory | null;
+  categories?: ProductCategory[];
   images?: ProductImage[];
+  attributes?: ProductAttribute[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -47,12 +57,19 @@ export interface ProductsMeta {
   totalPages: number;
 }
 
+export interface ProductAttributeInput {
+  attributeKey: string;
+  attributeLabel: string;
+  value: string;
+}
+
 export interface CreateProductData {
   name: string;
   description?: string;
   basePrice: number;
   isActive: boolean;
   categoryId?: string;
+  attributes?: ProductAttributeInput[];
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {}
