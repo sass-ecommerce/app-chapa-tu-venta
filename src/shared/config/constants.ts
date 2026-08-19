@@ -2,6 +2,11 @@ export const STORAGE_FOLDERS = {
   PRODUCTS: 'products',
 } as const;
 
+// Brand accent (2026 redesign) — not yet wired into the --primary CSS token,
+// so screens that need it apply it explicitly. See other usages in
+// app/categories, app/products/[slug], and features/products/components.
+export const BRAND_ORANGE = '#D9711A';
+
 // Onboarding steps constants (deprecated - keeping for backwards compatibility)
 // New approach: check user.unsafeMetadata.registerStoreCompleted
 export const ONBOARDING_STEPS = {
