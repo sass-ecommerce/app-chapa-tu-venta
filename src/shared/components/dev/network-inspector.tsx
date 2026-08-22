@@ -193,7 +193,7 @@ export function NetworkInspector() {
     transform: [{ translateX: translateX.value }],
   }));
 
-  if (!__DEV__) return null;
+  if (process.env.EXPO_PUBLIC_ENVIRONMENT !== 'development') return null;
 
   return (
     <>

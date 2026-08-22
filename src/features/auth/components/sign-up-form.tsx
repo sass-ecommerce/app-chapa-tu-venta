@@ -236,7 +236,8 @@ export function SignUpForm() {
                     onChange: z
                       .string()
                       .min(1, 'La contraseña es requerida')
-                      .min(6, 'Debe tener al menos 6 caracteres'),
+                      .min(6, 'Debe tener al menos 6 caracteres')
+                      .regex(/[A-Z]/, 'Debe contener al menos una letra mayúscula'),
                   }}>
                   {(field) => (
                     <View className="gap-1.5">

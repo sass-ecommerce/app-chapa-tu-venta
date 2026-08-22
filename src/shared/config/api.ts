@@ -7,6 +7,8 @@ export const API_CONFIG = {
   baseUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api',
 };
 
+const isDevelopment = process.env.EXPO_PUBLIC_ENVIRONMENT === 'development';
+
 export const apiClient = axios.create({
   baseURL: API_CONFIG.baseUrl,
   headers: { 'Content-Type': 'application/json' },
@@ -29,7 +31,7 @@ apiClient.interceptors.request.use(async (config: TrackedRequestConfig) => {
     console.warn(`[API] ⚠️  ${config.method?.toUpperCase()} ${config.url} — sin access token`);
   }
 
-  if (__DEV__) {
+  if (isDevelopment) {
     config._logId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     config._startTime = Date.now();
     useNetworkLogStore.getState().startLog({
@@ -81,7 +83,7 @@ apiClient.interceptors.response.use(
     console.log(`[API] ✅ ${response.status} ${response.config.url}`);
 
     const config = response.config as TrackedRequestConfig;
-    if (__DEV__ && config._logId) {
+    if (isDevelopment && config._logId) {
       useNetworkLogStore.getState().resolveLog(config._logId, {
         state: 'success',
         status: response.status,
@@ -98,7 +100,7 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const url = originalRequest?.url ?? 'unknown';
 
-    if (__DEV__ && originalRequest?._logId) {
+    if (isDevelopment && originalRequest?._logId) {
       useNetworkLogStore.getState().resolveLog(originalRequest._logId, {
         state: 'error',
         status,
