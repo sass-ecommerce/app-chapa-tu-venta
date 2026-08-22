@@ -7,12 +7,11 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFzdC10YWhyLTI3LmNsZXJrLmFjY291bnRzLmRldiQ",
-        "EXPO_PUBLIC_API_URL": "https://api-dev.niukinshop.com/api",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://zucloaermzznjzcqfpnc.supabase.co/rest/v1",
-        "EXPO_PUBLIC_SUPABASE_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00",
-        "EXPO_PUBLIC_SUPABASE_AUTH_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00"
+        "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api"
       }
     },
     "preview": {
@@ -21,11 +20,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_dmFzdC10YWhyLTI3LmNsZXJrLmFjY291bnRzLmRldiQ",
-        "EXPO_PUBLIC_API_URL": "https://api-dev.niukinshop.com/api",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://zucloaermzznjzcqfpnc.supabase.co/rest/v1",
-        "EXPO_PUBLIC_SUPABASE_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00",
-        "EXPO_PUBLIC_SUPABASE_AUTH_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00"
+        "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api"
       }
     },
     "production": {
@@ -34,11 +29,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_REPLACE_WITH_PRODUCTION_KEY",
-        "EXPO_PUBLIC_API_URL": "https://api.niukinshop.com/api",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://zucloaermzznjzcqfpnc.supabase.co/rest/v1",
-        "EXPO_PUBLIC_SUPABASE_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00",
-        "EXPO_PUBLIC_SUPABASE_AUTH_TOKEN": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp1Y2xvYWVybXp6bmp6Y3FmcG5jIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyOTc3MCwiZXhwIjoyMDg0OTA1NzcwfQ.m8oYJMxrUvgefG99hKKOfRquE9HMVNKcw9Py3hTQK00"
+        "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api"
       }
     }
   },

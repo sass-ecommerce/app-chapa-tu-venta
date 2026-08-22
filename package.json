@@ -8,7 +8,10 @@
     "android:build": "expo run:android",
     "ios": "expo start -c --ios",
     "web": "expo start -c --web",
-    "clean": "rm -rf .expo node_modules"
+    "clean": "rm -rf .expo node_modules",
+    "build:android:preview": "eas build --platform android --profile preview --local",
+    "build:android:development": "eas build --platform android --profile development --local",
+    "build:android:production": "eas build --platform android --profile production --local"
   },
   "dependencies": {
     "@react-native-picker/picker": "2.11.1",
@@ -71,6 +74,7 @@
     "@babel/core": "^7.26.0",
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.12",
+    "eas-cli": "^22.2.0",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "typescript": "~5.9.2"
