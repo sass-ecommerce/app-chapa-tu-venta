@@ -6,7 +6,6 @@ import { Image } from 'expo-image';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import type { Product } from '@/features/products/api/products';
-import { useProductImageUrl } from '@/features/products/queries';
 
 type ProductCardProps = {
   product: Product;
@@ -17,7 +16,7 @@ export const ProductCard = React.memo(
     const router = useRouter();
     const primaryImage =
       product.images.find((img) => img.isPrimary) ?? product.images[0] ?? null;
-    const { data: imageUrl } = useProductImageUrl(primaryImage?.s3Key);
+    const imageUrl = primaryImage?.url;
 
     return (
       <Pressable onPress={() => router.push(`/products/${product.id}`)} className="active:opacity-90">

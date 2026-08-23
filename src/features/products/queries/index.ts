@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { getProductsPage, getProduct, createProduct } from '../api/products';
 import { getPresignedUploadUrl, getPresignedViewUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
@@ -87,11 +87,7 @@ export function useUploadProductImageMutation() {
 }
 
 export function useCreateProductMutation() {
-  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateProductData) => createProduct(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
-    },
   });
 }

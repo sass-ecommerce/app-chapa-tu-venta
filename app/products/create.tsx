@@ -59,6 +59,15 @@ type ImageAsset = {
   fileName: string;
 };
 
+const EXT_TO_MIME: Record<string, string> = {
+  heic: 'image/heic',
+  heif: 'image/heif',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+};
+
 const MAX_IMAGES = 6;
 const CUSTOM_ATTRIBUTE_VALUE = '__custom__';
 const DESCRIPTION_MIN_HEIGHT = 90;
@@ -161,8 +170,9 @@ export default function CreateProductScreen() {
   const toggleStep = (id: StepId) => setOpenStep((prev) => (prev === id ? ('' as StepId) : id));
 
   const addImageAsset = (asset: ImagePicker.ImagePickerAsset) => {
-    const mimeType = asset.mimeType ?? 'image/jpeg';
-    const ext = mimeType.split('/')[1] ?? 'jpeg';
+    const uriExt = asset.uri.split('.').pop()?.toLowerCase();
+    const mimeType = asset.mimeType ?? EXT_TO_MIME[uriExt ?? ''] ?? 'image/jpeg';
+    const ext = mimeType.split('/')[1] ?? uriExt ?? 'jpeg';
     setImageAssets((prev) => [
       ...prev,
       {
@@ -228,14 +238,7 @@ export default function CreateProductScreen() {
     );
   };
 
-  const availableOptionsFor = (rowIndex: number) =>
-    PRODUCT_ATTRIBUTE_OPTIONS.filter(
-      (opt) =>
-        opt.value === attributeRows[rowIndex].attributeKey ||
-        !attributeRows.some((r) => r.attributeKey === opt.value)
-    );
-
-  const allAttributeOptionsUsed = attributeRows.length >= PRODUCT_ATTRIBUTE_OPTIONS.length;
+  const availableOptionsFor = (_rowIndex: number) => PRODUCT_ATTRIBUTE_OPTIONS;
 
   const openCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -325,9 +328,35 @@ export default function CreateProductScreen() {
     },
   });
 
-  const attributesComplete = attributeRows.every(
-    (row) => row.attributeKey && row.value.trim().length > 0
+  const findDuplicateAttributeRowIndex = (index: number) => {
+    const row = attributeRows[index];
+    if (!row.attributeKey || row.value.trim().length === 0) return -1;
+    return attributeRows.findIndex(
+      (r, i) =>
+        i !== index &&
+        r.attributeKey === row.attributeKey &&
+        r.value.trim().toLowerCase() === row.value.trim().toLowerCase()
+    );
+  };
+
+  const hasDuplicateAttributeValues = attributeRows.some(
+    (_, index) => findDuplicateAttributeRowIndex(index) !== -1
   );
+
+  const availableValueSuggestionsFor = (rowIndex: number, suggestions: string[]) => {
+    const row = attributeRows[rowIndex];
+    return suggestions.filter(
+      (s) =>
+        s === row.value ||
+        !attributeRows.some(
+          (r, i) => i !== rowIndex && r.attributeKey === row.attributeKey && r.value === s
+        )
+    );
+  };
+
+  const attributesComplete =
+    attributeRows.every((row) => row.attributeKey && row.value.trim().length > 0) &&
+    !hasDuplicateAttributeValues;
 
   return (
     <View className="flex-1 bg-background">
@@ -635,6 +664,7 @@ export default function CreateProductScreen() {
                             const suggestions =
                               PRODUCT_ATTRIBUTE_VALUE_SUGGESTIONS[row.attributeKey] ?? [];
                             const showValueList = suggestions.length > 0 && !row.isCustomValue;
+                            const isDuplicateValue = findDuplicateAttributeRowIndex(index) !== -1;
 
                             return (
                               <View key={index} className="gap-1.5">
@@ -669,14 +699,16 @@ export default function CreateProductScreen() {
                                       </SelectTrigger>
                                       <SelectContent>
                                         <SelectGroup>
-                                          {suggestions.map((suggestion) => (
-                                            <SelectItem
-                                              key={suggestion}
-                                              label={suggestion}
-                                              value={suggestion}>
-                                              {suggestion}
-                                            </SelectItem>
-                                          ))}
+                                          {availableValueSuggestionsFor(index, suggestions).map(
+                                            (suggestion) => (
+                                              <SelectItem
+                                                key={suggestion}
+                                                label={suggestion}
+                                                value={suggestion}>
+                                                {suggestion}
+                                              </SelectItem>
+                                            )
+                                          )}
                                         </SelectGroup>
                                         <SelectSeparator />
                                         <SelectItem
@@ -692,7 +724,11 @@ export default function CreateProductScreen() {
                                       value={row.value}
                                       onChangeText={(text) => updateAttributeValueText(index, text)}
                                       editable={!!row.attributeKey}
-                                      className={cn('h-10 flex-1', !row.attributeKey && 'opacity-50')}
+                                      className={cn(
+                                        'h-10 flex-1',
+                                        !row.attributeKey && 'opacity-50',
+                                        isDuplicateValue && 'border-destructive'
+                                      )}
                                     />
                                   )}
 
@@ -712,6 +748,12 @@ export default function CreateProductScreen() {
                                     </Text>
                                   </Pressable>
                                 )}
+
+                                {isDuplicateValue && (
+                                  <Text className="text-xs font-medium text-destructive">
+                                    Este valor ya fue agregado para este atributo
+                                  </Text>
+                                )}
                               </View>
                             );
                           })}
@@ -720,15 +762,9 @@ export default function CreateProductScreen() {
 
                       <Pressable
                         onPress={addAttributeRow}
-                        disabled={allAttributeOptionsUsed}
-                        className={cn(
-                          'flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 active:opacity-70',
-                          allAttributeOptionsUsed && 'opacity-50'
-                        )}>
+                        className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 active:opacity-70">
                         <Icon as={Plus} className="text-primary" size={16} />
-                        <Text className="text-sm font-medium text-primary">
-                          {allAttributeOptionsUsed ? 'Todos los atributos agregados' : 'Agregar atributo'}
-                        </Text>
+                        <Text className="text-sm font-medium text-primary">Agregar atributo</Text>
                       </Pressable>
                     </StepCard>
 
@@ -798,6 +834,7 @@ export default function CreateProductScreen() {
                   name.trim().length === 0 && 'nombre del producto',
                   categoryId.trim().length === 0 && 'categoría',
                   basePrice <= 0 && 'precio',
+                  hasDuplicateAttributeValues && 'atributos duplicados',
                 ].filter(Boolean) as string[];
                 const blocked = missing.length > 0;
                 const missingLabel =

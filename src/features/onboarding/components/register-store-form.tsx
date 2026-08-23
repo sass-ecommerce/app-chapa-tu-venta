@@ -31,6 +31,7 @@ function toSlug(text: string) {
 export function RegisterStoreForm() {
   const logoutMutation = useLogoutMutation();
   const createTenantMutation = useCreateTenantMutation();
+  const isCreatingRef = React.useRef(false);
 
   const form = useForm({
     defaultValues: {
@@ -38,6 +39,8 @@ export function RegisterStoreForm() {
       domain: '',
     },
     onSubmit: async ({ value }) => {
+      if (isCreatingRef.current) return;
+      isCreatingRef.current = true;
       try {
         await createTenantMutation.mutateAsync({
           name: value.name,
@@ -45,6 +48,7 @@ export function RegisterStoreForm() {
         });
         router.replace('/(tabs)');
       } catch (error) {
+        isCreatingRef.current = false;
         Alert.alert('Error', 'No se pudo crear la tienda. Por favor, intenta de nuevo.', [
           { text: 'OK' },
         ]);
@@ -151,7 +155,9 @@ export function RegisterStoreForm() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    disabled={logoutMutation.isPending}
+                    disabled={
+                      logoutMutation.isPending || isSubmitting || createTenantMutation.isPending
+                    }
                     onPress={() => logoutMutation.mutate()}>
                     <Text>Cerrar sesión</Text>
                   </Button>

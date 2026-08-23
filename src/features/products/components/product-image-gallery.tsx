@@ -3,7 +3,6 @@ import { Dimensions, ScrollView, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Text } from '@/shared/components/ui/text';
-import { useProductImageUrl } from '@/features/products/queries';
 import type { ProductImage } from '@/features/products/types';
 
 interface GalleryImageProps {
@@ -13,7 +12,7 @@ interface GalleryImageProps {
 }
 
 function GalleryImage({ image, width, height }: GalleryImageProps) {
-  const { data: imageUrl } = useProductImageUrl(image.s3Key);
+  const imageUrl = image.url;
 
   return (
     <View style={{ width, height }} className="items-center justify-center bg-muted">

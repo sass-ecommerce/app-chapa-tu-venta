@@ -6,7 +6,6 @@ import { Text } from '@/shared/components/ui/text';
 import { Card } from '@/shared/components/ui/card';
 import { ChevronRight } from 'lucide-react-native';
 import type { Product } from '@/features/products/api/products';
-import { useProductImageUrl } from '@/features/products/queries';
 
 interface ProductCardListProps {
   product: Product;
@@ -17,7 +16,7 @@ export const ProductCardList = React.memo(
     const router = useRouter();
     const primaryImage =
       product.images.find((img) => img.isPrimary) ?? product.images[0] ?? null;
-    const { data: imageUrl } = useProductImageUrl(primaryImage?.s3Key);
+    const imageUrl = primaryImage?.url;
 
     return (
       <Pressable onPress={() => router.push(`/products/${product.id}`)} className="active:opacity-90">

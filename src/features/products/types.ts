@@ -8,6 +8,7 @@ export interface ProductCategory {
 export interface ProductImage {
   id: string;
   s3Key: string;
+  url: string;
   isPrimary: boolean;
   sortOrder: number;
 }
