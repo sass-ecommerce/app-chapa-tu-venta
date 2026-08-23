@@ -9,7 +9,6 @@ import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
 
 import type { Product } from '@/features/products/api/products';
-import { useProductImageUrl } from '@/features/products/queries';
 
 interface ProductCardHorizontalProps {
   product: Product;
@@ -30,7 +29,7 @@ export const ProductCardHorizontal = React.memo(
   ({ product, onPress }: ProductCardHorizontalProps) => {
     const primaryImage =
       product.images.find((img) => img.isPrimary) ?? product.images[0] ?? null;
-    const { data: imageUrl } = useProductImageUrl(primaryImage?.s3Key);
+    const imageUrl = primaryImage?.url;
 
     return (
       <Pressable onPress={onPress} className="mb-2 active:scale-95" style={PRESSABLE_STYLE}>
