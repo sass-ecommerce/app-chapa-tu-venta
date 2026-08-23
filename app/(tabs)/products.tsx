@@ -15,7 +15,6 @@ import { Icon } from '@/shared/components/ui/icon';
 import { ProductCard } from '@/features/products/components/product-card';
 import { ProductCardList } from '@/features/products/components/product-card-list';
 import { ProductSkeletonGrid } from '@/features/products/components/product-skeleton';
-import { StatsHero } from '@/features/products/components/stats-hero';
 
 import { Search, Bell, Menu, Plus, Tag, Grid3x3, List } from 'lucide-react-native';
 import {
