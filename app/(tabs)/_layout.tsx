@@ -2,20 +2,21 @@ import { Tabs } from 'expo-router';
 import { HomeIcon, ShoppingBagIcon, UserIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
+
 export default function TabsLayout() {
   const { colorScheme } = useColorScheme();
-
-  const activeColor = colorScheme === 'dark' ? '#9333ea' : '#7c3aed';
-  const inactiveColor = colorScheme === 'dark' ? '#9CA3AF' : '#6B7280';
+  const theme = getVitrinaTheme(colorScheme === 'dark');
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: activeColor,
-        tabBarInactiveTintColor: inactiveColor,
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.muted,
         tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: colorScheme === 'dark' ? '#374151' : '#E5E7EB',
+          backgroundColor: theme.surface,
+          borderTopWidth: 1.5,
+          borderTopColor: theme.ink,
         },
       }}>
       <Tabs.Screen

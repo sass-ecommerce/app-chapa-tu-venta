@@ -1,14 +1,7 @@
 import * as React from 'react';
 import { Pressable } from 'react-native';
 
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  SlideInUp,
-  FadeIn,
-  ReduceMotion,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Plus } from 'lucide-react-native';
 
 import { cn } from '@/shared/utils/utils';
@@ -54,10 +47,6 @@ export function FAB({ onPress, icon, className, size = 'default' }: FABProps) {
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={animatedStyle}
-      entering={SlideInUp.springify()
-        .damping(ANIMATION.BOUNCE.damping)
-        .stiffness(ANIMATION.BOUNCE.stiffness)
-        .reduceMotion(ReduceMotion.System)}
       className={cn(
         'items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/30',
         sizeClasses[size],

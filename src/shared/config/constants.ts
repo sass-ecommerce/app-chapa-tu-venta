@@ -25,10 +25,6 @@ export const ANIMATION = {
     damping: 15,
     stiffness: 150,
   },
-  BOUNCE: {
-    damping: 10,
-    stiffness: 100,
-  },
 } as const;
 
 // Gradient presets for vibrancy

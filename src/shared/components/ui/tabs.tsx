@@ -20,9 +20,19 @@ interface TabsProps {
   value: string;
   onValueChange: (value: string) => void;
   className?: string;
+  /** Overrides the active indicator + active count badge (defaults to the `primary` token). */
+  accentColor?: string;
+  accentForeground?: string;
 }
 
-export function Tabs({ tabs, value, onValueChange, className }: TabsProps) {
+export function Tabs({
+  tabs,
+  value,
+  onValueChange,
+  className,
+  accentColor,
+  accentForeground = '#fff',
+}: TabsProps) {
   const [tabWidths, setTabWidths] = React.useState<number[]>([]);
   const [tabPositions, setTabPositions] = React.useState<number[]>([]);
   const indicatorLeft = useSharedValue(0);
@@ -91,13 +101,17 @@ export function Tabs({ tabs, value, onValueChange, className }: TabsProps) {
                     <View
                       className={cn(
                         'min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5',
-                        isActive ? 'bg-primary' : 'bg-muted'
-                      )}>
+                        isActive && !accentColor && 'bg-primary',
+                        !isActive && 'bg-muted'
+                      )}
+                      style={isActive && accentColor ? { backgroundColor: accentColor } : undefined}>
                       <Text
                         className={cn(
                           'text-xs font-bold',
-                          isActive ? 'text-primary-foreground' : 'text-muted-foreground'
-                        )}>
+                          isActive && !accentColor && 'text-primary-foreground',
+                          !isActive && 'text-muted-foreground'
+                        )}
+                        style={isActive && accentColor ? { color: accentForeground } : undefined}>
                         {tab.count}
                       </Text>
                     </View>
@@ -106,7 +120,10 @@ export function Tabs({ tabs, value, onValueChange, className }: TabsProps) {
               </Pressable>
             );
           })}
-          <Animated.View style={indicatorStyle} className="bg-primary" />
+          <Animated.View
+            style={[indicatorStyle, accentColor ? { backgroundColor: accentColor } : null]}
+            className={cn(!accentColor && 'bg-primary')}
+          />
         </View>
       </ScrollView>
     </View>

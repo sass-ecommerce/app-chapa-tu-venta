@@ -57,3 +57,12 @@ export async function createProduct(payload: CreateProductData): Promise<{ id: s
     throw error;
   }
 }
+
+export async function deleteProduct(id: string): Promise<void> {
+  try {
+    await apiClient.delete(`/products/${id}`);
+  } catch (error) {
+    console.error('❌ [deleteProduct] Error:', error instanceof Error ? error.message : error);
+    throw error;
+  }
+}

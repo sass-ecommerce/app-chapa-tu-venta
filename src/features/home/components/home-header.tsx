@@ -1,76 +1,90 @@
 import * as React from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { LinearGradient } from 'expo-linear-gradient';
+import { Bell } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
+import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
+
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 
 interface HomeHeaderProps {
   firstName?: string;
   lastName?: string;
   avatarUrl?: string;
-  onNotificationsPress?: () => void;
-  onSettingsPress?: () => void;
   notificationCount?: number;
+  onNotificationsPress?: () => void;
 }
 
 /**
- * Modern home header with gradient text, avatar, and action buttons
+ * Vitrina de mercado header: bold greeting, a magenta date sticker
+ * (the price-tag detail), and a notification button in the same
+ * outlined-tag language as the rest of the screen.
  */
-export function HomeHeader({ firstName, lastName, avatarUrl }: HomeHeaderProps) {
+export function HomeHeader({
+  firstName,
+  lastName,
+  avatarUrl,
+  notificationCount = 0,
+  onNotificationsPress,
+}: HomeHeaderProps) {
   const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const theme = getVitrinaTheme(colorScheme === 'dark');
 
-  // Get current date and time
-  const [currentTime, setCurrentTime] = React.useState(new Date());
-
+  const [now, setNow] = React.useState(new Date());
   React.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
+    const timer = setInterval(() => setNow(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // Get user initials for avatar fallback
   const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  const dateLabel = now
+    .toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
+    .replace('.', '')
+    .toUpperCase();
 
   return (
-    <View className="mb-6">
-      {/* Main Row: Avatar and Greeting */}
-      <View className="flex-row items-center gap-4">
-        {/* Avatar */}
-        <Avatar alt={`${firstName} ${lastName}`} className="h-16 w-16 border-2 border-primary">
+    <View className="mb-6 flex-row items-center justify-between gap-3">
+      <View className="flex-1 flex-row items-center gap-3">
+        <Avatar
+          alt={`${firstName} ${lastName}`}
+          className="h-14 w-14"
+          style={{ borderWidth: 2, borderColor: theme.ink }}>
           {avatarUrl && <AvatarImage source={{ uri: avatarUrl }} />}
           <AvatarFallback>
-            <Text className="text-xl font-bold text-primary-foreground">{initials}</Text>
+            <Text className="text-lg font-black">{initials}</Text>
           </AvatarFallback>
         </Avatar>
 
-        {/* Greeting with Gradient Text */}
         <View className="flex-1">
-          <Text className="text-base font-normal text-muted-foreground">Hola de nuevo,</Text>
-
-          {/* Gradient Text Effect */}
-          <View className="mt-1">
-            <LinearGradient
-              colors={
-                isDark
-                  ? (['#a78bfa', '#c084fc', '#e879f9'] as [string, string, ...string[]])
-                  : (['#7c3aed', '#9333ea', '#a855f7'] as [string, string, ...string[]])
-              }
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{ borderRadius: 8 }}>
-              <Text className="px-2 py-1 text-2xl font-bold text-white">
-                {firstName || 'Usuario'} {lastName || ''}!
-              </Text>
-            </LinearGradient>
+          <Text
+            className="text-xl font-black uppercase leading-tight tracking-tight"
+            numberOfLines={1}>
+            ¡Hola, {firstName || 'vendedor'}!
+          </Text>
+          <View
+            className="mt-1.5 self-start rounded-full px-2.5 py-1"
+            style={{ backgroundColor: theme.accent }}>
+            <Text className="text-[10px] font-bold text-white">{dateLabel}</Text>
           </View>
         </View>
       </View>
+
+      <Pressable
+        onPress={onNotificationsPress}
+        className="h-11 w-11 items-center justify-center rounded-lg border active:opacity-70"
+        style={{ borderColor: theme.ink }}>
+        <Icon as={Bell} size={18} color={theme.ink} />
+        {notificationCount > 0 && (
+          <View
+            className="absolute -right-1.5 -top-1.5 h-4 min-w-4 items-center justify-center rounded-full px-1"
+            style={{ backgroundColor: theme.bad }}>
+            <Text className="text-[9px] font-bold text-white">{notificationCount}</Text>
+          </View>
+        )}
+      </Pressable>
     </View>
   );
 }

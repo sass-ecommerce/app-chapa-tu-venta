@@ -12,11 +12,4 @@ export interface Transaction {
   name: string;
   date: string;
   amount: number;
-  icon: React.ReactNode;
-}
-
-export interface ChartColors {
-  completed: string;
-  pending: string;
-  cancelled: string;
 }

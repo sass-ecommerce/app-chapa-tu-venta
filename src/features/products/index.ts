@@ -1,6 +1,7 @@
 // Components
 export { ProductCard } from './components/product-card';
 export { ProductCardList } from './components/product-card-list';
+export { ProductSelectionBar } from './components/product-selection-bar';
 export { ProductSkeleton } from './components/product-skeleton';
 export { StatsHero } from './components/stats-hero';
 
@@ -9,6 +10,7 @@ export {
   useProductsInfiniteQuery,
   useProductQuery,
   useCreateProductMutation,
+  useDeleteProductsMutation,
   productKeys,
 } from './queries';
 

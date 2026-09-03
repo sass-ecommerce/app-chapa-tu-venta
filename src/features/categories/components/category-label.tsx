@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { View, Alert, Pressable } from 'react-native';
 import { ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
+import { PriceTag } from '@/shared/components/ui/price-tag';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 import type { Category } from '../types';
 
 interface CategoryLabelProps {
@@ -15,6 +18,9 @@ interface CategoryLabelProps {
 }
 
 export function CategoryLabel({ category, onPress, onEdit, onDelete }: CategoryLabelProps) {
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
+
   const handleDeleteConfirm = () => {
     Alert.alert('Eliminar categoría', `¿Eliminar "${category.name}"?`, [
       { text: 'Cancelar', style: 'cancel' },
@@ -23,46 +29,55 @@ export function CategoryLabel({ category, onPress, onEdit, onDelete }: CategoryL
   };
 
   return (
-    <View className="flex-row items-stretch overflow-hidden rounded-xl border border-border bg-card">
-      <Pressable
-        onPress={onPress}
-        className="flex-1 flex-row items-center gap-3 py-4 pl-4 pr-2 active:bg-muted/30">
-        <Text className="flex-1 text-sm font-semibold text-foreground" numberOfLines={1}>
-          {category.name}
-        </Text>
-        {category.childrenCount > 0 && (
-          <View className="rounded-full bg-primary/10 px-2 py-0.5">
-            <Text className="text-xs font-semibold text-primary">{category.childrenCount}</Text>
-          </View>
-        )}
-      </Pressable>
+    <PriceTag fill={theme.surface} stroke={theme.ink} holeColor={theme.bg} cut={12}>
+      <View className="flex-row items-stretch">
+        <Pressable
+          onPress={onPress}
+          className="flex-1 flex-row items-center gap-3 py-4 pl-4 pr-2 active:opacity-70">
+          <Text className="flex-1 text-sm font-bold" numberOfLines={1}>
+            {category.name}
+          </Text>
+          {category.childrenCount > 0 && (
+            <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: theme.accent + '1A' }}>
+              <Text className="text-xs font-bold" style={{ color: theme.accent }}>
+                {category.childrenCount}
+              </Text>
+            </View>
+          )}
+        </Pressable>
 
-      <View className="flex-row items-center gap-1 pr-3">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Pressable className="rounded-full p-2 active:bg-muted">
-              <Icon as={MoreHorizontal} size={18} className="text-muted-foreground" />
-            </Pressable>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-40 p-0">
-            <Pressable
-              onPress={onEdit}
-              className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-              <Pencil size={16} color="#888" />
-              <Text className="text-sm">Editar</Text>
-            </Pressable>
-            <View className="h-px bg-border" />
-            <Pressable
-              onPress={handleDeleteConfirm}
-              className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
-              <Trash2 size={16} color="#ef4444" />
-              <Text className="text-sm text-destructive">Eliminar</Text>
-            </Pressable>
-          </PopoverContent>
-        </Popover>
+        <View className="flex-row items-center gap-1 pr-3">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Pressable className="rounded-full p-2 active:opacity-70">
+                <Icon as={MoreHorizontal} size={18} color={theme.muted} />
+              </Pressable>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-40 rounded-lg border-[1.5px] p-0"
+              style={{ borderColor: theme.ink, backgroundColor: theme.surface }}>
+              <Pressable
+                onPress={onEdit}
+                className="flex-row items-center gap-3 px-4 py-3 active:opacity-70">
+                <Pencil size={16} color={theme.ink} />
+                <Text className="text-sm">Editar</Text>
+              </Pressable>
+              <View className="h-px" style={{ backgroundColor: theme.ink + '20' }} />
+              <Pressable
+                onPress={handleDeleteConfirm}
+                className="flex-row items-center gap-3 px-4 py-3 active:opacity-70">
+                <Trash2 size={16} color={theme.bad} />
+                <Text className="text-sm font-semibold" style={{ color: theme.bad }}>
+                  Eliminar
+                </Text>
+              </Pressable>
+            </PopoverContent>
+          </Popover>
 
-        <Icon as={ChevronRight} size={16} className="text-muted-foreground/60" />
+          <Icon as={ChevronRight} size={16} color={theme.muted} />
+        </View>
       </View>
-    </View>
+    </PriceTag>
   );
 }

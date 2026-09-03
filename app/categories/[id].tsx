@@ -2,11 +2,13 @@ import * as React from 'react';
 import { View, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Plus, Tag } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
 import { Button } from '@/shared/components/ui/button';
 import { ScreenHeader } from '@/shared/components/screen-header';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 
 import { CategoryLabel } from '@/features/categories/components/category-label';
 import { CategoryFormModal } from '@/features/categories/components/category-form-modal';
@@ -21,6 +23,8 @@ import type { Category, CreateCategoryData } from '@/features/categories/types';
 export default function CategoryDetailScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
   const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
 
   const [formVisible, setFormVisible] = React.useState(false);
   const [editingCategory, setEditingCategory] = React.useState<Category | undefined>();
@@ -69,8 +73,10 @@ export default function CategoryDetailScreen() {
         <Pressable
           onPress={handleOpenCreateSub}
           className="flex-row items-center gap-1 active:opacity-60">
-          <Icon as={Plus} size={20} className="text-primary" />
-          <Text className="text-sm font-semibold text-primary">Nueva sub</Text>
+          <Icon as={Plus} size={20} color={theme.accent} />
+          <Text className="text-sm font-bold" style={{ color: theme.accent }}>
+            Nueva sub
+          </Text>
         </Pressable>
       }
     />
@@ -78,18 +84,18 @@ export default function CategoryDetailScreen() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-background">
+      <View className="flex-1 bg-[#FBF9F4] dark:bg-[#18140F]">
         <Stack.Screen options={{ headerShown: false }} />
         {header}
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#D9711A" />
+          <ActivityIndicator size="large" color={theme.accent} />
         </View>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <View className="flex-1 bg-[#FBF9F4] dark:bg-[#18140F]">
       <Stack.Screen options={{ headerShown: false }} />
       {header}
 
@@ -100,8 +106,8 @@ export default function CategoryDetailScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => refetch()}
-            colors={['#D9711A']}
-            tintColor="#D9711A"
+            colors={[theme.accent]}
+            tintColor={theme.accent}
           />
         }
         ListHeaderComponent={
@@ -133,18 +139,20 @@ export default function CategoryDetailScreen() {
         ItemSeparatorComponent={() => <View className="h-2" />}
         ListEmptyComponent={() => (
           <View className="items-center px-5 py-12">
-            <View className="mb-4 rounded-full bg-primary/10 p-4">
-              <Icon as={Tag} size={32} className="text-primary" />
+            <View className="mb-4 rounded-full p-4" style={{ backgroundColor: theme.accent + '1A' }}>
+              <Icon as={Tag} size={32} color={theme.accent} />
             </View>
-            <Text className="font-semibold text-foreground">Sin subcategorías</Text>
+            <Text className="font-black uppercase tracking-tight">Sin subcategorías</Text>
             <Text className="mt-1.5 text-center text-sm text-muted-foreground">
               Agrega subcategorías para organizar mejor esta categoría
             </Text>
-            <Button onPress={handleOpenCreateSub} className="mt-5 gap-2" size="sm">
-              <Icon as={Plus} size={16} className="text-primary-foreground" />
-              <Text className="text-sm font-semibold text-primary-foreground">
-                Nueva subcategoría
-              </Text>
+            <Button
+              onPress={handleOpenCreateSub}
+              className="mt-5 gap-2"
+              size="sm"
+              style={{ backgroundColor: theme.accent }}>
+              <Icon as={Plus} size={16} color="#fff" />
+              <Text className="text-sm font-bold text-white">Nueva subcategoría</Text>
             </Button>
           </View>
         )}

@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { Modal, View, KeyboardAvoidingView, Pressable } from 'react-native';
 import { X } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
 import { Label } from '@/shared/components/ui/label';
 import { Icon } from '@/shared/components/ui/icon';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 import type { Category, CreateCategoryData } from '../types';
 
 function toSlug(text: string): string {
@@ -37,6 +39,8 @@ export function CategoryFormModal({
   editCategory,
   parentName,
 }: CategoryFormModalProps) {
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
   const [name, setName] = React.useState('');
   const [slug, setSlug] = React.useState('');
 
@@ -73,14 +77,14 @@ export function CategoryFormModal({
         behavior="padding"
         style={{ flex: 1 }}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View className="rounded-t-3xl bg-background px-6 pb-10 pt-4">
+          <View className="rounded-t-3xl px-6 pb-10 pt-4" style={{ backgroundColor: theme.surface }}>
             {/* Drag handle */}
-            <View className="mb-5 h-1 w-10 self-center rounded-full bg-muted-foreground/30" />
+            <View className="mb-5 h-1 w-10 self-center rounded-full" style={{ backgroundColor: theme.ink + '30' }} />
 
             {/* Header */}
             <View className="mb-6 flex-row items-start justify-between">
               <View className="flex-1 pr-4">
-                <Text className="text-xl font-bold text-foreground">
+                <Text className="text-xl font-black uppercase tracking-tight">
                   {isEditing ? 'Editar categoría' : 'Nueva categoría'}
                 </Text>
                 {parentName && (
@@ -89,8 +93,8 @@ export function CategoryFormModal({
                   </Text>
                 )}
               </View>
-              <Pressable onPress={onClose} className="rounded-full p-1.5 active:bg-muted">
-                <Icon as={X} size={20} className="text-muted-foreground" />
+              <Pressable onPress={onClose} className="rounded-full p-1.5 active:opacity-70">
+                <Icon as={X} size={20} color={theme.muted} />
               </Pressable>
             </View>
 
@@ -101,7 +105,9 @@ export function CategoryFormModal({
                 placeholder="Ej: Bebidas"
                 value={name}
                 onChangeText={handleNameChange}
-                className="h-12"
+                className="h-12 rounded-lg border-[1.5px] shadow-none"
+                style={{ borderColor: theme.ink, backgroundColor: theme.bg, color: theme.ink }}
+                placeholderTextColor={theme.muted}
                 autoFocus
               />
             </View>
@@ -115,15 +121,20 @@ export function CategoryFormModal({
               <Input
                 value={slug}
                 editable={false}
-                className="h-12 bg-muted/40"
+                className="h-12 rounded-lg border-[1.5px] shadow-none"
+                style={{ borderColor: theme.ink + '30', backgroundColor: theme.bg, color: theme.muted }}
                 placeholderTextColor="transparent"
               />
             </View>
 
             {/* Actions */}
             <View className="gap-3">
-              <Button onPress={handleSave} disabled={!isValid || isLoading} size="lg">
-                <Text className="font-semibold">
+              <Button
+                onPress={handleSave}
+                disabled={!isValid || isLoading}
+                size="lg"
+                style={{ backgroundColor: theme.accent, opacity: !isValid || isLoading ? 0.5 : 1 }}>
+                <Text className="font-bold text-white">
                   {isLoading
                     ? 'Guardando...'
                     : isEditing
@@ -131,8 +142,12 @@ export function CategoryFormModal({
                       : 'Crear categoría'}
                 </Text>
               </Button>
-              <Button variant="outline" size="lg" onPress={onClose}>
-                <Text>Cancelar</Text>
+              <Button
+                variant="outline"
+                size="lg"
+                onPress={onClose}
+                style={{ borderColor: theme.ink }}>
+                <Text style={{ color: theme.ink }}>Cancelar</Text>
               </Button>
             </View>
           </View>

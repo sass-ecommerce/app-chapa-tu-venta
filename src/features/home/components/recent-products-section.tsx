@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { router } from 'expo-router';
 import { ArrowRight } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
@@ -11,6 +12,7 @@ import type { Product } from '@/features/products/api/products';
 
 import { ProductCardHorizontal } from './product-card-horizontal';
 import { ProductListSkeleton } from './skeleton-loader';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 import { PRODUCTS_SCROLL_CONTENT_STYLE } from '../utils/utils';
 
 interface RecentProductsSectionProps {
@@ -30,16 +32,22 @@ export function RecentProductsSection({
   products,
   onRefetch,
 }: RecentProductsSectionProps) {
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
+
   return (
     <View className="mb-6">
       {/* Enhanced Header with Icon */}
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-foreground">Productos Recientes</Text>
+        <Text className="text-lg font-black uppercase tracking-tight">Productos Recientes</Text>
         <Pressable
           onPress={() => router.push('/(tabs)/products')}
-          className="flex-row items-center gap-1 rounded-lg bg-primary/10 px-3 py-2 active:opacity-70">
-          <Text className="text-sm font-semibold text-primary">Ver todo</Text>
-          <Icon as={ArrowRight} size={16} className="text-primary" />
+          className="flex-row items-center gap-1 rounded-full px-3 py-1.5 active:opacity-70"
+          style={{ backgroundColor: theme.accent + '1A' }}>
+          <Text className="text-xs font-bold" style={{ color: theme.accent }}>
+            Ver todo
+          </Text>
+          <Icon as={ArrowRight} size={14} color={theme.accent} />
         </Pressable>
       </View>
 
@@ -88,15 +96,16 @@ export function RecentProductsSection({
 
       {/* Empty State */}
       {!isLoading && !error && (!products || products.length === 0) && (
-        <View className="items-center rounded-2xl bg-muted/50 p-8">
-          <Text className="mb-1 text-base font-semibold text-foreground">No hay productos aún</Text>
+        <View className="items-center rounded-lg border border-dashed border-muted-foreground/30 p-8">
+          <Text className="mb-1 text-base font-bold text-foreground">No hay productos aún</Text>
           <Text className="mb-4 text-center text-sm text-muted-foreground">
             Comienza agregando tu primer producto
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/products')}
-            className="rounded-lg bg-primary px-4 py-2 active:opacity-80">
-            <Text className="text-sm font-semibold text-primary-foreground">Agregar Producto</Text>
+            className="rounded-md px-4 py-2 active:opacity-80"
+            style={{ backgroundColor: theme.accent }}>
+            <Text className="text-sm font-bold text-white">Agregar Producto</Text>
           </Pressable>
         </View>
       )}

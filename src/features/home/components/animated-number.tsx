@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { Text } from '@/shared/components/ui/text';
 
@@ -6,6 +7,7 @@ interface AnimatedNumberProps {
   value: number;
   duration?: number;
   className?: string;
+  style?: StyleProp<TextStyle>;
   prefix?: string;
   suffix?: string;
   decimals?: number;
@@ -19,6 +21,7 @@ export function AnimatedNumber({
   value,
   duration = 1000,
   className = '',
+  style,
   prefix = '',
   suffix = '',
   decimals = 0,
@@ -54,7 +57,7 @@ export function AnimatedNumber({
   const formattedValue = displayValue.toFixed(decimals);
 
   return (
-    <Text className={className}>
+    <Text className={className} style={style}>
       {prefix}
       {formattedValue}
       {suffix}

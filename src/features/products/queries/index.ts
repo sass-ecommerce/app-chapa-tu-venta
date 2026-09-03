@@ -1,5 +1,5 @@
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { getProductsPage, getProduct, createProduct } from '../api/products';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getProductsPage, getProduct, createProduct, deleteProduct } from '../api/products';
 import { getPresignedUploadUrl, getPresignedViewUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
 import { compressProductImage } from '@/shared/utils/image-compression';
@@ -89,5 +89,15 @@ export function useUploadProductImageMutation() {
 export function useCreateProductMutation() {
   return useMutation({
     mutationFn: (data: CreateProductData) => createProduct(data),
+  });
+}
+
+export function useDeleteProductsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => deleteProduct(id))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+    },
   });
 }

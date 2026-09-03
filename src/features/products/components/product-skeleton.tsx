@@ -1,16 +1,22 @@
 import * as React from 'react';
 import { View } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { Skeleton } from '@/shared/components/ui/skeleton';
-import { Card } from '@/shared/components/ui/card';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 
 export function ProductSkeleton() {
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
+
   return (
-    <Card className="w-full overflow-hidden rounded-xl bg-card">
-      {/* Image skeleton */}
-      <Skeleton className="h-36 w-full rounded-none" />
+    <View
+      className="w-full overflow-hidden rounded-sm border p-2.5 pt-3"
+      style={{ borderColor: theme.ink + '2A', backgroundColor: theme.surface }}>
+      {/* Image skeleton — same inset proportions as the loaded price tag */}
+      <Skeleton className="h-28 w-full rounded-sm" />
 
       {/* Content skeleton */}
-      <View className="gap-2 px-3 pb-3 pt-2">
+      <View className="gap-2 pb-1 pt-2.5">
         {/* Title */}
         <Skeleton className="h-4 w-3/4" />
 
@@ -26,7 +32,7 @@ export function ProductSkeleton() {
           <Skeleton className="h-3 w-12" />
         </View>
       </View>
-    </Card>
+    </View>
   );
 }
 
