@@ -170,24 +170,25 @@ export default function ProductosScreen() {
   const renderHeader = React.useCallback(() => {
     return (
       <View className="pt-12">
-        {/* Title + menu + notification bell */}
-        <View className="flex-row items-start justify-between gap-3 px-5 pb-4">
-          <View className="flex-1">
-            <Text className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.ink }}>
-              Mis productos
+        {/* Title */}
+        <View className="px-5 pb-4">
+          <Text className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.ink }}>
+            Mis productos
+          </Text>
+          {!isLoading && !error && products && (
+            <Text className="mt-1 text-xs font-semibold" style={{ color: theme.muted }}>
+              {totalCount.toLocaleString('es-PE')} productos
+              {categories.length > 0 ? ` · ${categories.length} categorías` : ''}
             </Text>
-            {!isLoading && !error && products && (
-              <Text className="mt-1 text-xs font-semibold" style={{ color: theme.muted }}>
-                {totalCount.toLocaleString('es-PE')} productos
-                {categories.length > 0 ? ` · ${categories.length} categorías` : ''}
-              </Text>
-            )}
-          </View>
+          )}
+        </View>
 
+        {/* Menu + search + filter toggle, same pill shape as the escaparate reference */}
+        <View className="flex-row items-center gap-2 px-5 pb-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Pressable
-                className="h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
+                className="h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-70"
                 style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
                 <Icon as={Menu} size={19} color={theme.ink} />
               </Pressable>
@@ -212,10 +213,7 @@ export default function ProductosScreen() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </View>
 
-        {/* Search + filter toggle, same pill shape as the escaparate reference */}
-        <View className="flex-row items-center gap-2 px-5 pb-3">
           <View className="relative flex-1">
             <Input
               placeholder="Buscar producto…"
