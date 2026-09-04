@@ -6,6 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { useProductsInfiniteQuery } from '@/features/products/queries';
 
 import { HomeHeader } from '@/features/home/components/home-header';
+import { QuickSaleBar } from '@/features/home/components/quick-sale-bar';
 import { SalesSummaryCard } from '@/features/home/components/sales-summary-card';
 import { RecentProductsSection } from '@/features/home/components/recent-products-section';
 import { RecentSalesSection } from '@/features/home/components/recent-sales-section';
@@ -74,7 +75,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-[#FBF9F4] dark:bg-[#18140F]"
+      className="flex-1 bg-[#F6F5FB] dark:bg-[#101018]"
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -84,7 +85,7 @@ export default function HomeScreen() {
         />
       }>
       <View className="px-5 pt-12">
-        {/* Vitrina de mercado header: bold greeting + date sticker */}
+        {/* Escaparate header: soft avatar + plain greeting */}
         <HomeHeader
           firstName={user?.firstName}
           lastName={user?.lastName}
@@ -96,7 +97,17 @@ export default function HomeScreen() {
           }}
         />
 
-        {/* Sales stats as price tags, total as a magenta tag */}
+        {/* Reuses the reference app's search-bar shape as the "register a
+            sale" entry point — no sale-creation screen exists yet, so this
+            is visual-only for now (same TODO pattern as the bell above). */}
+        <QuickSaleBar
+          onPress={() => {
+            console.log('🧾 [Home] Registrar venta pressed');
+            // TODO: Navigate to sale-registration flow once it exists
+          }}
+        />
+
+        {/* Balance-card hero: total + order-state chips */}
         <SalesSummaryCard salesData={mockSalesData} />
 
         {/* Recent Products Section with Skeletons */}
@@ -107,10 +118,10 @@ export default function HomeScreen() {
           onRefetch={refetchProducts}
         />
 
-        {/* Recent Sales Section as ticket stubs */}
+        {/* Recent Sales Section as statement rows */}
         <RecentSalesSection transactions={transactions} />
 
-        {/* Extra space for bottom nav */}
+        {/* Bottom breathing room */}
         <View className="h-6" />
       </View>
     </ScrollView>

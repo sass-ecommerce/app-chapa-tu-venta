@@ -17,18 +17,15 @@ import { useColorScheme } from 'nativewind';
 import { Text } from '@/shared/components/ui/text';
 import { Input } from '@/shared/components/ui/input';
 import { Button } from '@/shared/components/ui/button';
-import { Tabs } from '@/shared/components/ui/tabs';
 import { Chip } from '@/shared/components/ui/chip';
-import { PriceTag } from '@/shared/components/ui/price-tag';
 import { FAB } from '@/shared/components/ui/fab';
 import { Icon } from '@/shared/components/ui/icon';
 
 import { ProductCard } from '@/features/products/components/product-card';
-import { ProductCardList } from '@/features/products/components/product-card-list';
 import { ProductSkeletonGrid } from '@/features/products/components/product-skeleton';
 import { ProductSelectionBar } from '@/features/products/components/product-selection-bar';
 
-import { Search, Bell, Menu, Plus, Tag, Grid3x3, List } from 'lucide-react-native';
+import { Search, Bell, Menu, Plus, SlidersHorizontal, Tag } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,7 +44,6 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 
 import { useProductsStore } from '@/features/products/utils/products-store';
-import type { TabValue, SortBy } from '@/features/products/utils/products-store';
 import {
   SELECTION_MODE_ENTERING,
   SELECTION_MODE_EXITING,
@@ -57,17 +53,6 @@ import { useCategories } from '@/features/categories/queries/use-categories';
 import type { Product } from '@/features/products/api/products';
 import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 
-// Type guard to validate tab value
-function isValidTabValue(value: string): value is TabValue {
-  return value === 'all' || value === 'active' || value === 'inactive';
-}
-
-const SORT_LABELS: Record<SortBy, string> = {
-  recent: 'Recientes',
-  price_asc: 'Precio ↑',
-  price_desc: 'Precio ↓',
-};
-
 export default function ProductosScreen() {
   const router = useRouter();
   const { colorScheme } = useColorScheme();
@@ -76,18 +61,12 @@ export default function ProductosScreen() {
   // Zustand store states
   const searchQuery = useProductsStore((state) => state.searchQuery);
   const hasNotifications = useProductsStore((state) => state.hasNotifications);
-  const viewMode = useProductsStore((state) => state.viewMode);
-  const sortBy = useProductsStore((state) => state.sortBy);
-  const selectedTab = useProductsStore((state) => state.selectedTab);
   const selectedCategories = useProductsStore((state) => state.selectedCategories);
   const selectionMode = useProductsStore((state) => state.selectionMode);
   const selectedProductIds = useProductsStore((state) => state.selectedProductIds);
 
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
   const toggleNotifications = useProductsStore((state) => state.toggleNotifications);
-  const setViewMode = useProductsStore((state) => state.setViewMode);
-  const setSortBy = useProductsStore((state) => state.setSortBy);
-  const setSelectedTab = useProductsStore((state) => state.setSelectedTab);
   const toggleCategory = useProductsStore((state) => state.toggleCategory);
   const enterSelectionMode = useProductsStore((state) => state.enterSelectionMode);
   const toggleProductSelection = useProductsStore((state) => state.toggleProductSelection);
@@ -172,13 +151,9 @@ export default function ProductosScreen() {
   const filteredProducts = React.useMemo(() => {
     if (!products) return [];
 
-    const filtered = products.filter((product) => {
+    return products.filter((product) => {
       const matchesSearch =
         searchQuery === '' || product.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-      let matchesTab = true;
-      if (selectedTab === 'active') matchesTab = product.isActive;
-      else if (selectedTab === 'inactive') matchesTab = !product.isActive;
 
       const productCategoryName = product.categoryId
         ? (categoryNameById[product.categoryId] ?? null)
@@ -187,203 +162,129 @@ export default function ProductosScreen() {
         selectedCategories.length === 0 ||
         (productCategoryName ? selectedCategories.includes(productCategoryName) : false);
 
-      return matchesSearch && matchesTab && matchesCategory;
+      return matchesSearch && matchesCategory;
     });
-
-    if (sortBy === 'price_asc') {
-      return [...filtered].sort((a, b) => a.basePrice - b.basePrice);
-    }
-    if (sortBy === 'price_desc') {
-      return [...filtered].sort((a, b) => b.basePrice - a.basePrice);
-    }
-    return filtered;
-  }, [products, searchQuery, selectedTab, selectedCategories, categoryNameById, sortBy]);
+  }, [products, searchQuery, selectedCategories, categoryNameById]);
 
   const totalCount = data?.pages[0]?.meta.total ?? filteredProducts.length;
-
-  // Tab data with counts
-  const tabs = React.useMemo(() => {
-    if (!products) return [];
-    return [
-      { value: 'all', label: 'Todos', count: products.length },
-      { value: 'active', label: 'Activos', count: products.filter((p) => p.isActive).length },
-      { value: 'inactive', label: 'Inactivos', count: products.filter((p) => !p.isActive).length },
-    ];
-  }, [products]);
 
   // Render header component with brand bar, search, stats, tabs, and filters
   const renderHeader = React.useCallback(() => {
     return (
       <View className="pt-12">
-        {/* Brand bar: menu, brand mark, notification bell */}
-        <View className="flex-row items-center justify-between gap-3 px-5 pb-3">
-          {/* Menu Button with DropdownMenu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Pressable
-                className="h-11 w-11 items-center justify-center rounded-lg border active:opacity-70"
-                style={{ borderColor: theme.ink }}>
-                <Icon as={Menu} size={19} color={theme.ink} />
-              </Pressable>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-56 rounded-lg border-[1.5px]"
-              style={{ borderColor: theme.ink, backgroundColor: theme.surface }}>
-              <DropdownMenuItem
-                onPress={() => router.push('/products/create')}
-                className="flex-row items-center gap-3">
-                <Icon as={Plus} size={18} color={theme.accent} />
-                <Text className="text-base font-semibold" style={{ color: theme.accent }}>
-                  Crear producto
-                </Text>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onPress={() => router.push('/categories')}
-                className="flex-row items-center gap-3">
-                <Icon as={Tag} size={18} color={theme.ink} />
-                <Text className="text-base">Gestionar categorías</Text>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Text
-            className="text-lg font-black uppercase tracking-tight"
-            style={{ color: theme.ink }}>
-            Vitrina
-          </Text>
-
-          {/* Notification Bell */}
-          <Pressable
-            onPress={toggleNotifications}
-            className="relative h-11 w-11 items-center justify-center rounded-lg border active:opacity-70"
-            style={{ borderColor: theme.ink }}>
-            <Icon as={Bell} size={19} color={theme.ink} />
-            {hasNotifications && (
-              <View
-                className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: theme.bad }}
-              />
-            )}
-          </Pressable>
-        </View>
-
-        {/* Search bar */}
-        <View className="px-5 pb-4">
-          <View className="relative">
-            <Input
-              placeholder="Buscar cualquier producto..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              className="h-12 rounded-full border-[1.5px] pl-12 shadow-none"
-              style={{ borderColor: theme.ink, backgroundColor: theme.surface, color: theme.ink }}
-              placeholderTextColor={theme.muted}
-            />
-            <View className="absolute left-4 top-3">
-              <Icon as={Search} size={20} color={theme.muted} />
-            </View>
-          </View>
-        </View>
-
-        {/* Tabs Navigation */}
-        {!isLoading && !error && products && (
-          <Tabs
-            tabs={tabs}
-            value={selectedTab}
-            onValueChange={(v) => {
-              if (isValidTabValue(v)) {
-                setSelectedTab(v);
-              }
-            }}
-            accentColor={theme.accent}
-          />
-        )}
-
-        {/* Item count + Sort + Filter + View toggle */}
-        {!isLoading && !error && products && (
-          <View className="flex-row items-center justify-between gap-2 px-5 py-4">
-            <Text className="text-base font-black" style={{ color: theme.ink }}>
-              {totalCount.toLocaleString('es-PE')}+ productos
+        {/* Title + menu + notification bell */}
+        <View className="flex-row items-start justify-between gap-3 px-5 pb-4">
+          <View className="flex-1">
+            <Text className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.ink }}>
+              Mis productos
             </Text>
+            {!isLoading && !error && products && (
+              <Text className="mt-1 text-xs font-semibold" style={{ color: theme.muted }}>
+                {totalCount.toLocaleString('es-PE')} productos
+                {categories.length > 0 ? ` · ${categories.length} categorías` : ''}
+              </Text>
+            )}
+          </View>
 
-            <View className="flex-row items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Pressable className="active:opacity-80">
-                    <PriceTag
-                      fill={sortBy !== 'recent' ? theme.accent : theme.surface}
-                      stroke={sortBy !== 'recent' ? theme.accent : theme.ink}
-                      holeColor={theme.bg}
-                      cut={10}>
-                      <View className="flex-row items-center gap-1.5 px-3.5 py-2">
-                        <Text
-                          className="text-sm font-bold"
-                          style={{ color: sortBy !== 'recent' ? '#fff' : theme.ink }}>
-                          {SORT_LABELS[sortBy]}
-                        </Text>
-                      </View>
-                    </PriceTag>
-                  </Pressable>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56 rounded-lg border-[1.5px]"
-                  style={{ borderColor: theme.ink, backgroundColor: theme.surface }}>
-                  <DropdownMenuItem onPress={() => setSortBy('recent')} className="flex-row items-center gap-3">
-                    <Text className="text-base">Recientes</Text>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onPress={() => setSortBy('price_asc')}
-                    className="flex-row items-center gap-3">
-                    <Text className="text-base">Precio: menor a mayor</Text>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onPress={() => setSortBy('price_desc')}
-                    className="flex-row items-center gap-3">
-                    <Text className="text-base">Precio: mayor a menor</Text>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          <View className="flex-row items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Pressable
+                  className="h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
+                  style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
+                  <Icon as={Menu} size={19} color={theme.ink} />
+                </Pressable>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-56 rounded-2xl border"
+                style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
+                <DropdownMenuItem
+                  onPress={() => router.push('/products/create')}
+                  className="flex-row items-center gap-3">
+                  <Icon as={Plus} size={18} color={theme.accent} />
+                  <Text className="text-base font-semibold" style={{ color: theme.accent }}>
+                    Crear producto
+                  </Text>
+                </DropdownMenuItem>
 
-              {categories.length > 0 && (
-                <Chip
-                  label="Filtrar"
-                  selected={filtersVisible || selectedCategories.length > 0}
-                  count={selectedCategories.length || undefined}
-                  accentColor={theme.accent}
-                  onPress={() => setFiltersVisible((v) => !v)}
+                <DropdownMenuItem
+                  onPress={() => router.push('/categories')}
+                  className="flex-row items-center gap-3">
+                  <Icon as={Tag} size={18} color={theme.ink} />
+                  <Text className="text-base">Gestionar categorías</Text>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Notification Bell */}
+            <Pressable
+              onPress={toggleNotifications}
+              className="relative h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
+              style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
+              <Icon as={Bell} size={19} color={theme.ink} />
+              {hasNotifications && (
+                <View
+                  className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border"
+                  style={{ backgroundColor: theme.bad, borderColor: theme.surface }}
                 />
               )}
+            </Pressable>
+          </View>
+        </View>
 
-              <Pressable
-                onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="h-9 w-9 items-center justify-center rounded-lg border active:opacity-70"
-                style={{ borderColor: theme.ink }}>
-                {viewMode === 'grid' ? (
-                  <Icon as={List} size={15} color={theme.ink} />
-                ) : (
-                  <Icon as={Grid3x3} size={15} color={theme.ink} />
-                )}
-              </Pressable>
+        {/* Search + filter toggle, same pill shape as the escaparate reference */}
+        <View className="flex-row items-center gap-2 px-5 pb-3">
+          <View className="relative flex-1">
+            <Input
+              placeholder="Buscar producto…"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              className="h-[52px] rounded-full border pl-12 shadow-none"
+              style={{ borderColor: theme.muted + '20', backgroundColor: theme.surface, color: theme.ink }}
+              placeholderTextColor={theme.muted}
+            />
+            <View className="absolute left-4 top-4">
+              <Icon as={Search} size={19} color={theme.muted} />
             </View>
           </View>
-        )}
 
-        {/* Category Chips (toggled by the Filter chip) */}
+          {categories.length > 0 && (
+            <Pressable
+              onPress={() => setFiltersVisible((v) => !v)}
+              className="relative h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-80"
+              style={{
+                borderColor: filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.muted + '20',
+                backgroundColor: filtersVisible || selectedCategories.length > 0 ? theme.accent + '14' : theme.surface,
+              }}>
+              <Icon
+                as={SlidersHorizontal}
+                size={18}
+                color={filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.ink}
+              />
+              {selectedCategories.length > 0 && (
+                <View
+                  className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
+                  style={{ backgroundColor: theme.accent }}
+                />
+              )}
+            </Pressable>
+          )}
+        </View>
+
+        {/* Category chips (toggled by the filter button) */}
         {!isLoading && !error && filtersVisible && categories.length > 0 && (
-          <View className="gap-3 px-5 pb-4">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View className="flex-row gap-2">
-                {categories.map((category) => (
-                  <Chip
-                    key={category.id}
-                    label={category.name}
-                    selected={selectedCategories.includes(category.name)}
-                    onPress={() => toggleCategory(category.name)}
-                    count={products?.filter((p) => p.categoryId === category.id).length}
-                    accentColor={theme.accent}
-                  />
-                ))}
-              </View>
+          <View className="pb-4">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+              {categories.map((category) => (
+                <Chip
+                  key={category.id}
+                  label={category.name}
+                  selected={selectedCategories.includes(category.name)}
+                  onPress={() => toggleCategory(category.name)}
+                  count={products?.filter((p) => p.categoryId === category.id).length}
+                  accentColor={theme.accent}
+                />
+              ))}
             </ScrollView>
           </View>
         )}
@@ -397,15 +298,7 @@ export default function ProductosScreen() {
     isLoading,
     error,
     products,
-    tabs,
-    selectedTab,
-    setSelectedTab,
     categories,
-    categoryNameById,
-    viewMode,
-    setViewMode,
-    sortBy,
-    setSortBy,
     totalCount,
     filtersVisible,
     selectedCategories,
@@ -453,7 +346,7 @@ export default function ProductosScreen() {
     );
   }, [isLoading, error, refetch, theme]);
 
-  // Render footer with pagination spinner + spacer for FAB
+  // Render footer with pagination spinner + spacer for the FAB
   const renderFooter = React.useCallback(() => {
     return (
       <View className="h-24 items-center justify-center">
@@ -462,51 +355,36 @@ export default function ProductosScreen() {
     );
   }, [isFetchingNextPage, theme.accent]);
 
-  // Render item based on view mode
   const renderItem = React.useCallback(
     ({ item }: { item: Product }) => {
       const selected = selectedProductIds.has(item.id);
-      if (viewMode === 'grid') {
-        return (
-          <View className="p-1.5">
-            <ProductCard
-              product={item}
-              selectionMode={selectionMode}
-              selected={selected}
-              onLongPress={handleLongPressProduct}
-              onToggleSelect={handleToggleSelect}
-            />
-          </View>
-        );
-      } else {
-        return (
-          <View className="px-5">
-            <ProductCardList
-              product={item}
-              selectionMode={selectionMode}
-              selected={selected}
-              onLongPress={handleLongPressProduct}
-              onToggleSelect={handleToggleSelect}
-            />
-          </View>
-        );
-      }
+      return (
+        <View className="p-1.5">
+          <ProductCard
+            product={item}
+            selectionMode={selectionMode}
+            selected={selected}
+            onLongPress={handleLongPressProduct}
+            onToggleSelect={handleToggleSelect}
+          />
+        </View>
+      );
     },
-    [viewMode, selectionMode, selectedProductIds, handleLongPressProduct, handleToggleSelect]
+    [selectionMode, selectedProductIds, handleLongPressProduct, handleToggleSelect]
   );
 
   return (
-    <View className="flex-1 bg-[#FBF9F4] dark:bg-[#18140F]">
+    <View className="flex-1 bg-[#F6F5FB] dark:bg-[#101018]">
       {/* Floating Action Button */}
       {!selectionMode && (
         <Animated.View
           entering={SELECTION_MODE_ENTERING}
           exiting={SELECTION_MODE_EXITING}
-          className="absolute bottom-6 right-6 z-50">
+          className="absolute bottom-6 right-5 z-50">
           <FAB
             onPress={() => router.push('/products/create')}
             size="large"
-            className="bg-[#C0289C] shadow-[#C0289C]/30 dark:bg-[#E85BC0] dark:shadow-[#E85BC0]/30"
+            className="bg-[#6C4FF2] shadow-[#6C4FF2]/30 dark:bg-[#8B6BFA] dark:shadow-[#8B6BFA]/30"
           />
         </Animated.View>
       )}
@@ -554,10 +432,9 @@ export default function ProductosScreen() {
         data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        numColumns={viewMode === 'grid' ? 2 : 1}
-        masonry={viewMode === 'grid'}
-        optimizeItemArrangement={viewMode === 'grid'}
-        key={viewMode} // Force re-render when switching between grid and list
+        numColumns={2}
+        masonry
+        optimizeItemArrangement
         extraData={[selectionMode, selectedProductIds]}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={renderEmpty}

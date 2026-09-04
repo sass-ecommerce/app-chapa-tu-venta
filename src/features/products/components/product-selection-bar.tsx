@@ -32,8 +32,8 @@ export function ProductSelectionBar({
     <Animated.View
       entering={SELECTION_MODE_ENTERING}
       exiting={SELECTION_MODE_EXITING}
-      className="absolute bottom-6 left-5 right-5 z-50 flex-row items-center justify-between rounded-lg border-2 px-4 py-3"
-      style={{ borderColor: theme.ink, backgroundColor: theme.surface }}>
+      className="absolute bottom-6 left-5 right-5 z-50 flex-row items-center justify-between rounded-2xl border px-4 py-3"
+      style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 8 }}>
       <Pressable
         onPress={onCancel}
         className="flex-row items-center gap-2 active:opacity-70"

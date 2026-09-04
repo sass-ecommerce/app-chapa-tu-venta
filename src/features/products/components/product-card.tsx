@@ -1,8 +1,7 @@
 import { AspectRatio } from '@/shared/components/ui/aspect-ratio';
-import { PriceTag } from '@/shared/components/ui/price-tag';
 import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
-import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
+import { getVitrinaTheme, NAV_BAR } from '@/shared/config/vitrina-palette';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { Check } from 'lucide-react-native';
@@ -40,70 +39,59 @@ export const ProductCard = React.memo(
       <Pressable
         onPress={handlePress}
         onLongPress={() => onLongPress?.(product)}
-        className="active:opacity-90">
-        <PriceTag
-          fill={theme.surface}
-          stroke={selected ? theme.accent : theme.ink}
-          strokeWidth={selected ? 2.5 : 2}
-          holeColor={theme.bg}>
-          <View className="p-2 pt-2.5">
-            <View className="relative overflow-hidden rounded-sm">
-              <AspectRatio ratio={1} style={{ backgroundColor: theme.bg }}>
-                {imageUrl ? (
-                  <Image
-                    source={{ uri: imageUrl }}
-                    style={{ width: '100%', height: '100%' }}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <View
-                    className="h-full w-full items-center justify-center"
-                    style={{ backgroundColor: theme.bg }}>
-                    <Text className="text-4xl">📦</Text>
-                  </View>
-                )}
-              </AspectRatio>
+        className="rounded-[20px] border p-2 active:opacity-90"
+        style={{
+          borderColor: selected ? theme.accent : theme.muted + '20',
+          borderWidth: selected ? 2 : 1,
+          backgroundColor: theme.surface,
+        }}>
+        <View className="relative overflow-hidden rounded-2xl">
+          <AspectRatio ratio={1} style={{ backgroundColor: theme.accent + '14' }}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            ) : (
+              <View className="h-full w-full items-center justify-center" style={{ backgroundColor: theme.accent + '14' }}>
+                <Text className="text-4xl">📦</Text>
+              </View>
+            )}
+          </AspectRatio>
 
-              {selectionMode && (
-                <View
-                  className="absolute left-2 top-2 h-6 w-6 items-center justify-center rounded-full border-2"
-                  style={{
-                    borderColor: '#fff',
-                    backgroundColor: selected ? theme.accent : 'rgba(0,0,0,0.3)',
-                  }}>
-                  {selected && <Icon as={Check} size={14} color="#fff" />}
-                </View>
-              )}
-
-              {product.category && (
-                <View
-                  className="absolute right-2 top-2 max-w-[70%] rounded-full px-2 py-0.5"
-                  style={{ backgroundColor: theme.surface + 'E6' }}>
-                  <Text
-                    className="text-[10px] font-bold"
-                    numberOfLines={1}
-                    style={{ color: theme.muted }}>
-                    {product.category.name}
-                  </Text>
-                </View>
-              )}
+          {selectionMode && (
+            <View
+              className="absolute left-2 top-2 h-6 w-6 items-center justify-center rounded-full border-2"
+              style={{
+                borderColor: '#fff',
+                backgroundColor: selected ? theme.accent : 'rgba(0,0,0,0.3)',
+              }}>
+              {selected && <Icon as={Check} size={14} color="#fff" />}
             </View>
+          )}
 
-            <View className="gap-1 pb-1 pt-2">
-              <Text className="text-sm font-bold" numberOfLines={2}>
-                {product.name}
-              </Text>
-              {product.description ? (
-                <Text className="text-xs text-muted-foreground" numberOfLines={2}>
-                  {product.description}
-                </Text>
-              ) : null}
-              <Text className="pt-0.5 text-base font-black" style={{ color: theme.accent }}>
-                S/ {product.basePrice.toFixed(2)}
+          {product.category && (
+            <View
+              className="absolute right-2 top-2 max-w-[65%] rounded-full px-2 py-0.5"
+              style={{ backgroundColor: theme.surface + 'E6' }}>
+              <Text className="text-[10px] font-bold" numberOfLines={1} style={{ color: theme.muted }}>
+                {product.category.name}
               </Text>
             </View>
+          )}
+
+          <View className="absolute bottom-2 left-2 rounded-full px-2.5 py-1" style={{ backgroundColor: NAV_BAR }}>
+            <Text className="text-[11px] font-bold text-white">S/ {product.basePrice.toFixed(2)}</Text>
           </View>
-        </PriceTag>
+        </View>
+
+        <View className="gap-1 px-1 pb-1 pt-2.5">
+          <Text className="text-[13px] font-bold" numberOfLines={2}>
+            {product.name}
+          </Text>
+          {product.description ? (
+            <Text className="text-xs" numberOfLines={2} style={{ color: theme.muted }}>
+              {product.description}
+            </Text>
+          ) : null}
+        </View>
       </Pressable>
     );
   },

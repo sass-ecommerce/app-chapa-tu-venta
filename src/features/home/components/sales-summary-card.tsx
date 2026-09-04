@@ -1,73 +1,76 @@
 import * as React from 'react';
 import { View } from 'react-native';
 
+import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
 
 import { Text } from '@/shared/components/ui/text';
 
 import { AnimatedNumber } from './animated-number';
-import { PriceTag } from '@/shared/components/ui/price-tag';
-import { getVitrinaTheme, type VitrinaTheme } from '@/shared/config/vitrina-palette';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 import type { SalesSummary } from '../types';
 
 interface SalesSummaryCardProps {
   salesData: SalesSummary;
 }
 
-interface StatTagProps {
-  label: string;
-  value: number;
+interface StatChipProps {
   color: string;
-  theme: VitrinaTheme;
+  value: number;
+  label: string;
 }
 
-function StatTag({ label, value, color, theme }: StatTagProps) {
+function StatChip({ color, value, label }: StatChipProps) {
   return (
-    <PriceTag fill={theme.surface} stroke={theme.ink} holeColor={theme.bg} cut={12} className="flex-1">
-      <View className="items-center px-2 py-3.5">
-        <AnimatedNumber value={value} duration={800} className="text-2xl font-black" style={{ color }} />
-        <Text
-          className="mt-0.5 text-[10px] font-bold uppercase text-muted-foreground"
-          style={{ letterSpacing: 0.4 }}>
-          {label}
-        </Text>
-      </View>
-    </PriceTag>
+    <View
+      className="flex-row items-center gap-1.5 rounded-full px-2.5 py-1.5"
+      style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}>
+      <View className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <Text className="text-[10.5px] font-bold text-white">
+        {value} {label}
+      </Text>
+    </View>
   );
 }
 
 /**
- * "Vendiste hoy" — three price-tag stats plus a big magenta total tag,
- * replacing the donut chart with the same tag silhouette used across
- * the screen (products, transactions). No chart, no gradient.
+ * "Vendiste hoy" as a gradient balance card — the escaparate system's
+ * reinterpretation of the reference app's promo carousel. A ghost card
+ * peeks behind it for depth; the 3 order states are soft chips instead
+ * of separate stat tiles.
  */
 export function SalesSummaryCard({ salesData }: SalesSummaryCardProps) {
   const { colorScheme } = useColorScheme();
   const theme = getVitrinaTheme(colorScheme === 'dark');
 
   return (
-    <View className="mb-6 gap-2">
-      <View className="flex-row gap-2">
-        <StatTag label="Completas" value={salesData.completedOrders} color={theme.ok} theme={theme} />
-        <StatTag label="Pendientes" value={salesData.pendingPaymentOrders} color={theme.warn} theme={theme} />
-        <StatTag label="Anuladas" value={salesData.cancelledOrders} color={theme.bad} theme={theme} />
-      </View>
-
-      <PriceTag fill={theme.accent} stroke={theme.surface} holeColor={theme.bg} cut={16} strokeWidth={2.25}>
-        <View className="px-5 py-4">
-          <Text className="text-xs font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>
-            Vendiste hoy
-          </Text>
-          <AnimatedNumber
-            value={salesData.totalSales}
-            duration={1200}
-            decimals={2}
-            prefix="S/ "
-            className="mt-0.5 text-3xl font-black"
-            style={{ color: '#FFFFFF' }}
-          />
+    <View className="mb-6 pt-2">
+      <View
+        className="absolute bottom-[-6px] left-6 right-[-4px] top-4 rounded-[26px] opacity-40"
+        style={{ backgroundColor: theme.accent }}
+      />
+      <LinearGradient
+        colors={[theme.accent, theme.accent2]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ borderRadius: 26, paddingHorizontal: 20, paddingVertical: 18 }}>
+        <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.75)' }}>
+          Resumen de hoy
+        </Text>
+        <AnimatedNumber
+          value={salesData.totalSales}
+          duration={1200}
+          decimals={2}
+          prefix="S/ "
+          className="mt-1 text-[32px] font-extrabold"
+          style={{ color: '#FFFFFF', letterSpacing: -0.5 }}
+        />
+        <View className="mt-3 flex-row flex-wrap gap-1.5">
+          <StatChip color="#FFFFFF" value={salesData.completedOrders} label="completas" />
+          <StatChip color="#FFD98A" value={salesData.pendingPaymentOrders} label="pend." />
+          <StatChip color="#FF9E9E" value={salesData.cancelledOrders} label="anul." />
         </View>
-      </PriceTag>
+      </LinearGradient>
     </View>
   );
 }

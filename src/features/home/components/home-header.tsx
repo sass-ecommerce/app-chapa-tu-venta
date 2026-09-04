@@ -19,9 +19,8 @@ interface HomeHeaderProps {
 }
 
 /**
- * Vitrina de mercado header: bold greeting, a magenta date sticker
- * (the price-tag detail), and a notification button in the same
- * outlined-tag language as the rest of the screen.
+ * Escaparate header: soft-bordered avatar and a plain greeting — no more
+ * shouting uppercase or a solid-fill date sticker, just a muted caption.
  */
 export function HomeHeader({
   firstName,
@@ -40,47 +39,42 @@ export function HomeHeader({
   }, []);
 
   const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  const dateLabel = now
-    .toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })
-    .replace('.', '')
-    .toUpperCase();
+  const dateLabel = now.toLocaleDateString('es-PE', { day: '2-digit', month: 'long' }).replace('.', '');
 
   return (
-    <View className="mb-6 flex-row items-center justify-between gap-3">
+    <View className="mb-5 flex-row items-center justify-between gap-3">
       <View className="flex-1 flex-row items-center gap-3">
         <Avatar
           alt={`${firstName} ${lastName}`}
-          className="h-14 w-14"
-          style={{ borderWidth: 2, borderColor: theme.ink }}>
+          className="h-12 w-12"
+          style={{ borderWidth: 1, borderColor: theme.muted + '35' }}>
           {avatarUrl && <AvatarImage source={{ uri: avatarUrl }} />}
           <AvatarFallback>
-            <Text className="text-lg font-black">{initials}</Text>
+            <Text className="text-base font-bold" style={{ color: theme.accent }}>
+              {initials}
+            </Text>
           </AvatarFallback>
         </Avatar>
 
         <View className="flex-1">
-          <Text
-            className="text-xl font-black uppercase leading-tight tracking-tight"
-            numberOfLines={1}>
-            ¡Hola, {firstName || 'vendedor'}!
+          <Text className="text-base font-bold leading-tight" numberOfLines={1}>
+            Hola, {firstName || 'vendedor'}
           </Text>
-          <View
-            className="mt-1.5 self-start rounded-full px-2.5 py-1"
-            style={{ backgroundColor: theme.accent }}>
-            <Text className="text-[10px] font-bold text-white">{dateLabel}</Text>
-          </View>
+          <Text className="mt-0.5 text-xs font-semibold capitalize" style={{ color: theme.muted }}>
+            {dateLabel}
+          </Text>
         </View>
       </View>
 
       <Pressable
         onPress={onNotificationsPress}
-        className="h-11 w-11 items-center justify-center rounded-lg border active:opacity-70"
-        style={{ borderColor: theme.ink }}>
+        className="h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
+        style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
         <Icon as={Bell} size={18} color={theme.ink} />
         {notificationCount > 0 && (
           <View
-            className="absolute -right-1.5 -top-1.5 h-4 min-w-4 items-center justify-center rounded-full px-1"
-            style={{ backgroundColor: theme.bad }}>
+            className="absolute -right-1 -top-1 h-4 min-w-4 items-center justify-center rounded-full border-2 px-1"
+            style={{ backgroundColor: theme.bad, borderColor: theme.bg }}>
             <Text className="text-[9px] font-bold text-white">{notificationCount}</Text>
           </View>
         )}

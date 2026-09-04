@@ -1,8 +1,11 @@
 /**
- * Color world for "Vitrina de mercado" — the home tab direction.
- * The magenta is Yape's purple, the color a seller checks dozens of times
- * a day to confirm a payment. Bg values are duplicated as literal Tailwind
- * classes in app/(tabs)/index.tsx (bg-[...] dark:bg-[...]) — keep both in sync.
+ * Color world for "Escaparate" — the e-commerce-polish direction that
+ * replaced the market-stall (magenta price-tag) system. Purple accent +
+ * rounded cards, modeled after the modern retail apps sellers use daily.
+ * Kept the `getVitrinaTheme`/`VitrinaTheme` names on purpose to avoid
+ * touching every import across the app for a rename — see PR notes.
+ * Bg values are duplicated as literal Tailwind classes in several
+ * app/*.tsx screens (bg-[...] dark:bg-[...]) — keep both in sync.
  */
 export interface VitrinaTheme {
   bg: string;
@@ -10,33 +13,41 @@ export interface VitrinaTheme {
   ink: string;
   muted: string;
   accent: string;
+  /** Secondary stop for accent gradients (hero cards, store mark). */
+  accent2: string;
   ok: string;
   warn: string;
   bad: string;
 }
 
 export const VITRINA_LIGHT: VitrinaTheme = {
-  bg: '#FBF9F4',
+  bg: '#F6F5FB',
   surface: '#FFFFFF',
-  ink: '#1A1A1A',
-  muted: '#6B675F',
-  accent: '#C0289C',
-  ok: '#1E9E86',
-  warn: '#B8860B',
-  bad: '#E8432F',
+  ink: '#17151F',
+  muted: '#76718C',
+  accent: '#6C4FF2',
+  accent2: '#8B6BFA',
+  ok: '#1FAE7A',
+  warn: '#E0972A',
+  bad: '#EF4444',
 };
 
 export const VITRINA_DARK: VitrinaTheme = {
-  bg: '#18140F',
-  surface: '#221C15',
-  ink: '#F3EFE8',
-  muted: '#9C9384',
-  accent: '#E85BC0',
-  ok: '#3FCDAE',
-  warn: '#F0A500',
-  bad: '#FF6B54',
+  bg: '#101018',
+  surface: '#1B1926',
+  ink: '#F2F0FA',
+  muted: '#9C97B5',
+  accent: '#8B6BFA',
+  accent2: '#6C4FF2',
+  ok: '#33D18F',
+  warn: '#F2A83E',
+  bad: '#FF6B6B',
 };
 
 export function getVitrinaTheme(isDark: boolean): VitrinaTheme {
   return isDark ? VITRINA_DARK : VITRINA_LIGHT;
 }
+
+/** Fixed near-black used for the price pill overlaid on product photos —
+ * stays constant in both themes, it's a label on an image, not a surface. */
+export const NAV_BAR = '#17151F';

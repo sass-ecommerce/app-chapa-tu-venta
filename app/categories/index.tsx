@@ -107,7 +107,7 @@ export default function CategoriesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-[#FBF9F4] dark:bg-[#18140F]">
+    <View className="flex-1 bg-[#F6F5FB] dark:bg-[#101018]">
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenHeader
         title="Categorías"

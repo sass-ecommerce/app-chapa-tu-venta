@@ -10,8 +10,7 @@ import { Text } from '@/shared/components/ui/text';
 
 import type { Product } from '@/features/products/api/products';
 
-import { PriceTag } from '@/shared/components/ui/price-tag';
-import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
+import { getVitrinaTheme, NAV_BAR } from '@/shared/config/vitrina-palette';
 
 interface ProductCardHorizontalProps {
   product: Product;
@@ -28,31 +27,33 @@ export const ProductCardHorizontal = React.memo(
     const imageUrl = primaryImage?.url;
 
     return (
-      <Pressable onPress={onPress} className="w-36 active:scale-95">
-        <PriceTag fill={theme.surface} stroke={theme.ink} holeColor={theme.bg} cut={12}>
-          <View className="p-2.5 pt-3">
-            <View
-              className="mb-2 h-20 w-full items-center justify-center overflow-hidden rounded-sm"
-              style={{ backgroundColor: theme.bg }}>
-              {imageUrl ? (
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                />
-              ) : (
-                <Icon as={Package} size={22} color={theme.muted} />
-              )}
-            </View>
-
-            <Text className="text-xs font-bold" numberOfLines={2}>
-              {product.name}
-            </Text>
-            <Text className="mt-1 text-sm font-black" style={{ color: theme.accent }}>
-              S/ {product.basePrice.toFixed(2)}
-            </Text>
+      <Pressable
+        onPress={onPress}
+        className="w-32 rounded-[18px] border p-2 active:scale-95"
+        style={{ borderColor: theme.muted + '20', backgroundColor: theme.surface }}>
+        <View
+          className="relative mb-2 h-24 w-full items-center justify-center overflow-hidden rounded-xl"
+          style={{ backgroundColor: theme.accent + '14' }}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+          ) : (
+            <Icon as={Package} size={24} color={theme.accent} />
+          )}
+          <View
+            className="absolute bottom-1.5 left-1.5 rounded-full px-2 py-1"
+            style={{ backgroundColor: NAV_BAR }}>
+            <Text className="text-[10px] font-bold text-white">S/ {product.basePrice.toFixed(0)}</Text>
           </View>
-        </PriceTag>
+        </View>
+
+        <Text className="px-0.5 text-xs font-bold" numberOfLines={1}>
+          {product.name}
+        </Text>
+        {product.category && (
+          <Text className="px-0.5 text-[10px] font-semibold" numberOfLines={1} style={{ color: theme.muted }}>
+            {product.category.name}
+          </Text>
+        )}
       </Pressable>
     );
   },

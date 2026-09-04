@@ -37,13 +37,13 @@ export function RecentProductsSection({
 
   return (
     <View className="mb-6">
-      {/* Enhanced Header with Icon */}
+      {/* Header */}
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-lg font-black uppercase tracking-tight">Productos Recientes</Text>
+        <Text className="text-[15px] font-extrabold tracking-tight">Productos recientes</Text>
         <Pressable
           onPress={() => router.push('/(tabs)/products')}
           className="flex-row items-center gap-1 rounded-full px-3 py-1.5 active:opacity-70"
-          style={{ backgroundColor: theme.accent + '1A' }}>
+          style={{ backgroundColor: theme.accent + '14' }}>
           <Text className="text-xs font-bold" style={{ color: theme.accent }}>
             Ver todo
           </Text>
@@ -96,16 +96,16 @@ export function RecentProductsSection({
 
       {/* Empty State */}
       {!isLoading && !error && (!products || products.length === 0) && (
-        <View className="items-center rounded-lg border border-dashed border-muted-foreground/30 p-8">
+        <View className="items-center rounded-2xl border border-dashed border-muted-foreground/30 p-8">
           <Text className="mb-1 text-base font-bold text-foreground">No hay productos aún</Text>
           <Text className="mb-4 text-center text-sm text-muted-foreground">
             Comienza agregando tu primer producto
           </Text>
           <Pressable
             onPress={() => router.push('/(tabs)/products')}
-            className="rounded-md px-4 py-2 active:opacity-80"
+            className="rounded-full px-4 py-2.5 active:opacity-80"
             style={{ backgroundColor: theme.accent }}>
-            <Text className="text-sm font-bold text-white">Agregar Producto</Text>
+            <Text className="text-sm font-bold text-white">Agregar producto</Text>
           </Pressable>
         </View>
       )}
