@@ -51,7 +51,146 @@ import {
 import { useProductsInfiniteQuery, useDeleteProductsMutation } from '@/features/products/queries';
 import { useCategories } from '@/features/categories/queries/use-categories';
 import type { Product } from '@/features/products/api/products';
+import type { Category } from '@/features/categories/types';
 import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
+
+interface ProductsHeaderProps {
+  isLoading: boolean;
+  error: Error | null;
+  products: Product[] | undefined;
+  categories: Category[];
+  totalCount: number;
+  filtersVisible: boolean;
+  onToggleFilters: () => void;
+}
+
+/**
+ * Kept as its own component (not an inline useCallback) so its identity
+ * never changes across renders. FlashList remounts ListHeaderComponent
+ * whenever that identity changes — which, with search state baked into a
+ * useCallback's deps, happened on every keystroke and closed the keyboard.
+ */
+function ProductsHeader({
+  isLoading,
+  error,
+  products,
+  categories,
+  totalCount,
+  filtersVisible,
+  onToggleFilters,
+}: ProductsHeaderProps) {
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
+
+  const searchQuery = useProductsStore((state) => state.searchQuery);
+  const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
+  const selectedCategories = useProductsStore((state) => state.selectedCategories);
+  const toggleCategory = useProductsStore((state) => state.toggleCategory);
+
+  return (
+    <View className="pt-12">
+      {/* Title */}
+      <View className="px-5 pb-4">
+        <Text className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.ink }}>
+          Mis productos
+        </Text>
+        {!isLoading && !error && products && (
+          <Text className="mt-1 text-xs font-semibold" style={{ color: theme.muted }}>
+            {totalCount.toLocaleString('es-PE')} productos
+            {categories.length > 0 ? ` · ${categories.length} categorías` : ''}
+          </Text>
+        )}
+      </View>
+
+      {/* Menu + search + filter toggle, same pill shape as the escaparate reference */}
+      <View className="flex-row items-center gap-2 px-5 pb-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Pressable
+              className="h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-70"
+              style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
+              <Icon as={Menu} size={19} color={theme.ink} />
+            </Pressable>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            className="w-56 rounded-2xl border"
+            style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
+            <DropdownMenuItem
+              onPress={() => router.push('/products/create')}
+              className="flex-row items-center gap-3">
+              <Icon as={Plus} size={18} color={theme.accent} />
+              <Text className="text-base font-semibold" style={{ color: theme.accent }}>
+                Crear producto
+              </Text>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onPress={() => router.push('/categories')}
+              className="flex-row items-center gap-3">
+              <Icon as={Tag} size={18} color={theme.ink} />
+              <Text className="text-base">Gestionar categorías</Text>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <View className="relative flex-1">
+          <Input
+            placeholder="Buscar producto…"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            className="h-[52px] rounded-full border pl-12 shadow-none"
+            style={{ borderColor: theme.muted + '20', backgroundColor: theme.surface, color: theme.ink }}
+            placeholderTextColor={theme.muted}
+          />
+          <View className="absolute left-4 top-4">
+            <Icon as={Search} size={19} color={theme.muted} />
+          </View>
+        </View>
+
+        {categories.length > 0 && (
+          <Pressable
+            onPress={onToggleFilters}
+            className="relative h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-80"
+            style={{
+              borderColor: filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.muted + '20',
+              backgroundColor: filtersVisible || selectedCategories.length > 0 ? theme.accent + '14' : theme.surface,
+            }}>
+            <Icon
+              as={SlidersHorizontal}
+              size={18}
+              color={filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.ink}
+            />
+            {selectedCategories.length > 0 && (
+              <View
+                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
+                style={{ backgroundColor: theme.accent }}
+              />
+            )}
+          </Pressable>
+        )}
+      </View>
+
+      {/* Category chips (toggled by the filter button) */}
+      {!isLoading && !error && filtersVisible && categories.length > 0 && (
+        <View className="pb-4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
+            {categories.map((category) => (
+              <Chip
+                key={category.id}
+                label={category.name}
+                selected={selectedCategories.includes(category.name)}
+                onPress={() => toggleCategory(category.name)}
+                count={products?.filter((p) => p.categoryId === category.id).length}
+                accentColor={theme.accent}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
 
 export default function ProductosScreen() {
   const router = useRouter();
@@ -64,8 +203,6 @@ export default function ProductosScreen() {
   const selectionMode = useProductsStore((state) => state.selectionMode);
   const selectedProductIds = useProductsStore((state) => state.selectedProductIds);
 
-  const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
-  const toggleCategory = useProductsStore((state) => state.toggleCategory);
   const enterSelectionMode = useProductsStore((state) => state.enterSelectionMode);
   const toggleProductSelection = useProductsStore((state) => state.toggleProductSelection);
   const exitSelectionMode = useProductsStore((state) => state.exitSelectionMode);
@@ -166,124 +303,7 @@ export default function ProductosScreen() {
 
   const totalCount = data?.pages[0]?.meta.total ?? filteredProducts.length;
 
-  // Render header component with brand bar, search, stats, tabs, and filters
-  const renderHeader = React.useCallback(() => {
-    return (
-      <View className="pt-12">
-        {/* Title */}
-        <View className="px-5 pb-4">
-          <Text className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.ink }}>
-            Mis productos
-          </Text>
-          {!isLoading && !error && products && (
-            <Text className="mt-1 text-xs font-semibold" style={{ color: theme.muted }}>
-              {totalCount.toLocaleString('es-PE')} productos
-              {categories.length > 0 ? ` · ${categories.length} categorías` : ''}
-            </Text>
-          )}
-        </View>
-
-        {/* Menu + search + filter toggle, same pill shape as the escaparate reference */}
-        <View className="flex-row items-center gap-2 px-5 pb-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Pressable
-                className="h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-70"
-                style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
-                <Icon as={Menu} size={19} color={theme.ink} />
-              </Pressable>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-56 rounded-2xl border"
-              style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
-              <DropdownMenuItem
-                onPress={() => router.push('/products/create')}
-                className="flex-row items-center gap-3">
-                <Icon as={Plus} size={18} color={theme.accent} />
-                <Text className="text-base font-semibold" style={{ color: theme.accent }}>
-                  Crear producto
-                </Text>
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onPress={() => router.push('/categories')}
-                className="flex-row items-center gap-3">
-                <Icon as={Tag} size={18} color={theme.ink} />
-                <Text className="text-base">Gestionar categorías</Text>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <View className="relative flex-1">
-            <Input
-              placeholder="Buscar producto…"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              className="h-[52px] rounded-full border pl-12 shadow-none"
-              style={{ borderColor: theme.muted + '20', backgroundColor: theme.surface, color: theme.ink }}
-              placeholderTextColor={theme.muted}
-            />
-            <View className="absolute left-4 top-4">
-              <Icon as={Search} size={19} color={theme.muted} />
-            </View>
-          </View>
-
-          {categories.length > 0 && (
-            <Pressable
-              onPress={() => setFiltersVisible((v) => !v)}
-              className="relative h-[52px] w-[52px] items-center justify-center rounded-full border active:opacity-80"
-              style={{
-                borderColor: filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.muted + '20',
-                backgroundColor: filtersVisible || selectedCategories.length > 0 ? theme.accent + '14' : theme.surface,
-              }}>
-              <Icon
-                as={SlidersHorizontal}
-                size={18}
-                color={filtersVisible || selectedCategories.length > 0 ? theme.accent : theme.ink}
-              />
-              {selectedCategories.length > 0 && (
-                <View
-                  className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full"
-                  style={{ backgroundColor: theme.accent }}
-                />
-              )}
-            </Pressable>
-          )}
-        </View>
-
-        {/* Category chips (toggled by the filter button) */}
-        {!isLoading && !error && filtersVisible && categories.length > 0 && (
-          <View className="pb-4">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
-              {categories.map((category) => (
-                <Chip
-                  key={category.id}
-                  label={category.name}
-                  selected={selectedCategories.includes(category.name)}
-                  onPress={() => toggleCategory(category.name)}
-                  count={products?.filter((p) => p.categoryId === category.id).length}
-                  accentColor={theme.accent}
-                />
-              ))}
-            </ScrollView>
-          </View>
-        )}
-      </View>
-    );
-  }, [
-    searchQuery,
-    setSearchQuery,
-    isLoading,
-    error,
-    products,
-    categories,
-    totalCount,
-    filtersVisible,
-    selectedCategories,
-    toggleCategory,
-    router,
-    theme,
-  ]);
+  const handleToggleFilters = React.useCallback(() => setFiltersVisible((v) => !v), []);
 
   // Render empty component for loading, error, and empty states
   const renderEmpty = React.useCallback(() => {
@@ -414,7 +434,17 @@ export default function ProductosScreen() {
         masonry
         optimizeItemArrangement
         extraData={[selectionMode, selectedProductIds]}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={
+          <ProductsHeader
+            isLoading={isLoading}
+            error={error}
+            products={products}
+            categories={categories}
+            totalCount={totalCount}
+            filtersVisible={filtersVisible}
+            onToggleFilters={handleToggleFilters}
+          />
+        }
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         onEndReached={handleEndReached}
