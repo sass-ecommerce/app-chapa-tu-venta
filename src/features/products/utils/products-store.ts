@@ -1,11 +1,9 @@
 import { create } from 'zustand';
 
 interface ProductsState {
-  // Search & notifications
+  // Search
   searchQuery: string;
-  hasNotifications: boolean;
   setSearchQuery: (query: string) => void;
-  toggleNotifications: () => void;
 
   // Category filters
   selectedCategories: string[];
@@ -21,11 +19,9 @@ interface ProductsState {
 }
 
 export const useProductsStore = create<ProductsState>((set) => ({
-  // Search & notifications
+  // Search
   searchQuery: '',
-  hasNotifications: true,
   setSearchQuery: (query) => set({ searchQuery: query }),
-  toggleNotifications: () => set((state) => ({ hasNotifications: !state.hasNotifications })),
 
   // Category filters
   selectedCategories: [],

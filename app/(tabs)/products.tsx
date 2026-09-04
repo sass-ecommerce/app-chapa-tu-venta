@@ -25,7 +25,7 @@ import { ProductCard } from '@/features/products/components/product-card';
 import { ProductSkeletonGrid } from '@/features/products/components/product-skeleton';
 import { ProductSelectionBar } from '@/features/products/components/product-selection-bar';
 
-import { Search, Bell, Menu, Plus, SlidersHorizontal, Tag } from 'lucide-react-native';
+import { Search, Menu, Plus, SlidersHorizontal, Tag } from 'lucide-react-native';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,13 +60,11 @@ export default function ProductosScreen() {
 
   // Zustand store states
   const searchQuery = useProductsStore((state) => state.searchQuery);
-  const hasNotifications = useProductsStore((state) => state.hasNotifications);
   const selectedCategories = useProductsStore((state) => state.selectedCategories);
   const selectionMode = useProductsStore((state) => state.selectionMode);
   const selectedProductIds = useProductsStore((state) => state.selectedProductIds);
 
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery);
-  const toggleNotifications = useProductsStore((state) => state.toggleNotifications);
   const toggleCategory = useProductsStore((state) => state.toggleCategory);
   const enterSelectionMode = useProductsStore((state) => state.enterSelectionMode);
   const toggleProductSelection = useProductsStore((state) => state.toggleProductSelection);
@@ -186,50 +184,34 @@ export default function ProductosScreen() {
             )}
           </View>
 
-          <View className="flex-row items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Pressable
-                  className="h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
-                  style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
-                  <Icon as={Menu} size={19} color={theme.ink} />
-                </Pressable>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 rounded-2xl border"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Pressable
+                className="h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
                 style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
-                <DropdownMenuItem
-                  onPress={() => router.push('/products/create')}
-                  className="flex-row items-center gap-3">
-                  <Icon as={Plus} size={18} color={theme.accent} />
-                  <Text className="text-base font-semibold" style={{ color: theme.accent }}>
-                    Crear producto
-                  </Text>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  onPress={() => router.push('/categories')}
-                  className="flex-row items-center gap-3">
-                  <Icon as={Tag} size={18} color={theme.ink} />
-                  <Text className="text-base">Gestionar categorías</Text>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Notification Bell */}
-            <Pressable
-              onPress={toggleNotifications}
-              className="relative h-11 w-11 items-center justify-center rounded-2xl border active:opacity-70"
+                <Icon as={Menu} size={19} color={theme.ink} />
+              </Pressable>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-56 rounded-2xl border"
               style={{ borderColor: theme.muted + '25', backgroundColor: theme.surface }}>
-              <Icon as={Bell} size={19} color={theme.ink} />
-              {hasNotifications && (
-                <View
-                  className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full border"
-                  style={{ backgroundColor: theme.bad, borderColor: theme.surface }}
-                />
-              )}
-            </Pressable>
-          </View>
+              <DropdownMenuItem
+                onPress={() => router.push('/products/create')}
+                className="flex-row items-center gap-3">
+                <Icon as={Plus} size={18} color={theme.accent} />
+                <Text className="text-base font-semibold" style={{ color: theme.accent }}>
+                  Crear producto
+                </Text>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onPress={() => router.push('/categories')}
+                className="flex-row items-center gap-3">
+                <Icon as={Tag} size={18} color={theme.ink} />
+                <Text className="text-base">Gestionar categorías</Text>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </View>
 
         {/* Search + filter toggle, same pill shape as the escaparate reference */}
@@ -293,8 +275,6 @@ export default function ProductosScreen() {
   }, [
     searchQuery,
     setSearchQuery,
-    hasNotifications,
-    toggleNotifications,
     isLoading,
     error,
     products,
