@@ -158,10 +158,12 @@ export default function PerfilScreen() {
           try {
             setIsSigningOut(true);
             await logoutUser();
-            router.replace('/(auth)/sign-in');
           } catch (error) {
             console.error('❌ [Profile] Sign out error:', error);
-            Alert.alert('Error', 'No se pudo cerrar la sesión. Intenta nuevamente.');
+          } finally {
+            // logoutUser siempre limpia los datos locales, incluso si la llamada
+            // al servidor falla, así que se navega a sign-in en cualquier caso.
+            router.replace('/(auth)/sign-in');
             setIsSigningOut(false);
           }
         },

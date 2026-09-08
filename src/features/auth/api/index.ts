@@ -25,9 +25,15 @@ export async function loginUser(data: LoginPayload): Promise<LoginResponse> {
 }
 
 export async function logoutUser(): Promise<void> {
-  await apiClient.post<ApiResponse>('/auth/logout');
-  await authStorage.clearTokens();
-  await authStorage.clearUser();
+  try {
+    await apiClient.post<ApiResponse>('/auth/logout');
+  } finally {
+    await Promise.allSettled([
+      authStorage.clearTokens(),
+      authStorage.clearUser(),
+      authStorage.clearTenantId(),
+    ]);
+  }
 }
 
 export async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {

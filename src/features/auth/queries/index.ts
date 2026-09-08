@@ -2,6 +2,7 @@ import { useMutation,  } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
 import { authStorage } from '../utils/storage';
+import { decodeIdTokenClaims, exchangeGoogleAuthCode } from '../utils/cognito';
 
 import {
   registerUser,
@@ -44,6 +45,33 @@ export function useLoginMutation() {
   });
 }
 
+export function useGoogleLoginMutation() {
+  return useMutation({
+    mutationFn: ({
+      code,
+      codeVerifier,
+      redirectUri,
+    }: {
+      code: string;
+      codeVerifier: string;
+      redirectUri: string;
+    }) => exchangeGoogleAuthCode(code, codeVerifier, redirectUri),
+    onSuccess: async (tokens) => {
+      const claims = tokens.idToken ? decodeIdTokenClaims(tokens.idToken) : null;
+
+      await Promise.all([
+        authStorage.saveTokens(tokens.accessToken, tokens.refreshToken ?? ''),
+        authStorage.saveUser({
+          userSlug: (claims?.email ?? '').split('@')[0],
+          email: claims?.email ?? '',
+          firstName: claims?.given_name ?? '',
+          lastName: claims?.family_name ?? '',
+        }),
+      ]);
+    },
+  });
+}
+
 export function useResendCodeMutation() {
   return useMutation({
     mutationFn: (email: string) => resendCode(email),
@@ -79,15 +107,13 @@ export function useOnboardingStatusMutation() {
 export function useLogoutMutation() {
   return useMutation({
     mutationFn: async () => {
-      await Promise.all([
+      await Promise.allSettled([
         authStorage.clearUser(),
         authStorage.clearTokens(),
         authStorage.clearTenantId(),
       ]);
     },
     onSuccess: () => {
-      authStorage.clearTokens();
-
       router.replace('/(auth)/sign-in');
     },
   });

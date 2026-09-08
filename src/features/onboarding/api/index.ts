@@ -7,9 +7,8 @@ export interface CreateTenantPayload {
 }
 
 export interface CreateTenantResponse {
-  id: string;
+  tenantId: string;
   name: string;
-  domain: string;
 }
 
 export async function createTenant(data: CreateTenantPayload): Promise<CreateTenantResponse> {

@@ -93,6 +93,12 @@ function NetworkLogRow({ entry }: { entry: NetworkLogEntry }) {
       {expanded && (
         <View className="mt-2 gap-2">
           <Text className="text-[11px] text-muted-foreground">{entry.url}</Text>
+          {entry.requestHeaders !== undefined && (
+            <View className="gap-1">
+              <Text className="text-xs font-semibold text-foreground">Headers</Text>
+              <CodeBlock code={JSON.stringify(entry.requestHeaders, null, 2)} />
+            </View>
+          )}
           {entry.requestData !== undefined && (
             <View className="gap-1">
               <Text className="text-xs font-semibold text-foreground">Request</Text>

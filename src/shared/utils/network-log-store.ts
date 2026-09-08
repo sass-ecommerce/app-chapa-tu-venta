@@ -13,6 +13,7 @@ export interface NetworkLogEntry {
   statusText?: string;
   duration?: number;
   timestamp: number;
+  requestHeaders?: unknown;
   requestData?: unknown;
   responseData?: unknown;
   error?: string;

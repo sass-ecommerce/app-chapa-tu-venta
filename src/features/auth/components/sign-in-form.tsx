@@ -5,7 +5,7 @@ import { type TextInput, TouchableOpacity, View } from 'react-native';
 // 2. Third-party libraries
 import { useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 
 // 3. UI components
@@ -20,16 +20,23 @@ import {
 import { Icon } from '@/shared/components/ui/icon';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
+import { Separator } from '@/shared/components/ui/separator';
 import { Text } from '@/shared/components/ui/text';
 import { StatusDialog } from '@/shared/components/status-dialog';
 
 // 4. Utils & hooks
-import { useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
-import { authStorage } from '@/features/auth/utils/storage';
+import { useGoogleSignIn, useLoginMutation, useOnboardingStatusMutation } from '@/features/auth';
+import { routeAfterLogin } from '@/features/auth/utils/navigation';
 
 export function SignInForm() {
   const loginMutation = useLoginMutation();
   const onboardingStatusMutation = useOnboardingStatusMutation();
+  const {
+    promptAsync: promptGoogleSignIn,
+    isLoading: isGoogleLoading,
+    error: googleError,
+    clearError: clearGoogleError,
+  } = useGoogleSignIn();
 
   const [errorDialog, setErrorDialog] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -51,15 +58,7 @@ export function SignInForm() {
         });
 
         const onboarding = await onboardingStatusMutation.mutateAsync();
-
-        if (!onboarding.createTenant.completed) {
-          router.replace('/(onboarding)/register-store');
-        } else {
-          if (onboarding.createTenant.tenant?.id) {
-            await authStorage.saveTenantId(onboarding.createTenant.tenant.id);
-          }
-          router.replace('/(tabs)');
-        }
+        await routeAfterLogin(onboarding);
       } catch {
         setErrorDialog(true);
       }
@@ -82,6 +81,15 @@ export function SignInForm() {
         description="Credenciales incorrectas. Verifica tu correo y contraseña e inténtalo de nuevo."
         actionLabel="Intentar de nuevo"
         onAction={() => setErrorDialog(false)}
+      />
+      <StatusDialog
+        open={googleError}
+        onOpenChange={clearGoogleError}
+        variant="error"
+        title="Error al continuar con Google"
+        description="No pudimos completar el inicio de sesión con Google. Inténtalo de nuevo."
+        actionLabel="Intentar de nuevo"
+        onAction={clearGoogleError}
       />
       <Card className="border-border/0 shadow-none sm:border-border sm:shadow-sm sm:shadow-black/5">
         <CardHeader>
@@ -198,6 +206,20 @@ export function SignInForm() {
                 </Button>
               )}
             </form.Subscribe>
+
+            <View className="flex-row items-center gap-3">
+              <Separator className="flex-1" />
+              <Text className="text-xs text-muted-foreground">o continúa con</Text>
+              <Separator className="flex-1" />
+            </View>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onPress={() => promptGoogleSignIn()}
+              disabled={isGoogleLoading}>
+              <Text>{isGoogleLoading ? 'Conectando...' : 'Continuar con Google'}</Text>
+            </Button>
           </View>
 
           <Text className="text-center text-sm">

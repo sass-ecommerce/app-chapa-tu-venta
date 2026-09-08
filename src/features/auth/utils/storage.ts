@@ -36,7 +36,7 @@ export const authStorage = {
   },
 
   async clearTokens(): Promise<void> {
-    await Promise.all([
+    await Promise.allSettled([
       SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
       SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
     ]);

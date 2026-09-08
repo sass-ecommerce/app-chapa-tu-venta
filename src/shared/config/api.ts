@@ -40,6 +40,7 @@ apiClient.interceptors.request.use(async (config: TrackedRequestConfig) => {
       url: `${config.baseURL ?? ''}${config.url ?? ''}`,
       path: config.url ?? '',
       timestamp: config._startTime,
+      requestHeaders: config.headers,
       requestData: config.data,
     });
   }
