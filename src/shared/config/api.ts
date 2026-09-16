@@ -113,7 +113,14 @@ apiClient.interceptors.response.use(
     }
 
     // ── Regla 2: cualquier error que no sea 401 (o sin config) pasa directo ──
-    if (!originalRequest || status !== 401 || originalRequest._retry) {
+    // /auth/logout queda excluido: no tiene sentido refrescar la sesión para
+    // poder cerrarla, y logoutUser() ya limpia el storage local pase lo que pase.
+    if (
+      !originalRequest ||
+      status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.url === '/auth/logout'
+    ) {
       console.warn(`[API] ❌ ${status ?? 'SIN_RESPUESTA'} ${url} — propagando error al caller`);
       console.error(`[API] Detalles del error:`, error.response?.data ?? error.message ?? error);
       return Promise.reject(error);
