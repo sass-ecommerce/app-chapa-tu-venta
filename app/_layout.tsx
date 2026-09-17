@@ -59,6 +59,8 @@ function Routes() {
       <Stack.Screen name="(onboarding)/register-store" />
       <Stack.Screen name="products/[slug]" />
       <Stack.Screen name="products/create" />
+      <Stack.Screen name="collections/[id]" />
+      <Stack.Screen name="collections/[id]/add-products" />
       <Stack.Screen name="categories" />
       <Stack.Screen name="categories/[id]" />
       <Stack.Screen name="profile/edit" />

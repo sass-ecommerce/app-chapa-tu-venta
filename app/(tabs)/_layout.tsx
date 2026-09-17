@@ -2,7 +2,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 
 import { Tabs } from 'expo-router';
-import { HomeIcon, ShoppingBagIcon, UserIcon, type LucideIcon } from 'lucide-react-native';
+import { HomeIcon, Layers, ShoppingBagIcon, UserIcon, type LucideIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 
 import { Icon } from '@/shared/components/ui/icon';
@@ -77,6 +77,15 @@ export default function TabsLayout() {
           title: 'Productos',
           tabBarIcon: ({ focused, color, size }) => (
             <TabIcon as={ShoppingBagIcon} focused={focused} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="colecciones"
+        options={{
+          title: 'Colecciones',
+          tabBarIcon: ({ focused, color, size }) => (
+            <TabIcon as={Layers} focused={focused} color={color} size={size} />
           ),
         }}
       />

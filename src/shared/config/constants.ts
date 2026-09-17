@@ -1,5 +1,6 @@
 export const STORAGE_FOLDERS = {
   PRODUCTS: 'products',
+  COLLECTIONS: 'collections',
 } as const;
 
 // Brand accent (2026 redesign) — not yet wired into the --primary CSS token,

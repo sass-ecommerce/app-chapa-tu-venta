@@ -45,8 +45,17 @@ export function useGoogleSignIn() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
+  // preferEphemeralSession evita que iOS reutilice las cookies de la sesión
+  // anterior (Cognito Hosted UI / Google) entre intentos de login: sin esto,
+  // luego de un logout Google no vuelve a mostrar el selector de cuenta
+  // porque ASWebAuthenticationSession comparte el cookie store con Safari.
+  const promptGoogleSignIn = React.useCallback(
+    () => promptAsync({ preferEphemeralSession: true }),
+    [promptAsync]
+  );
+
   return {
-    promptAsync,
+    promptAsync: promptGoogleSignIn,
     isLoading:
       !request || googleLoginMutation.isPending || onboardingStatusMutation.isPending,
     error,
