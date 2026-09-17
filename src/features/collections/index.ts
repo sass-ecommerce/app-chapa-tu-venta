@@ -18,7 +18,6 @@ export {
   useDeleteCollectionsMutation,
   useUploadCollectionCoverMutation,
   useAddProductsToCollectionMutation,
-  useRemoveProductFromCollectionMutation,
   useRemoveProductsFromCollectionMutation,
 } from './queries';
 

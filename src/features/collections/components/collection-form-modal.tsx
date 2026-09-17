@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Alert, Modal, View, KeyboardAvoidingView, Pressable } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  View,
+  KeyboardAvoidingView,
+  Pressable,
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { Camera, X } from 'lucide-react-native';
@@ -47,8 +54,10 @@ export function CollectionFormModal({
   const theme = getVitrinaTheme(colorScheme === 'dark');
   const [name, setName] = React.useState('');
   const [imageAsset, setImageAsset] = React.useState<CollectionImageAsset | null>(null);
+  const [modalVisible, setModalVisible] = React.useState(visible);
 
   React.useEffect(() => {
+    setModalVisible(visible);
     if (visible) {
       setName(editCollection?.name ?? '');
       setImageAsset(null);
@@ -76,7 +85,9 @@ export function CollectionFormModal({
       Alert.alert('Permiso necesario', 'Necesitamos acceso a tu cámara para tomar fotos.');
       return;
     }
+    setModalVisible(false);
     const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.8 });
+    setModalVisible(true);
     if (!result.canceled) addImageAsset(result.assets[0]);
   };
 
@@ -86,7 +97,12 @@ export function CollectionFormModal({
       Alert.alert('Permiso necesario', 'Necesitamos acceso a tu biblioteca de fotos.');
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+    setModalVisible(false);
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+    });
+    setModalVisible(true);
     if (!result.canceled) addImageAsset(result.assets[0]);
   };
 
@@ -104,17 +120,31 @@ export function CollectionFormModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal
+      visible={modalVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={isLoading ? undefined : onClose}
+      statusBarTranslucent>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View className="rounded-t-3xl px-6 pb-10 pt-4" style={{ backgroundColor: theme.surface }}>
-            <View className="mb-5 h-1 w-10 self-center rounded-full" style={{ backgroundColor: theme.ink + '30' }} />
+          <View
+            className="rounded-t-3xl px-6 pb-10 pt-4"
+            style={{ backgroundColor: theme.surface }}>
+            <View
+              className="mb-5 h-1 w-10 self-center rounded-full"
+              style={{ backgroundColor: theme.ink + '30' }}
+            />
 
             <View className="mb-6 flex-row items-start justify-between">
               <Text className="text-xl font-black uppercase tracking-tight">
                 {isEditing ? 'Editar colección' : 'Nueva colección'}
               </Text>
-              <Pressable onPress={onClose} className="rounded-full p-1.5 active:opacity-70">
+              <Pressable
+                onPress={onClose}
+                disabled={isLoading}
+                className="rounded-full p-1.5 active:opacity-70"
+                style={{ opacity: isLoading ? 0.4 : 1 }}>
                 <Icon as={X} size={20} color={theme.muted} />
               </Pressable>
             </View>
@@ -135,8 +165,14 @@ export function CollectionFormModal({
             <View className="mb-6">
               <Label className="mb-2 text-sm font-medium">Portada</Label>
               {previewUri ? (
-                <Pressable onPress={pickCover} className="relative h-28 overflow-hidden rounded-2xl active:opacity-80">
-                  <Image source={{ uri: previewUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+                <Pressable
+                  onPress={pickCover}
+                  className="relative h-28 overflow-hidden rounded-2xl active:opacity-80">
+                  <Image
+                    source={{ uri: previewUri }}
+                    style={{ width: '100%', height: '100%' }}
+                    contentFit="cover"
+                  />
                   <Pressable
                     onPress={() => setImageAsset(null)}
                     className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 active:opacity-70">
@@ -169,11 +205,28 @@ export function CollectionFormModal({
                   {isLoading ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear colección'}
                 </Text>
               </Button>
-              <Button variant="outline" size="lg" onPress={onClose} style={{ borderColor: theme.ink }}>
+              <Button
+                variant="outline"
+                size="lg"
+                onPress={onClose}
+                disabled={isLoading}
+                style={{ borderColor: theme.ink, opacity: isLoading ? 0.5 : 1 }}>
                 <Text style={{ color: theme.ink }}>Cancelar</Text>
               </Button>
             </View>
           </View>
+
+          {isLoading && (
+            <View
+              pointerEvents="auto"
+              className="absolute inset-0 items-center justify-center"
+              style={{ backgroundColor: theme.bg + 'B3' }}>
+              <ActivityIndicator size="large" color={theme.accent} />
+              <Text className="mt-3 text-sm font-bold" style={{ color: theme.ink }}>
+                {isEditing ? 'Guardando cambios...' : 'Creando colección...'}
+              </Text>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </Modal>

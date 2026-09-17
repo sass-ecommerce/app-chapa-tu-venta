@@ -78,11 +78,11 @@ export async function updateCollection(
   }
 }
 
-export async function deleteCollection(id: string): Promise<void> {
+export async function deleteCollections(ids: string[]): Promise<void> {
   try {
-    await apiClient.delete(`/collections/${id}`);
+    await apiClient.delete('/collections', { data: { ids } });
   } catch (error) {
-    console.error('❌ [deleteCollection] Error:', error instanceof Error ? error.message : error);
+    console.error('❌ [deleteCollections] Error:', error instanceof Error ? error.message : error);
     throw error;
   }
 }
@@ -125,15 +125,15 @@ export async function addProductsToCollection(
   }
 }
 
-export async function removeProductFromCollection(
+export async function removeProductsFromCollection(
   collectionId: string,
-  productId: string
+  productIds: string[]
 ): Promise<void> {
   try {
-    await apiClient.delete(`/collections/${collectionId}/products/${productId}`);
+    await apiClient.delete(`/collections/${collectionId}/products`, { data: { productIds } });
   } catch (error) {
     console.error(
-      '❌ [removeProductFromCollection] Error:',
+      '❌ [removeProductsFromCollection] Error:',
       error instanceof Error ? error.message : error
     );
     throw error;

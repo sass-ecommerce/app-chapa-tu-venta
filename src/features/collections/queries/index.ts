@@ -4,10 +4,10 @@ import {
   getCollection,
   createCollection,
   updateCollection,
-  deleteCollection,
+  deleteCollections,
   getCollectionProductsPage,
   addProductsToCollection,
-  removeProductFromCollection,
+  removeProductsFromCollection,
 } from '../api/collections';
 import { getPresignedUploadUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
@@ -15,7 +15,6 @@ import { compressProductImage } from '@/shared/utils/image-compression';
 import type { CreateCollectionData, UpdateCollectionData } from '../types';
 
 export const collectionKeys = {
-  all: ['collections'] as const,
   list: () => ['collections', 'list'] as const,
   detail: (id: string) => ['collections', id] as const,
   products: (id: string) => ['collections', id, 'products'] as const,
@@ -64,7 +63,7 @@ export function useCreateCollectionMutation() {
   return useMutation({
     mutationFn: (data: CreateCollectionData) => createCollection(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.list() });
     },
   });
 }
@@ -75,7 +74,7 @@ export function useUpdateCollectionMutation() {
     mutationFn: ({ id, data }: { id: string; data: UpdateCollectionData }) =>
       updateCollection(id, data),
     onSuccess: (_result, variables) => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.list() });
       queryClient.invalidateQueries({ queryKey: collectionKeys.detail(variables.id) });
     },
   });
@@ -84,9 +83,9 @@ export function useUpdateCollectionMutation() {
 export function useDeleteCollectionsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => Promise.all(ids.map((id) => deleteCollection(id))),
+    mutationFn: (ids: string[]) => deleteCollections(ids),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.list() });
     },
   });
 }
@@ -123,21 +122,9 @@ export function useAddProductsToCollectionMutation(collectionId: string) {
   return useMutation({
     mutationFn: (productIds: string[]) => addProductsToCollection(collectionId, productIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.products(collectionId) });
       queryClient.invalidateQueries({ queryKey: collectionKeys.detail(collectionId) });
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
-    },
-  });
-}
-
-export function useRemoveProductFromCollectionMutation(collectionId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (productId: string) => removeProductFromCollection(collectionId, productId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.products(collectionId) });
-      queryClient.invalidateQueries({ queryKey: collectionKeys.detail(collectionId) });
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.list() });
+      queryClient.resetQueries({ queryKey: collectionKeys.products(collectionId) });
     },
   });
 }
@@ -145,12 +132,11 @@ export function useRemoveProductFromCollectionMutation(collectionId: string) {
 export function useRemoveProductsFromCollectionMutation(collectionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (productIds: string[]) =>
-      Promise.all(productIds.map((productId) => removeProductFromCollection(collectionId, productId))),
+    mutationFn: (productIds: string[]) => removeProductsFromCollection(collectionId, productIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: collectionKeys.products(collectionId) });
       queryClient.invalidateQueries({ queryKey: collectionKeys.detail(collectionId) });
-      queryClient.invalidateQueries({ queryKey: collectionKeys.all });
+      queryClient.invalidateQueries({ queryKey: collectionKeys.list() });
+      queryClient.resetQueries({ queryKey: collectionKeys.products(collectionId) });
     },
   });
 }
