@@ -397,6 +397,7 @@ export default function CollectionDetailScreen() {
 
       {viewMode === 'grid' ? (
         <FlashList
+          key="grid"
           data={products}
           keyExtractor={(item) => item.id}
           numColumns={2}
@@ -411,6 +412,7 @@ export default function CollectionDetailScreen() {
         />
       ) : (
         <FlashList
+          key="list"
           data={products}
           keyExtractor={(item) => item.id}
           renderItem={renderListItem}
