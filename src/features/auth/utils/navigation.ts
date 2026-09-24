@@ -12,6 +12,9 @@ export async function routeAfterLogin(onboarding: OnboardingStatus): Promise<voi
   if (onboarding.createTenant.tenant?.id) {
     await authStorage.saveTenantId(onboarding.createTenant.tenant.id);
   }
+  if (onboarding.createTenant.tenant?.domain) {
+    await authStorage.saveTenantDomain(onboarding.createTenant.tenant.domain);
+  }
 
   router.replace('/(tabs)');
 }

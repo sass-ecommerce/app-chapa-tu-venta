@@ -7,8 +7,9 @@ import { authStorage, refreshAccessToken } from '@/features/auth';
 export function useCreateTenantMutation() {
   return useMutation({
     mutationFn: (data: CreateTenantPayload) => createTenant(data),
-    onSuccess: async (tenant) => {
+    onSuccess: async (tenant, variables) => {
       await authStorage.saveTenantId(tenant.tenantId);
+      await authStorage.saveTenantDomain(variables.domain);
 
       // El access token vigente no incluye el tenant recién creado. Se
       // refresca antes de golpear cualquier otra API para que el nuevo

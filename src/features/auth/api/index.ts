@@ -1,6 +1,13 @@
 import { apiClient } from '@/shared/config/api';
 import type { ApiResponse } from '@/src/shared/interfaces/api-response';
-import type { LoginPayload, LoginResponse, RefreshTokenResponse, RegisterPayload } from '../types';
+import type {
+  LoginPayload,
+  LoginResponse,
+  MeResponse,
+  RefreshTokenResponse,
+  RegisterPayload,
+  UpdateProfilePayload,
+} from '../types';
 import { authStorage } from '../utils/storage';
 
 export async function registerUser(data: RegisterPayload): Promise<{ userSub: string }> {
@@ -24,6 +31,16 @@ export async function loginUser(data: LoginPayload): Promise<LoginResponse> {
   return result.data;
 }
 
+export async function getMe(): Promise<MeResponse> {
+  const { data: result } = await apiClient.get<ApiResponse<MeResponse>>('/users/me');
+  return result.data;
+}
+
+export async function updateMe(data: UpdateProfilePayload): Promise<MeResponse> {
+  const { data: result } = await apiClient.patch<ApiResponse<MeResponse>>('/users/me', data);
+  return result.data;
+}
+
 export async function logoutUser(): Promise<void> {
   try {
     await apiClient.post<ApiResponse>('/auth/logout');
@@ -32,6 +49,7 @@ export async function logoutUser(): Promise<void> {
       authStorage.clearTokens(),
       authStorage.clearUser(),
       authStorage.clearTenantId(),
+      authStorage.clearTenantDomain(),
     ]);
   }
 }

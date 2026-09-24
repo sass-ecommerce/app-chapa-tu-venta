@@ -13,6 +13,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api",
         "EXPO_PUBLIC_ENVIRONMENT": "development",
+        "EXPO_PUBLIC_STORE_WEB_DOMAIN": "dev.chapatuventa.shop",
         "EXPO_PUBLIC_COGNITO_DOMAIN": "https://ctv-dev.auth.us-east-1.amazoncognito.com",
         "EXPO_PUBLIC_COGNITO_CLIENT_ID": "67a47cceler9jn6lasg0t8roug"
       }
@@ -25,6 +26,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api",
         "EXPO_PUBLIC_ENVIRONMENT": "development",
+        "EXPO_PUBLIC_STORE_WEB_DOMAIN": "dev.chapatuventa.shop",
         "EXPO_PUBLIC_COGNITO_DOMAIN": "https://ctv-dev.auth.us-east-1.amazoncognito.com",
         "EXPO_PUBLIC_COGNITO_CLIENT_ID": "67a47cceler9jn6lasg0t8roug"
       }
@@ -37,6 +39,7 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://backend-chapa-tu-venta-development.up.railway.app/api",
         "EXPO_PUBLIC_ENVIRONMENT": "production",
+        "EXPO_PUBLIC_STORE_WEB_DOMAIN": "dev.chapatuventa.shop",
         "EXPO_PUBLIC_COGNITO_DOMAIN": "https://ctv-dev.auth.us-east-1.amazoncognito.com",
         "EXPO_PUBLIC_COGNITO_CLIENT_ID": "67a47cceler9jn6lasg0t8roug"
       }

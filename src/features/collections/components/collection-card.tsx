@@ -124,6 +124,7 @@ export const CollectionCard = React.memo(
     prevProps.collection.id === nextProps.collection.id &&
     prevProps.collection.name === nextProps.collection.name &&
     prevProps.collection.coverImageUrl === nextProps.collection.coverImageUrl &&
+    prevProps.collection.previewImageUrls === nextProps.collection.previewImageUrls &&
     prevProps.collection.productsCount === nextProps.collection.productsCount &&
     prevProps.selectionMode === nextProps.selectionMode &&
     prevProps.selected === nextProps.selected

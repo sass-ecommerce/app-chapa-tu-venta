@@ -1,7 +1,7 @@
 {
   "name": "app-chapa-tu-venta",
   "main": "expo-router/entry",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "scripts": {
     "dev": "expo start -c",
     "android": "expo start -c --android",
@@ -13,7 +13,10 @@
     "build:android:preview": "eas build --platform android --profile preview --local",
     "build:android:development": "eas build --platform android --profile development --local",
     "build:android:production": "eas build --platform android --profile production --local",
-    "distribute:android": "./scripts/distribute-android.sh"
+    "build:ios:preview": "eas build --platform ios --profile preview --local",
+    "build:ios:production": "eas build --platform ios --profile production --local",
+    "distribute:android": "./scripts/distribute-android.sh",
+    "distribute:ios": "./scripts/distribute-ios.sh"
   },
   "dependencies": {
     "@react-navigation/native": "^7.0.0",

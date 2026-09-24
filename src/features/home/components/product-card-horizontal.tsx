@@ -35,7 +35,14 @@ export const ProductCardHorizontal = React.memo(
           className="relative mb-2 h-24 w-full items-center justify-center overflow-hidden rounded-xl"
           style={{ backgroundColor: theme.accent + '14' }}>
           {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            <Image
+              source={{ uri: imageUrl }}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={product.id}
+              transition={150}
+            />
           ) : (
             <Icon as={Package} size={24} color={theme.accent} />
           )}
@@ -58,5 +65,7 @@ export const ProductCardHorizontal = React.memo(
     );
   },
   (prevProps, nextProps) =>
-    prevProps.product.id === nextProps.product.id && prevProps.onPress === nextProps.onPress
+    prevProps.product.id === nextProps.product.id &&
+    prevProps.product.images === nextProps.product.images &&
+    prevProps.onPress === nextProps.onPress
 );

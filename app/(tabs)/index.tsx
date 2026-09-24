@@ -3,6 +3,7 @@ import { View, ScrollView, RefreshControl } from 'react-native';
 
 import { useColorScheme } from 'nativewind';
 
+import { useCurrentUserQuery } from '@/features/auth';
 import { useProductsInfiniteQuery } from '@/features/products/queries';
 
 import { HomeHeader } from '@/features/home/components/home-header';
@@ -45,14 +46,7 @@ const transactions: Transaction[] = [
 ];
 
 export default function HomeScreen() {
-  const { user } = {
-    user: {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      imageUrl: undefined,
-    },
-  };
+  const { data: user } = useCurrentUserQuery();
   const { colorScheme } = useColorScheme();
   const theme = getVitrinaTheme(colorScheme === 'dark');
   const [refreshing, setRefreshing] = React.useState(false);
@@ -89,7 +83,6 @@ export default function HomeScreen() {
         <HomeHeader
           firstName={user?.firstName}
           lastName={user?.lastName}
-          avatarUrl={user?.imageUrl ?? undefined}
           notificationCount={3}
           onNotificationsPress={() => {
             console.log('📬 [Home] Notifications pressed');

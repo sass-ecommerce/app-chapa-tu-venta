@@ -1,10 +1,19 @@
 import * as React from 'react';
-import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Share, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useColorScheme } from 'nativewind';
-import { ChevronLeft, Edit, Grid2x2, List, MoreVertical, Plus, Trash2 } from 'lucide-react-native';
+import {
+  ChevronLeft,
+  Edit,
+  Grid2x2,
+  List,
+  MoreVertical,
+  Plus,
+  Share2,
+  Trash2,
+} from 'lucide-react-native';
 
 import { Text } from '@/shared/components/ui/text';
 import { Icon } from '@/shared/components/ui/icon';
@@ -33,8 +42,10 @@ import {
   useUploadCollectionCoverMutation,
   useRemoveProductsFromCollectionMutation,
   useDeleteCollectionsMutation,
+  getCollectionShareUrl,
 } from '@/features/collections';
 import type { Collection } from '@/features/collections';
+import { getShareableTenantDomain } from '@/features/auth';
 import { ProductCard } from '@/features/products';
 import type { Product } from '@/features/products/types';
 
@@ -44,6 +55,7 @@ interface CollectionDetailMenuProps {
   theme: VitrinaTheme;
   onEdit: () => void;
   onAddProducts: () => void;
+  onShare: () => void;
   onDelete: () => void;
 }
 
@@ -53,6 +65,7 @@ function CollectionDetailMenu({
   theme,
   onEdit,
   onAddProducts,
+  onShare,
   onDelete,
 }: CollectionDetailMenuProps) {
   return (
@@ -76,6 +89,12 @@ function CollectionDetailMenu({
           <Text className="text-sm font-semibold">Agregar productos</Text>
         </Pressable>
         <Pressable
+          onPress={onShare}
+          className="flex-row items-center gap-3 px-4 py-3 active:opacity-70">
+          <Icon as={Share2} size={17} color={theme.ink} />
+          <Text className="text-sm font-semibold">Compartir colección</Text>
+        </Pressable>
+        <Pressable
           onPress={onDelete}
           className="flex-row items-center gap-3 px-4 py-3 active:opacity-70">
           <Icon as={Trash2} size={17} color={theme.bad} />
@@ -97,6 +116,7 @@ interface CollectionDetailHeaderProps {
   onBack: () => void;
   onAddProducts: () => void;
   onEdit: () => void;
+  onShare: () => void;
   onDelete: () => void;
 }
 
@@ -114,6 +134,7 @@ function CollectionDetailHeader({
   onBack,
   onAddProducts,
   onEdit,
+  onShare,
   onDelete,
 }: CollectionDetailHeaderProps) {
   const { colorScheme } = useColorScheme();
@@ -133,6 +154,7 @@ function CollectionDetailHeader({
           theme={theme}
           onEdit={onEdit}
           onAddProducts={onAddProducts}
+          onShare={onShare}
           onDelete={onDelete}
         />
       </View>
@@ -270,6 +292,20 @@ export default function CollectionDetailScreen() {
     [updateMutation, uploadCoverMutation, id]
   );
 
+  const handleShareCollection = React.useCallback(async () => {
+    try {
+      const tenantDomain = await getShareableTenantDomain();
+      if (!tenantDomain) {
+        Alert.alert('No se pudo compartir', 'No encontramos el dominio de tu tienda.');
+        return;
+      }
+      const url = getCollectionShareUrl(tenantDomain, id);
+      await Share.share({ message: `${displayName} — ${url}`, url });
+    } catch {
+      Alert.alert('Error', 'No se pudo compartir la colección. Intenta de nuevo.');
+    }
+  }, [id, displayName]);
+
   const handleDeleteCollection = React.useCallback(() => {
     deleteMutation.mutate([id], {
       onSuccess: () => {
@@ -329,6 +365,7 @@ export default function CollectionDetailScreen() {
       onBack={() => router.back()}
       onAddProducts={goToAddProducts}
       onEdit={() => setFormVisible(true)}
+      onShare={handleShareCollection}
       onDelete={() => setConfirmDeleteOpen(true)}
     />
   );

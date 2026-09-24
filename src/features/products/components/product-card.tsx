@@ -48,7 +48,14 @@ export const ProductCard = React.memo(
         <View className="relative overflow-hidden rounded-2xl">
           <AspectRatio ratio={1} style={{ backgroundColor: theme.accent + '14' }}>
             {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+              <Image
+                source={{ uri: imageUrl }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                recyclingKey={product.id}
+                transition={150}
+              />
             ) : (
               <View className="h-full w-full items-center justify-center" style={{ backgroundColor: theme.accent + '14' }}>
                 <Text className="text-4xl">📦</Text>
@@ -97,6 +104,7 @@ export const ProductCard = React.memo(
   },
   (prevProps, nextProps) =>
     prevProps.product.id === nextProps.product.id &&
+    prevProps.product.images === nextProps.product.images &&
     prevProps.selectionMode === nextProps.selectionMode &&
     prevProps.selected === nextProps.selected
 );

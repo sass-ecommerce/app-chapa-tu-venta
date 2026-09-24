@@ -6,3 +6,4 @@ export type { User, UpdateProfilePayload } from './types';
 
 // Auth actions
 export { logoutUser } from '@/features/auth/api';
+export { useUpdateProfileMutation } from '@/features/auth/queries';

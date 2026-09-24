@@ -1,9 +1,10 @@
 // Utils
 export { authStorage } from './utils/storage';
 export { routeAfterLogin } from './utils/navigation';
+export { getShareableTenantDomain } from './utils/tenant';
 
 // Types
-export type { RegisterPayload, LoginPayload, LoginResponse, User } from './types';
+export type { RegisterPayload, LoginPayload, LoginResponse, MeResponse, User } from './types';
 
 // API
 export {
@@ -15,10 +16,15 @@ export {
   forgotPasswordRequest,
   resetPasswordRequest,
   getOnboardingStatus,
+  getMe,
+  updateMe,
 } from './api';
 
 // Queries
 export {
+  authKeys,
+  useCurrentUserQuery,
+  useUpdateProfileMutation,
   useRegisterMutation,
   useLoginMutation,
   useGoogleLoginMutation,

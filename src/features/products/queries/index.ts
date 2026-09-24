@@ -1,19 +1,14 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProductsPage, getProduct, createProduct, deleteProduct } from '../api/products';
-import { getPresignedUploadUrl, getPresignedViewUrl, uploadToS3 } from '@/shared/config/storage';
+import { getPresignedUploadUrl, uploadToS3 } from '@/shared/config/storage';
 import { STORAGE_FOLDERS } from '@/shared/config/constants';
 import { compressProductImage } from '@/shared/utils/image-compression';
 import type { CreateProductData } from '../types';
-
-// El link firmado expira a los 60 min (ver backend); lo refrescamos antes de eso.
-const PRESIGNED_VIEW_STALE_TIME = 50 * 60 * 1000;
-const PRESIGNED_VIEW_GC_TIME = 55 * 60 * 1000;
 
 export const productKeys = {
   all: ['products'] as const,
   detail: (id: string) => ['products', id] as const,
   infinite: () => ['products', 'infinite'] as const,
-  imageUrl: (key: string) => ['products', 'image-url', key] as const,
 };
 
 export function useProductsInfiniteQuery() {
@@ -39,18 +34,6 @@ export function useProductQuery(id: string) {
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
-  });
-}
-
-export function useProductImageUrl(key: string | null | undefined) {
-  return useQuery({
-    queryKey: productKeys.imageUrl(key ?? ''),
-    queryFn: () => getPresignedViewUrl(key as string),
-    enabled: !!key,
-    staleTime: PRESIGNED_VIEW_STALE_TIME,
-    gcTime: PRESIGNED_VIEW_GC_TIME,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
   });

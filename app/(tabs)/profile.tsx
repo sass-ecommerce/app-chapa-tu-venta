@@ -11,7 +11,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useColorScheme } from 'nativewind';
 import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 
+import { authKeys, useCurrentUserQuery } from '@/features/auth';
 import { logoutUser } from '@/features/profile';
 
 import {
@@ -19,7 +21,6 @@ import {
   MailIcon,
   ShieldCheckIcon,
   UserIcon,
-  CalendarIcon,
   ChevronRightIcon,
   BellIcon,
   LockIcon,
@@ -52,15 +53,8 @@ import {
 import { ANIMATION, REFRESH_COLORS } from '@/shared/config/constants';
 
 export default function PerfilScreen() {
-  const { user } = {
-    user: {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      createdAt: new Date(),
-      imageUrl: null,
-    },
-  };
+  const queryClient = useQueryClient();
+  const { data: user, refetch: refetchUser } = useCurrentUserQuery();
   const { colorScheme, setColorScheme } = useColorScheme();
   const [isSigningOut, setIsSigningOut] = React.useState(false);
   const [imageUri, setImageUri] = React.useState<string | null>(null);
@@ -136,15 +130,6 @@ export default function PerfilScreen() {
       .slice(0, 2);
   }, [user?.firstName, user?.lastName, user?.email]);
 
-  const createdAt = React.useMemo(() => {
-    if (user.createdAt) return null;
-    return new Date(user.createdAt).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  }, [user?.createdAt]);
-
   const handleSignOut = async () => {
     Alert.alert('Cerrar Sesión', '¿Estás seguro de que quieres cerrar sesión?', [
       {
@@ -163,6 +148,7 @@ export default function PerfilScreen() {
           } finally {
             // logoutUser siempre limpia los datos locales, incluso si la llamada
             // al servidor falla, así que se navega a sign-in en cualquier caso.
+            queryClient.removeQueries({ queryKey: authKeys.me });
             router.replace('/(auth)/sign-in');
             setIsSigningOut(false);
           }
@@ -177,12 +163,11 @@ export default function PerfilScreen() {
     console.log(`🎨 [Profile] Theme changed to: ${newScheme}`);
   };
 
-  // const onRefresh = React.useCallback(async () => {
-  //   setRefreshing(true);
-  //   // Reload user data from API
-  //   await refreshUser();
-  //   setRefreshing(false);
-  // }, [refreshUser]);
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refetchUser();
+    setRefreshing(false);
+  }, [refetchUser]);
 
   return (
     <ScrollView
@@ -190,7 +175,7 @@ export default function PerfilScreen() {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          //onRefresh={onRefresh}
+          onRefresh={onRefresh}
           colors={[REFRESH_COLORS.LIGHT]}
           tintColor={REFRESH_COLORS.LIGHT}
         />
@@ -204,7 +189,7 @@ export default function PerfilScreen() {
                 <Avatar
                   alt={`${user ? `${user.firstName} ${user.lastName}` : 'Usuario'}'s avatar`}
                   className="size-24">
-                  <AvatarImage source={{ uri: imageUri || user?.imageUrl || undefined }} />
+                  <AvatarImage source={{ uri: imageUri || undefined }} />
                   <AvatarFallback>
                     <Text className="text-2xl">{userInitials}</Text>
                   </AvatarFallback>
@@ -263,20 +248,6 @@ export default function PerfilScreen() {
               </View>
             </View>
 
-            {createdAt && (
-              <>
-                <Separator />
-                <View className="flex-row items-center gap-3">
-                  <View className="size-10 items-center justify-center rounded-full bg-primary/10">
-                    <Icon as={CalendarIcon} className="size-5 text-primary" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-sm text-muted-foreground">Miembro desde</Text>
-                    <Text className="font-medium">{createdAt}</Text>
-                  </View>
-                </View>
-              </>
-            )}
           </CardContent>
         </AnimatedCard>
 

@@ -60,8 +60,15 @@ export function CollectionProductRow({
       )}
 
       <View className="h-11 w-11 overflow-hidden rounded-xl" style={{ backgroundColor: theme.accent + '14' }}>
-        {primaryImage ? (
-          <Image source={{ uri: primaryImage.url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+        {primaryImage?.url ? (
+          <Image
+            source={{ uri: primaryImage.url }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={product.id}
+            transition={150}
+          />
         ) : (
           <View className="h-full w-full items-center justify-center">
             <Text className="text-lg">📦</Text>

@@ -5,6 +5,7 @@ const USER_DATA_KEY = 'auth_user_data';
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 const TENANT_ID_KEY = 'auth_tenant_id';
+const TENANT_DOMAIN_KEY = 'auth_tenant_domain';
 
 export const authStorage = {
   async saveUser(user: User): Promise<void> {
@@ -52,5 +53,17 @@ export const authStorage = {
 
   async clearTenantId(): Promise<void> {
     await SecureStore.deleteItemAsync(TENANT_ID_KEY);
+  },
+
+  async saveTenantDomain(domain: string): Promise<void> {
+    await SecureStore.setItemAsync(TENANT_DOMAIN_KEY, domain);
+  },
+
+  async getTenantDomain(): Promise<string | null> {
+    return SecureStore.getItemAsync(TENANT_DOMAIN_KEY);
+  },
+
+  async clearTenantDomain(): Promise<void> {
+    await SecureStore.deleteItemAsync(TENANT_DOMAIN_KEY);
   },
 };

@@ -8,7 +8,8 @@ export interface ProductCategory {
 export interface ProductImage {
   id: string;
   s3Key: string;
-  url: string;
+  /** URL pública de CloudFront guardada por el backend; null en imágenes aún sin backfill. */
+  url: string | null;
   isPrimary: boolean;
   sortOrder: number;
 }

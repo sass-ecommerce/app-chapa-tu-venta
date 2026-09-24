@@ -3,6 +3,11 @@ export const STORAGE_FOLDERS = {
   COLLECTIONS: 'collections',
 } as const;
 
+// Storefront (customer-web-chapa-tu-venta) domain for this environment — the tenant's
+// domain is prepended as subdomain to build shareable links (see getCollectionShareUrl).
+export const STORE_WEB_DOMAIN =
+  process.env.EXPO_PUBLIC_STORE_WEB_DOMAIN || 'dev.chapatuventa.shop';
+
 // Brand accent (2026 redesign) — not yet wired into the --primary CSS token,
 // so screens that need it apply it explicitly. See other usages in
 // app/categories, app/products/[slug], and features/products/components.

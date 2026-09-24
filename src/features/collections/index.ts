@@ -24,5 +24,8 @@ export {
 // Store
 export { useCollectionsStore } from './utils/collections-store';
 
+// Utils
+export { getCollectionShareUrl } from './utils/share-link';
+
 // Types
 export type { Collection, CreateCollectionData, UpdateCollectionData } from './types';

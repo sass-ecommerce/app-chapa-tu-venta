@@ -31,6 +31,12 @@ export interface LoginResponse {
   tokenType: string;
 }
 
+export interface MeResponse {
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
 export interface RefreshTokenResponse {
   accessToken: string;
   expiresIn: number;

@@ -1,8 +1,11 @@
 import * as React from 'react';
-import { Alert, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 
 import { useForm } from '@tanstack/react-form';
+import { isAxiosError } from 'axios';
 import { z } from 'zod';
+
+import { useCurrentUserQuery, useUpdateProfileMutation } from '@/features/auth';
 
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
@@ -15,55 +18,50 @@ interface EditProfileFormProps {
   onCancel?: () => void;
 }
 
-export function EditProfileForm({ onSuccess, onCancel }: EditProfileFormProps) {
-  const { user } = { user: { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' } };
+export function EditProfileForm(props: EditProfileFormProps) {
+  const { data: user, isLoading } = useCurrentUserQuery();
+
+  if (isLoading) {
+    return <ActivityIndicator className="py-10" />;
+  }
+
+  // Se monta cuando ya tenemos el usuario para que los valores iniciales sean reales.
+  return (
+    <EditProfileFormContent
+      {...props}
+      firstName={user?.firstName ?? ''}
+      lastName={user?.lastName ?? ''}
+    />
+  );
+}
+
+function EditProfileFormContent({
+  onSuccess,
+  onCancel,
+  firstName,
+  lastName,
+}: EditProfileFormProps & { firstName: string; lastName: string }) {
+  const updateProfileMutation = useUpdateProfileMutation();
 
   const form = useForm({
-    defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-    },
+    defaultValues: { firstName, lastName },
     onSubmit: async ({ value }) => {
-      if (!user) return;
-
-      console.log('📝 [Edit Profile] Updating user data:', {
-        firstName: value.firstName,
-        lastName: value.lastName,
-      });
-
       try {
-        // Update user profile
-        // await updateUser({
-        //   firstName: value.firstName,
-        //   lastName: value.lastName,
-        // });
-
-        console.log('✅ [Edit Profile] User data updated successfully');
+        await updateProfileMutation.mutateAsync({
+          firstName: value.firstName.trim(),
+          lastName: value.lastName.trim(),
+        });
 
         Alert.alert('Perfil Actualizado', 'Tu información se ha actualizado correctamente', [
-          {
-            text: 'OK',
-            onPress: () => {
-              if (onSuccess) onSuccess();
-            },
-          },
+          { text: 'OK', onPress: onSuccess },
         ]);
-      } catch (error: any) {
+      } catch (error) {
         console.error('❌ [Edit Profile] Error updating user:', error);
 
-        // Manejar errores específicos
-        let errorMessage = 'No se pudo actualizar tu perfil. Intenta nuevamente.';
-
-        if (error.errors && error.errors.length > 0) {
-          const clerkError = error.errors[0];
-
-          // Errores comunes de Clerk
-          if (clerkError.code === 'form_identifier_exists') {
-            errorMessage = 'Este nombre de usuario ya está en uso';
-          } else if (clerkError.message) {
-            errorMessage = clerkError.message;
-          }
-        }
+        const errorMessage =
+          isAxiosError(error) && error.response?.status === 400
+            ? 'Revisa los datos ingresados e intenta nuevamente.'
+            : 'No se pudo actualizar tu perfil. Intenta nuevamente.';
 
         Alert.alert('Error', errorMessage);
       }

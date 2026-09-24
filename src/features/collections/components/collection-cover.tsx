@@ -34,6 +34,9 @@ export function CollectionCover({
         source={{ uri: coverImageUrl }}
         style={{ width: '100%', height: '100%' }}
         contentFit="cover"
+        cachePolicy="memory-disk"
+        recyclingKey={coverImageUrl}
+        transition={150}
       />
     );
   }
@@ -43,7 +46,14 @@ export function CollectionCover({
       <View className="h-full w-full flex-row flex-wrap" style={{ gap: 1.5 }}>
         {previewImageUrls.slice(0, 4).map((url, index) => (
           <View key={index} style={{ width: '49.5%', height: '49.5%' }}>
-            <Image source={{ uri: url }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+            <Image
+              source={{ uri: url }}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={url}
+              transition={150}
+            />
           </View>
         ))}
       </View>
