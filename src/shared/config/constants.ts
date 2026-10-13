@@ -5,7 +5,7 @@ export const STORAGE_FOLDERS = {
 } as const;
 
 // Storefront (customer-web-chapa-tu-venta) domain for this environment — the tenant's
-// domain is prepended as subdomain to build shareable links (see getCollectionShareUrl).
+// domain is prepended as subdomain to build shareable links (see getCollectionShareUrl / getProductShareUrl).
 export const STORE_WEB_DOMAIN =
   process.env.EXPO_PUBLIC_STORE_WEB_DOMAIN || 'dev.chapatuventa.shop';
 

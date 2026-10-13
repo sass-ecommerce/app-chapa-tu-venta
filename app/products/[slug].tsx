@@ -1,13 +1,15 @@
 import * as React from 'react';
-import { Alert, ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Alert, ActivityIndicator, Pressable, ScrollView, Share, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { Archive, ChevronRight, Edit, MoreVertical, Trash2 } from 'lucide-react-native';
+import { Archive, ChevronRight, Edit, MoreVertical, Share2, Trash2 } from 'lucide-react-native';
 import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
 import { useProductQuery } from '@/features/products/queries';
 import { ProductImageGallery } from '@/features/products/components/product-image-gallery';
 import { AttributeValue } from '@/features/products/components/attribute-value';
+import { getProductShareUrl } from '@/features/products/utils/share-link';
+import { getShareableTenantDomain } from '@/features/auth';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
@@ -15,6 +17,20 @@ export default function ProductoDetalleScreen() {
   const { data: product, isLoading } = useProductQuery(productId);
 
   const handleEdit = () => Alert.alert('Editar', `Editar producto: ${product?.name}`);
+  const handleShare = async () => {
+    if (!product) return;
+    try {
+      const tenantDomain = await getShareableTenantDomain();
+      if (!tenantDomain) {
+        Alert.alert('No se pudo compartir', 'No encontramos el dominio de tu tienda.');
+        return;
+      }
+      const url = getProductShareUrl(tenantDomain, productId);
+      await Share.share({ message: `${product.name} — ${url}`, url });
+    } catch {
+      Alert.alert('Error', 'No se pudo compartir el producto. Intenta de nuevo.');
+    }
+  };
   const handleArchive = () => Alert.alert('Archivar', `Archivar producto: ${product?.name}`);
   const handleDelete = () => {
     Alert.alert('Eliminar Producto', `¿Eliminar "${product?.name}"?`, [
@@ -34,6 +50,10 @@ export default function ProductoDetalleScreen() {
         <Pressable onPress={handleEdit} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
           <Edit size={18} color="#666" />
           <Text className="text-base">Editar</Text>
+        </Pressable>
+        <Pressable onPress={handleShare} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
+          <Share2 size={18} color="#666" />
+          <Text className="text-base">Compartir</Text>
         </Pressable>
         <Pressable onPress={handleArchive} className="flex-row items-center gap-3 px-4 py-3 active:bg-accent">
           <Archive size={18} color="#666" />

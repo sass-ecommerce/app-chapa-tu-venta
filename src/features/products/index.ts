@@ -15,6 +15,7 @@ export {
 
 // Store
 export { useProductsStore } from './utils/products-store';
+export { getProductShareUrl } from './utils/share-link';
 
 // Types
 export type { Product, CreateProductData, UpdateProductData } from './types';
