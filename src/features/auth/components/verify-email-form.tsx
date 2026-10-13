@@ -47,11 +47,7 @@ export function VerifyEmailForm() {
     defaultValues: { code: '' },
     onSubmit: async ({ value, formApi }) => {
       try {
-        console.log('📧 [VerifyEmail] Verifying email with code...');
-
         await confirmMutation.mutateAsync({ email, code: value.code });
-
-        console.log('✅ [VerifyEmail] Email verified and signed in');
         router.replace('/(auth)/sign-in');
       } catch (err) {
         logError('[VerifyEmail] Confirm failed:', err);

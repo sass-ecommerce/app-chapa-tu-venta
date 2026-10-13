@@ -58,3 +58,27 @@ export async function compressProductImage({
     return { uri, contentType };
   }
 }
+
+// Logos: PNG para conservar la transparencia (react-native-compressor la
+// mantiene con output 'png' e ignora `quality`). 512px basta para avatar,
+// navbar y previews Open Graph.
+const LOGO_IMAGE_COMPRESSION_OPTIONS = {
+  compressionMethod: 'manual' as const,
+  maxWidth: 512,
+  maxHeight: 512,
+  output: 'png' as const,
+};
+
+export async function compressLogoImage({
+  uri,
+  contentType,
+}: CompressImageInput): Promise<CompressedImageResult> {
+  try {
+    const compressedUri = await Image.compress(uri, LOGO_IMAGE_COMPRESSION_OPTIONS);
+    await logCompressionResult(uri, compressedUri);
+    return { uri: compressedUri, contentType: 'image/png' };
+  } catch (err) {
+    logError('compressLogoImage: usando archivo original por fallo de compresión', err);
+    return { uri, contentType };
+  }
+}

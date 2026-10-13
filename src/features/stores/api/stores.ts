@@ -1,5 +1,11 @@
 import { apiClient } from '@/shared/config/api';
-import type { CreateStorePayload, StoreApiResponse } from '../types';
+import type { ApiResponse } from '@/src/shared/interfaces/api-response';
+import type {
+  CreateStorePayload,
+  MyTenant,
+  StoreApiResponse,
+  UpdateMyTenantPayload,
+} from '../types';
 
 export async function createStore(
   data: CreateStorePayload,
@@ -28,4 +34,14 @@ export async function getStoreBySlug(slug: string, token: string): Promise<Store
     console.error('❌ [getStoreBySlug] Error:', error);
     throw error;
   }
+}
+
+export async function getMyTenant(): Promise<MyTenant> {
+  const { data: result } = await apiClient.get<ApiResponse<MyTenant>>('/tenants/me');
+  return result.data;
+}
+
+export async function updateMyTenant(data: UpdateMyTenantPayload): Promise<MyTenant> {
+  const { data: result } = await apiClient.patch<ApiResponse<MyTenant>>('/tenants/me', data);
+  return result.data;
 }

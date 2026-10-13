@@ -11,19 +11,26 @@ interface GalleryImageProps {
   height: number;
 }
 
-function GalleryImage({ image, width, height }: GalleryImageProps) {
+const GalleryImage = React.memo(function GalleryImage({ image, width, height }: GalleryImageProps) {
   const imageUrl = image.url;
 
   return (
     <View style={{ width, height }} className="items-center justify-center bg-muted">
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={{ width, height }} contentFit="cover" />
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width, height }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={image.id}
+          transition={150}
+        />
       ) : (
         <Text className="text-6xl">📦</Text>
       )}
     </View>
   );
-}
+});
 
 interface ProductImageGalleryProps {
   images: ProductImage[];

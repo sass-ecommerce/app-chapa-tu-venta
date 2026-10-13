@@ -21,7 +21,7 @@ interface CollectionProductRowProps {
   onLongPress?: (product: Product) => void;
 }
 
-export function CollectionProductRow({
+export const CollectionProductRow = React.memo(function CollectionProductRow({
   product,
   onPress,
   selectable = false,
@@ -86,4 +86,4 @@ export function CollectionProductRow({
       </View>
     </Pressable>
   );
-}
+});

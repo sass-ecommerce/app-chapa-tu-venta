@@ -1,6 +1,7 @@
 export const STORAGE_FOLDERS = {
   PRODUCTS: 'products',
   COLLECTIONS: 'collections',
+  STORES: 'stores',
 } as const;
 
 // Storefront (customer-web-chapa-tu-venta) domain for this environment — the tenant's

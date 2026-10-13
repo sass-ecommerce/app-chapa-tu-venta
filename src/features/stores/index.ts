@@ -11,7 +11,19 @@
  */
 
 // API
-export { createStore, getStoreBySlug } from './api/stores';
+export { createStore, getStoreBySlug, getMyTenant, updateMyTenant } from './api/stores';
+
+// Queries
+export { storeKeys, useMyTenantQuery, useUploadStoreLogoMutation } from './queries';
+
+// Components
+export { StoreCard } from './components/store-card';
 
 // Types
-export type { Store, CreateStorePayload, StoreApiResponse } from './types';
+export type {
+  Store,
+  CreateStorePayload,
+  StoreApiResponse,
+  MyTenant,
+  UpdateMyTenantPayload,
+} from './types';

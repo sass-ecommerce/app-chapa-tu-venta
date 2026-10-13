@@ -23,3 +23,16 @@ export interface StoreApiResponse {
   slug: string;
   created_at: string;
 }
+
+// Tienda del usuario autenticado (GET/PATCH /tenants/me).
+export interface MyTenant {
+  id: string;
+  name: string;
+  domain: string;
+  logoUrl: string | null;
+}
+
+export interface UpdateMyTenantPayload {
+  // `null` quita el logo.
+  logoKey?: string | null;
+}

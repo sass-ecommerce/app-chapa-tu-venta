@@ -15,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { authKeys, useCurrentUserQuery } from '@/features/auth';
 import { logoutUser } from '@/features/profile';
+import { StoreCard, storeKeys } from '@/features/stores';
 
 import {
   LogOutIcon,
@@ -165,9 +166,9 @@ export default function PerfilScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await refetchUser();
+    await Promise.all([refetchUser(), queryClient.invalidateQueries({ queryKey: storeKeys.me })]);
     setRefreshing(false);
-  }, [refetchUser]);
+  }, [refetchUser, queryClient]);
 
   return (
     <ScrollView
@@ -219,8 +220,11 @@ export default function PerfilScreen() {
           </CardHeader>
         </AnimatedCard>
 
+        {/* Mi tienda: logo, nombre y dominio */}
+        <StoreCard delay={ANIMATION.STAGGER} />
+
         {/* Información de la Cuenta */}
-        <AnimatedCard delay={ANIMATION.STAGGER}>
+        <AnimatedCard delay={ANIMATION.STAGGER * 2}>
           <CardHeader>
             <Text className="text-lg font-semibold">Información de la Cuenta</Text>
           </CardHeader>
@@ -252,7 +256,7 @@ export default function PerfilScreen() {
         </AnimatedCard>
 
         {/* Configuración y Opciones */}
-        <AnimatedCard delay={ANIMATION.STAGGER * 2}>
+        <AnimatedCard delay={ANIMATION.STAGGER * 3}>
           <CardHeader>
             <Text className="text-lg font-semibold">Configuración</Text>
           </CardHeader>

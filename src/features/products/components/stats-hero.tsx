@@ -6,7 +6,7 @@ import { Card } from '@/shared/components/ui/card';
 import { Package, CheckCircle, DollarSign } from 'lucide-react-native';
 import type { Product } from '@/features/products/api/products';
 
-function StatCard({
+const StatCard = React.memo(function StatCard({
   icon,
   value,
   label,
@@ -26,7 +26,7 @@ function StatCard({
       </Card>
     </Animated.View>
   );
-}
+});
 
 export function StatsHero({ products }: { products: Product[] }) {
   const stats = React.useMemo(() => {
