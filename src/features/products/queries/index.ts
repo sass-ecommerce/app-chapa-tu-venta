@@ -79,8 +79,17 @@ export function useDeleteProductsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) => Promise.all(ids.map((id) => deleteProduct(id))),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
+    onSuccess: (_, ids) => {
+      // A deleted product's detail is only marked stale, not refetched: the
+      // detail screen may still be mounted while it closes, and refetching
+      // would hit a 404.
+      queryClient.invalidateQueries({
+        queryKey: productKeys.all,
+        predicate: (query) => !ids.includes(String(query.queryKey[1])),
+      });
+      ids.forEach((id) =>
+        queryClient.invalidateQueries({ queryKey: productKeys.detail(id), refetchType: 'none' })
+      );
     },
   });
 }

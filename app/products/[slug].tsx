@@ -1,20 +1,40 @@
 import * as React from 'react';
 import { Alert, ActivityIndicator, Pressable, ScrollView, Share, View } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useColorScheme } from 'nativewind';
+import type { TriggerRef } from '@rn-primitives/popover';
 import { Archive, ChevronRight, Edit, MoreVertical, Share2, Trash2 } from 'lucide-react-native';
 import { Icon } from '@/shared/components/ui/icon';
 import { Text } from '@/shared/components/ui/text';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
-import { useProductQuery } from '@/features/products/queries';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
+import { useDeleteProductsMutation, useProductQuery } from '@/features/products/queries';
 import { ProductImageGallery } from '@/features/products/components/product-image-gallery';
 import { AttributeValue } from '@/features/products/components/attribute-value';
 import { getProductShareUrl } from '@/features/products/utils/share-link';
 import { getShareableTenantDomain } from '@/features/auth';
+import { getVitrinaTheme } from '@/shared/config/vitrina-palette';
 
 export default function ProductoDetalleScreen() {
   const { slug: productId } = useLocalSearchParams<{ slug: string }>();
 
+  const router = useRouter();
+  const { colorScheme } = useColorScheme();
+  const theme = getVitrinaTheme(colorScheme === 'dark');
+  const menuTriggerRef = React.useRef<TriggerRef>(null);
+
   const { data: product, isLoading } = useProductQuery(productId);
+  const deleteProductsMutation = useDeleteProductsMutation();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
 
   const handleEdit = () => Alert.alert('Editar', `Editar producto: ${product?.name}`);
   const handleShare = async () => {
@@ -33,15 +53,26 @@ export default function ProductoDetalleScreen() {
   };
   const handleArchive = () => Alert.alert('Archivar', `Archivar producto: ${product?.name}`);
   const handleDelete = () => {
-    Alert.alert('Eliminar Producto', `¿Eliminar "${product?.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => Alert.alert('Eliminado', 'Producto eliminado') },
-    ]);
+    // Close the menu first: on iOS it renders in a full-window overlay that
+    // would sit on top of the confirmation dialog.
+    menuTriggerRef.current?.close();
+    setConfirmDeleteOpen(true);
+  };
+  const handleConfirmDelete = () => {
+    deleteProductsMutation.mutate([productId], {
+      onSuccess: () => {
+        setConfirmDeleteOpen(false);
+        router.back();
+      },
+      onError: () => {
+        Alert.alert('Error', 'No se pudo eliminar el producto. Intenta de nuevo.');
+      },
+    });
   };
 
   const MenuButton = () => (
     <Popover>
-      <PopoverTrigger asChild>
+      <PopoverTrigger asChild ref={menuTriggerRef}>
         <Pressable className="p-2">
           <MoreVertical size={24} color="#000" />
         </Pressable>
@@ -98,6 +129,30 @@ export default function ProductoDetalleScreen() {
           headerRight: () => <MenuButton />,
         }}
       />
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. "{product.name}" se eliminará de tu catálogo de
+              forma permanente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>
+              <Text>Cancelar</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onPress={handleConfirmDelete}
+              disabled={deleteProductsMutation.isPending}
+              style={{ backgroundColor: theme.bad }}>
+              <Text className="font-semibold text-white">
+                {deleteProductsMutation.isPending ? 'Eliminando…' : 'Eliminar'}
+              </Text>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <ScrollView className="flex-1 bg-background">
         <ProductImageGallery images={product.images} height={256} />
 
